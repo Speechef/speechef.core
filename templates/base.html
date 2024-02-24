@@ -43,12 +43,14 @@
                 </form>
                 <ul class="navbar-nav mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link text-warning" href="">Login</a>
+                        <a class="nav-link text-warning" href="{% url 'login'%}">Login</a>
                         <!-- <button class="btn btn-success bg-light text-warning" type="">Login</button> -->
 
                     </li>
                     <li class="nav-item">
-                        <button class="btn btn-success" type="">Register</button>
+                        <button class="btn btn-success" type="">
+                            <a href="{% url 'register'%}" class="text-decoration-none text-white">Register</a>    
+                        </button>
                         <!-- <a class="nav-link text-white" href="">Sign up</a> -->
                     </li>        
                 </ul>

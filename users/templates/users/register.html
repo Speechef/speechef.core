@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block page_head %}
+<style >
+.content-section {
+    background-color: #fff;
+}
+
+.content-section legend {
+    width: auto;
+    margin-bottom: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.content-section .form-group {
+    margin-bottom: 1rem;
+}
+
+.content-section .btn {
+    font-size: 1rem;
+}
+
+.content-section a {
+    text-decoration: none;
+}
+
+/* Optional: Customize border colors and shadow */
+.content-section.border {
+    border-color: #ddd;
+}
+
+/* Optional: Increase shadow intensity */
+.content-section.shadow-sm {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+    
+</style>
+{% endblock page_head %}
+{% block page_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="content-section">
+                <form method="POST">
+                    {% csrf_token %}
+                    <fieldset class="form-group">
+                        <legend class="border-bottom mb-4">Join Today</legend>
+                        {{ form|crispy }}
+                    </fieldset>
+                    <div class="form-group">
+                        <button class="btn btn-outline-info" type="submit">Sign Up</button>
+                    </div>
+                </form>
+                <div class="border-top pt-3">
+                    <small class="text-muted">
+                        Already Have An Account? <a class="ml-2" href="{% url 'login' %}">Sign In</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock page_content %}
