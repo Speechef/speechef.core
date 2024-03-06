@@ -8,6 +8,15 @@ def index(request):
 
 
 def home_index(request):
+    """
+    Render the 'home/index.html' template with a context containing all posts ordered by creation date.
+    
+    Args:
+        request: The HTTP request object.
+        
+    Returns:
+        The rendered HTTP response.
+    """
     posts = Post.objects.all().order_by("-created_on")
     context = {
         "posts": posts,
