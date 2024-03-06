@@ -1,6 +1,5 @@
 # speechef.core
 
-Install Python
-Install Django
-`pip install django`
-`python manage.py runserver`
+Install Python <br>
+Install Django: `pip install django` <br>
+Start server: `python manage.py runserver` <br>
