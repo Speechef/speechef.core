@@ -1,22 +1,76 @@
 {% extends "base.html" %}
+{% block page_head %}
+<style>
+    .card {
+      border-radius: 15px;
+      border: none;
+    }
+    .sidebar {
+      background-color: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+    }
+    a {
+      text-decoration: none;
+    }    
+  </style>
+{% endblock page_head%}
 
 {% block page_title %}
-    <h2>learn Posts</h2>
+    <h2 class="text-center" style="padding: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"> Learn </h2>
 {% endblock page_title %}
 
 {% block page_content %}
-    {% block posts %}
-        {% for post in posts %}
-            <h3><a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a></h3>
-            <small>
-                {{ post.created_on.date }} | Categories:
-                {% for category in post.categories.all %}
-                    <a href="{% url 'learn_category' category.name %}">
-                        {{ category.name }}
-                    </a>
-                {% endfor %}
-            </small>
-            <p>{{ post.body | slice:":400" }}...</p>
-        {% endfor %}
-    {% endblock posts %}
+  {% block posts %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-10">    
+        <div class="row">
+          {% for post in posts %}
+            <div class="col-md-4">
+              <div class="card mb-4 shadow">
+                <div class="card-body" style="max-height: 200px; overflow: hidden;">
+                  <h5 class="card-title"><a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a></h5>     
+                  <button class="btn btn-primary rounded-pill"> Read more </button>           
+                  <p class="card-text">{{ post.body | slice:":400" }}...</p>
+                </div>
+                <div class="card-footer">
+                  {% for category in post.categories.all %}    
+                    <span class="badge bg-success" ><a href="{% url 'learn_category' category.name %}" class="text-white">{{ category.name }}</a></span>                
+                    <span class="badge bg-warning"> {{ post.created_on.date }}</span>
+                  {% endfor %}
+                </div>                                
+              </div>
+            </div>
+            {% endfor %}
+
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="sidebar">
+          <h5>Categories</h5>
+          <ul class="list-unstyled">
+            <li><a href="{% url 'learn_index'%}">All categories</a></li>
+            {% for category in all_categories %}
+                <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</li>
+            {% endfor %}
+            
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+
+            <!-- Add more categories as needed -->
+          </ul>
+        </div>
+      </div>      
+    </div>
+  </div>
+  {% endblock posts %}
+  
 {% endblock page_content %}
