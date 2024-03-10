@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'home.apps.HomeConfig',
     'users.apps.UsersConfig',
+    'learn.apps.LearnConfig',
     'crispy_forms',
     'crispy_bootstrap5',
     'django.contrib.admin',
