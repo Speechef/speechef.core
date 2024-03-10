@@ -13,3 +13,8 @@ class CommentAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Comment, CommentAdmin)
+
+
+admin.site.site_header = "Speechef Admin"
+admin.site.site_title = "Speechef Admin Portal"
+admin.site.index_title = "Welcome to Speechef"
