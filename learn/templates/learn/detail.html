@@ -1,17 +1,30 @@
 {% extends "base.html" %}
 
-{% block page_title %}
-    <h2>{{ post.title }}</h2>
-{% endblock page_title %}
+      {% block page_title %}
+        <h2 class="text-center p-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">{{ post.title }}</h2>
+      {% endblock page_title %}
 
-{% block page_content %}
-    <small>
-        {{ post.created_on.date }} | Categories:
-        {% for category in post.categories.all %}
-            <a href="{% url 'learn_category' category.name %}">
-                {{ category.name }}
-            </a>
-        {% endfor %}
-    </small>
-    <p>{{ post.body | linebreaks }}</p>
+      {% block page_content %}
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-10">      
+      <div class="card mb-4">
+        <div class="card-header bg-warning text-center">
+          {{ post.created_on.date }} | Categories:
+          {% for category in post.categories.all %}
+            <a href="{% url 'learn_category' category.name %}" class="text-white">{{ category.name }}</a>
+          {% endfor %}
+        </div>
+        <div class="card-body">
+          <p class="card-text">{{ post.body | linebreaks }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2 border text-center" >
+        <h5>Sponser</h5>
+    </div>
+
+  </div>
+</div>
 {% endblock page_content %}
