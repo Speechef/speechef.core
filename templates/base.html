@@ -16,7 +16,7 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg shadow-sm p-3 mb-3 bg-white rounded">
+  <nav class="navbar navbar-expand-lg shadow-sm p-3 mb-5 bg-white rounded">
     <div class="container-fluid">
       <a class="navbar-brand" href="{% url 'landing_page' %}">Speechef</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
@@ -50,7 +50,7 @@
             <!-- <button class="btn btn-success bg-light text-warning" type="">Login</button> -->
           </li>
           <li class="nav-item me-3">
-            <button class="btn btn-success rounded-pill px-4 gradient-button" type="">
+            <button class="btn rounded-pill px-4 gradient-button" type="">
               <a href="{% url 'register'%}" class="text-decoration-none text-white">Register</a>
             </button>
           </li>
@@ -58,8 +58,6 @@
       </div>
     </div>
   </nav>
-  {% block page_title %}
-  {% endblock page_title %}
 
   {% block page_content %}
   {% endblock page_content %}
