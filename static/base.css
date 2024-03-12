@@ -1,0 +1,23 @@
+.navbar-brand {
+  font-size: 2rem;
+  font-family: 'brush script mt', cursive;
+  font-weight: bold;
+  background: linear-gradient(to right, hsl(43, 91%, 63%), #fe9940);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* For hovering over Navbar brand */
+.navbar-brand:hover {
+  background: linear-gradient(to right, #141c52, #fe9940);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-button {
+  background: linear-gradient(to right, hsl(43, 91%, 63%), #fe9940);
+  display: block;
+  border: none;
+}
