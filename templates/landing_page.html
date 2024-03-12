@@ -1,115 +1,143 @@
-{% extends "base.html" %}
-{% load static %}
-{%  block page_head %}
-    <link rel="stylesheet" href="{% static 'landing_page.css' %}">
-{% endblock page_head %}
+{% extends "base.html" %} {% load static %} {% block page_head %}
+<link rel="stylesheet" href="{% static 'landing_page.css' %}" />
+{% endblock page_head %} {% block page_title %}
+<div class="hero-section">
+  <div class="top-left-corner"></div>
+  <div class="top-right-corner"></div>
+  <div class="bottom-left-corner"></div>
+  <div class="bottom-right-corner"></div>
+  <div class="container hero-content">
+    <div class="hero-title-container">
+      <h1 class="animated-text">Welcome to Speechef</h1>
+    </div>
+    <p>Communicate your way to the top!</p>
+    <a href="{% url 'login'%}" class="btn btn-primary">Get Started</a>
+    <a href="{% url 'register'%}" class="btn btn-outline-success">Register</a>
+    <p>We help you master your public speaking and communications game.</p>
+    <p>We help you hire the finest speakers tailored for your next event.</p>
+    <!-- <p>We help candidates sharpen their speaking skills and pursue job opportunities.</p> -->
+  </div>
+</div>
+{% endblock page_title %} {% block page_content %}
 
-{% block page_title %}
-  <div class="hero-section">
-      <div class="top-left-corner"></div>
-      <div class="top-right-corner"></div>
-      <div class="bottom-left-corner"></div>
-      <div class="bottom-right-corner"></div>
-      <div class="container hero-content">
-        <h1>Welcome to Speechef</h1>
-        <p>Communicate your way to the top!</p>
-        <a href="{% url 'login'%}" class="btn btn-primary">Get Started</a>
-        <a href="{% url 'register'%}" class="btn btn-outline-success">Register</a>
-        <p>We help you master your public speaking and communications game.</p>
-        <p>We help you hire the finest speakers tailored for your next event.</p>
-        <!-- <p>We help candidates sharpen their speaking skills and pursue job opportunities.</p> -->
-      </div>
-  </div>      
-{% endblock page_title %}
-
-{% block page_content %}
 <div class="features-section">
   <div class="container">
-      <div class="feature">
-          <i class="fas fa-chalkboard-teacher"></i>
-          <h3>Expert Guidance</h3>
-          <p>Receive expert guidance and training from experienced speakers to improve your communication skills.</p>
-      </div>
-      <div class="feature">
-          <i class="fas fa-user-friends"></i>
-          <h3>Community Support</h3>
-          <p>Join a vibrant community of learners and speakers where you can support and learn from each other.</p>
-      </div>
-      <div class="feature">
-          <i class="fas fa-bullhorn"></i>
-          <h3>Effective Communication</h3>
-          <p>Learn techniques to deliver compelling speeches and presentations that captivate your audience.</p>
-      </div>
+    <div class="feature">
+      <i class="fas fa-chalkboard-teacher"></i>
+      <h3>Expert Guidance</h3>
+      <p>
+        Receive expert guidance and training from experienced speakers to
+        improve your communication skills.
+      </p>
+    </div>
+    <div class="feature">
+      <i class="fas fa-user-friends"></i>
+      <h3>Community Support</h3>
+      <p>
+        Join a vibrant community of learners and speakers where you can support
+        and learn from each other.
+      </p>
+    </div>
+    <div class="feature">
+      <i class="fas fa-bullhorn"></i>
+      <h3>Effective Communication</h3>
+      <p>
+        Learn techniques to deliver compelling speeches and presentations that
+        captivate your audience.
+      </p>
+    </div>
   </div>
 </div>
 
 <div class="testimonial-section">
   <div class="container">
-      <h1 class="text-center">Customer Reviews</h1>
-      <h5 class="text-center p-4 mb-5 text-muted">What our customers are saying?</h5>
-      <div class="testimonial-cards">
-          <div class="testimonial-card">
-              <div class="testimonial-content">
-                  <p>"Speechef has transformed my public speaking skills. I feel more confident and prepared to address any audience."</p>
-              </div>
-              <div class="testimonial-author">
-                  <img src="https://images.unsplash.com/flagged/photo-1595514191830-3e96a518989b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="John Doe">
-                  <div class="author-info">
-                      <h3>John Doe</h3>
-                      <p>CEO, <span class="badge bg-warning">XYZ Company</span></p>
-                  </div>
-              </div>
+    <h1 class="text-center">Customer Reviews</h1>
+    <h5 class="text-center p-4 mb-5 text-muted">
+      What our customers are saying?
+    </h5>
+    <div class="testimonial-cards">
+      <div class="testimonial-card">
+        <div class="testimonial-content">
+          <p>
+            "Speechef has transformed my public speaking skills. I feel more
+            confident and prepared to address any audience."
+          </p>
+        </div>
+        <div class="testimonial-author">
+          <img
+            src="https://images.unsplash.com/flagged/photo-1595514191830-3e96a518989b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            alt="John Doe"
+          />
+          <div class="author-info">
+            <h3>John Doe</h3>
+            <p>CEO, <span class="badge bg-warning">XYZ Company</span></p>
           </div>
-          <div class="testimonial-card">
-              <div class="testimonial-content">
-                  <p>"I highly recommend Speechef to anyone looking to improve their communication abilities. It's been a game-changer for me."</p>
-              </div>
-              <div class="testimonial-author">
-                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Jane Smith">
-
-                  <div class="author-info">
-                      <h3>Jane Smith</h3>
-                      <p>Designer, <span class="badge bg-warning">ABC Inc</span></p>
-                  </div>
-              </div>
-          </div>
-          <div class="testimonial-card">
-              <div class="testimonial-content">
-                  <p>"Speechef helped me gain confidence in public speaking. It's an invaluable resource for anyone looking to improve their skills."</p>
-              </div>
-              <div class="testimonial-author">
-                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="David Johnson">
-                  <div class="author-info">
-                      <h3>David Johnson</h3>
-                      <p>Entrepreneur, <span class="badge bg-warning">RTX Corp</span></p>
-                  </div>
-              </div>
-          </div>
+        </div>
       </div>
+      <div class="testimonial-card">
+        <div class="testimonial-content">
+          <p>
+            "I highly recommend Speechef to anyone looking to improve their
+            communication abilities. It's been a game-changer for me."
+          </p>
+        </div>
+        <div class="testimonial-author">
+          <img
+            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            alt="Jane Smith"
+          />
+
+          <div class="author-info">
+            <h3>Jane Smith</h3>
+            <p>Designer, <span class="badge bg-warning">ABC Inc</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-content">
+          <p>
+            "Speechef helped me gain confidence in public speaking. It's an
+            invaluable resource for anyone looking to improve their skills."
+          </p>
+        </div>
+        <div class="testimonial-author">
+          <img
+            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            alt="David Johnson"
+          />
+          <div class="author-info">
+            <h3>David Johnson</h3>
+            <p>Entrepreneur, <span class="badge bg-warning">RTX Corp</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="customers-section">
   <div class="container">
-      <h1 class="mb-5">You're in good company</h1>
-      <div class="customer-logos">          
-          <i class="fab fa-facebook"></i>
-          <i class="fab fa-cc-visa"></i>
-          <i class="fab fa-cc-mastercard"></i>
-          <i class="fab fa-youtube-square"></i>
-          <i class="fab fa-yandex-international"></i>
-          <i class="fab fa-windows"></i>
-          <i class="fab fa-snapchat-square"></i>
-          <i class="fab fa-whatsapp"></i>
-          <i class="fab fa-wix"></i>
-          <i class="fab fa-vimeo"></i>
-          <i class="fab fa-yahoo"></i>
-          <i class="fab fa-ubuntu"></i>
-          <i class="fab fa-twitter"></i>
-      </div>
-      <div class="mt-3">
-        <button class="btn btn-warning rounded-pill p-3">Meet our customers</button>
-      </div>
+    <h1 class="mb-5">You're in good company</h1>
+    <div class="customer-logos">
+      <i class="fab fa-facebook"></i>
+      <i class="fab fa-cc-visa"></i>
+      <i class="fab fa-cc-mastercard"></i>
+      <i class="fab fa-youtube-square"></i>
+      <i class="fab fa-yandex-international"></i>
+      <i class="fab fa-windows"></i>
+      <i class="fab fa-snapchat-square"></i>
+      <i class="fab fa-whatsapp"></i>
+      <i class="fab fa-wix"></i>
+      <i class="fab fa-vimeo"></i>
+      <i class="fab fa-yahoo"></i>
+      <i class="fab fa-ubuntu"></i>
+      <i class="fab fa-twitter"></i>
+    </div>
+    <div class="mt-3">
+      <button class="btn btn-warning rounded-pill p-3">
+        Meet our customers
+      </button>
+    </div>
   </div>
 </div>
 
@@ -124,18 +152,40 @@
         <h3>Quick Links</h3>
         <ul>
           <li><a class="text-dark text-decoration-none" href="#">Home</a></li>
-          <li><a class="text-dark text-decoration-none" href="#">About Us</a></li>
-          <li><a class="text-dark text-decoration-none" href="#">Services</a></li>
-          <li><a class="text-dark text-decoration-none" href="#">Contact</a></li>
+          <li>
+            <a class="text-dark text-decoration-none" href="#">About Us</a>
+          </li>
+          <li>
+            <a class="text-dark text-decoration-none" href="#">Services</a>
+          </li>
+          <li>
+            <a class="text-dark text-decoration-none" href="#">Contact</a>
+          </li>
         </ul>
       </div>
       <div class="footer__col">
         <h3>Social Media</h3>
         <ul class="social-media">
-          <li><a href="#" class="text-decoration-none"><i class="fab fa-facebook"></i></a></li>
-          <li><a href="#" class="text-decoration-none"><i class="fab fa-twitter"></i></a></li>
-          <li><a href="#" class="text-decoration-none"><i class="fab fa-instagram"></i></a></li>
-          <li><a href="#" class="text-decoration-none"><i class="fab fa-linkedin"></i></a></li>
+          <li>
+            <a href="#" class="text-decoration-none"
+              ><i class="fab fa-facebook"></i
+            ></a>
+          </li>
+          <li>
+            <a href="#" class="text-decoration-none"
+              ><i class="fab fa-twitter"></i
+            ></a>
+          </li>
+          <li>
+            <a href="#" class="text-decoration-none"
+              ><i class="fab fa-instagram"></i
+            ></a>
+          </li>
+          <li>
+            <a href="#" class="text-decoration-none"
+              ><i class="fab fa-linkedin"></i
+            ></a>
+          </li>
         </ul>
       </div>
       <div class="footer__col">
