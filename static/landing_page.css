@@ -52,16 +52,19 @@
 .feature-wrapper{
   padding: 30px;
 }
+
 .features-section {
   /* background-color: #FADB43; */
   background: linear-gradient(to right, #FADB43, #fe9940);
-  color: #141c52;
-  padding: 100px 0;
+  color: #fff;
+  padding: 50px 0;
   text-align: center;
   border-radius: 20px;
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .custom-feature-card{
@@ -80,6 +83,7 @@
 
 .feature h3 {
   font-size: 1.8rem;
+  color: #141c52;
 }
 
 .feature p {
@@ -94,14 +98,13 @@
 }
 
 .testimonial-section {
-  /* background: linear-gradient(to left, #FADB43, #fe9940); */
   background-color: #ffffff;
   border-radius: 20px;
-  border-color: #f1a71c;
   padding: 50px 0;
-
 }
-
+.testimonial-section h1{
+  color: #141c52;;
+}
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -117,7 +120,8 @@
 .testimonial-card {
   flex: 0 0 calc(33.33% - 20px);
   /* Three cards in a row with spacing */
-  background-color: #ffffff;
+  background-color: #fff;
+  background: linear-gradient(to left, #FADB43, #fe9940);
   border-radius: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -126,7 +130,7 @@
 
 .testimonial-content p {
   font-size: 1.2rem;
-  color: #6c757d;
+  color: #141c52;
 }
 
 .testimonial-author {
@@ -145,17 +149,23 @@
 .author-info h3 {
   font-size: 1.2rem;
   margin-bottom: 5px;
+  color: #fff;
 }
 
 .author-info p {
   font-size: 1rem;
-  color: #6c757d;
+  color: #141c52;
 }
 
+.author-info span {
+  font-size: 1rem;
+  color: #fff;
+  background-color: #141c52;
+}
 /* Our Customers Section Styles */
 .customers-section {
-  background-color: #f8f9fa;
-  padding: 100px 0;
+  background-color: #fff;
+  padding: 50px 0;
   text-align: center;
 }
 
@@ -179,6 +189,10 @@
   color: #fff;
   padding: 50px 0;
   text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  border-radius: 20px 20px 0 0;
+
 }
 
 .footer p {
