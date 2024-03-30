@@ -1,19 +1,9 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block page_head %}
-<style>
-    .card {
-      border-radius: 15px;
-      border: none;
-    }
-    .sidebar {
-      background-color: #f8f9fa;
-      border-radius: 15px;
-      padding: 20px;
-    }
-    a {
-      text-decoration: none;
-    }    
-  </style>
+<link rel="stylesheet" href="{% static 'learn_index.css' %}"/>
+
 {% endblock page_head%}
 
 {% block page_title %}
@@ -27,23 +17,22 @@
       <div class="col-md-10">    
         <div class="row">
           {% for post in posts %}
-            <div class="col-md-4">
+            <div class="col-md-10">
               <div class="card mb-4 shadow">
                 <div class="card-body" style="max-height: 200px; overflow: hidden;">
                   <h5 class="card-title"><a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a></h5>     
-                  <button class="btn btn-primary rounded-pill"><a href="{% url 'learn_detail' post.pk %}" class="text-white"> Read more</a> </button>           
-                  <p class="card-text">{{ post.body | slice:":400" }}...</p>
+                  <!-- <button class="btn btn-primary rounded-pill gradient-button mt-2"><a href="{% url 'learn_detail' post.pk %}" class="text-white"> Read more</a> </button>            -->
+                  <!-- <p class="card-text">{{ post.body | slice:":400" }}...</p> -->
                 </div>
                 <div class="card-footer">
                   {% for category in post.categories.all %}    
-                    <span class="badge bg-success" ><a href="{% url 'learn_category' category.name %}" class="text-white">{{ category.name }}</a></span>                
+                    <span><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></span>                
                     <span class="badge bg-warning"> {{ post.created_on.date }}</span>
                   {% endfor %}
                 </div>                                
               </div>
             </div>
             {% endfor %}
-
         </div>
       </div>
       <div class="col-md-2">
