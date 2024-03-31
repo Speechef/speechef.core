@@ -1,11 +1,15 @@
-<!-- {% extends "base.html" %} -->
+{% extends "base.html" %}
 
 {% block title %}Logout{% endblock title %}
-<!-- {% block page_content %}
-    <h2>You have been logged out</h2>
-    <div class="border-top pt-3">
-        <small class="text-muted">
-            <a href="{% url 'login' %}">Log In Again</a>
-        </small>
-    </div>
-{% endblock page_content %} -->
+
+
+{% block page_content %}
+    <div class="container">
+    <h2>You have been logged out of speechef</h2>
+			<div class="border-top pt-3">
+					<small class="text-muted">
+							<a href="{% url 'login' %}">Log In Again</a>
+					</small>
+			</div>
+		</div>
+{% endblock page_content %}
