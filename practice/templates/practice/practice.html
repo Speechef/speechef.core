@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_head %}
+
+{% endblock page_head%}
+
+
+{% block page_title %}
+    <h2 class="text-center" style="padding: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"> Learn </h2>
+{% endblock page_title %}
+
+{% block page_content %}
+<!-- #     <h1>Practice</h1>
+#     <ul>
+#         {% for practice in practices %}
+#             <li>{{ practice.title }}</li>
+#         {% endfor %}
+#     </ul> -->
+
+  {% block posts %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-10">    
+        <div class="row">
+          {% for post in posts %}
+            <div class="col-md-10">
+              <div class="card mb-4 shadow">
+                <div class="card-body" style="max-height: 200px; overflow: hidden;">
+                  <h5 class="card-title"><a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a></h5>     
+                  <!-- <button class="btn btn-primary rounded-pill gradient-button mt-2"><a href="{% url 'learn_detail' post.pk %}" class="text-white"> Read more</a> </button>            -->
+                  <!-- <p class="card-text">{{ post.body | slice:":400" }}...</p> -->
+                </div>
+                <div class="card-footer">
+                  {% for category in post.categories.all %}    
+                    <span><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></span>                
+                    <span class="badge bg-warning"> {{ post.created_on.date }}</span>
+                  {% endfor %}
+                </div>                                
+              </div>
+            </div>
+            {% endfor %}
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="sidebar">
+          <h5>Categories</h5>
+          <ul class="list-unstyled">
+            <li><a href="{% url 'learn_index'%}">All categories</a></li>
+            {% for category in all_categories %}
+                <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</li>
+            {% endfor %}
+            
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+
+            <!-- Add more categories as needed -->
+          </ul>
+        </div>
+      </div>      
+    </div>
+  </div>
+  {% endblock posts %}
+  
+{% endblock page_content %}

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'home.apps.HomeConfig',
     'users.apps.UsersConfig',
     'learn.apps.LearnConfig',
+    'practice.apps.PracticeConfig',
     'crispy_forms',
     'crispy_bootstrap5',
     'django.contrib.admin',
