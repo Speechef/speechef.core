@@ -1,8 +1,40 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block page_title %}
-    <h2>Home Page</h2>
-{% endblock page_title %}
+{% block page_head %}
+<style>
+  .position-relative {
+    position: relative;
+  }
+
+  .centered {
+    position: absolute;
+    top: 50%;
+    left: 38%;
+    transform: translate(-50%, -50%);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  </style>
+{% endblock page_head %}
+
 
 {% block page_content %}
+  <div class="row">
+    <div class="col-md-12 position-relative">
+      <img src="{% static 'v1.jpg' %}" class="img-fluid" alt="Speechef">
+      <div class="centered text-white text-center">
+        <h1 class="display-4">Welcome to Speechef</h1>
+        <p class="lead">The best place to learn, practice and compete in public speaking.</p>
+        <p>Speechef is a platform that helps you to improve your public speaking skills. </p>
+          <p>You can learn from the best speakers, practice your skills and compete with others.</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'learn_index' %}" class="btn rounded-pill px-4 gradient-button">Learn</a>
+        <a href="{% url 'practice_index' %}" class="btn rounded-pill px-4 gradient-button">Practice</a>
+        {% else %}
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started</a>
+        <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">Log In</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 {% endblock page_content %}
