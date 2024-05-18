@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'learn.apps.LearnConfig',
     'practice.apps.PracticeConfig',
+    'jobs.apps.JobsConfig',
     'crispy_forms',
     'crispy_bootstrap5',
     'django.contrib.admin',

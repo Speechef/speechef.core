@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_head %}
+{% endblock page_head%}
+
+{% block page_content %}
+  {% block posts %}
+  <div class="container">
+  <h1>Jobs</h1>
+    <div class="row">
+      <div class="col-md-10">    
+        <div class="row">
+            <!-- {% for practice in practices %} -->
+            <div class="col-md-10">
+              <div class="card mb-4 shadow">
+                <div class="card-body">
+                  <h5 class="card-title"><a href="">Title 1 </a></h5>     
+                </div>
+                <div class="card-footer">
+                    <span class="badge bg-warning"> Date </span>
+                </div>                                
+              </div>
+            </div>
+            <!-- {% endfor %} -->
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="sidebar">
+          <h5>Categories</h5>
+          <ul class="list-unstyled">
+            <li><a href="{% url 'learn_index'%}">All categories</a></li>
+            {% for category in all_categories %}
+                <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</li>
+            {% endfor %}
+            
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+            <li><a href="#">Dummy category</a></li>
+
+            <!-- Add more categories as needed -->
+          </ul>
+        </div>
+      </div>      
+    </div>
+  </div>
+  {% endblock posts %}
+  
+{% endblock page_content %}
