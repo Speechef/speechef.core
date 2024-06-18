@@ -2,54 +2,45 @@
 {% load static %}
 
 {% block page_head %}
+<link rel="stylesheet" href="{% static 'jobs.css' %}">
 {% endblock page_head%}
 
 {% block page_content %}
-  {% block posts %}
-  <div class="container">
-  <h1>Jobs</h1>
+<div class="container">
     <div class="row">
-      <div class="col-md-10">    
-        <div class="row">
-            <!-- {% for practice in practices %} -->
-            <div class="col-md-10">
-              <div class="card mb-4 shadow">
-                <div class="card-body">
-                  <h5 class="card-title"><a href="">Title 1 </a></h5>     
-                </div>
-                <div class="card-footer">
-                    <span class="badge bg-warning"> Date </span>
-                </div>                                
-              </div>
-            </div>
-            <!-- {% endfor %} -->
+        <div class="col-md-12">
+            <h1>Jobs</h1>
+            <p>Here are the jobs available at Speechef</p>
         </div>
-      </div>
-      <div class="col-md-2">
-        <div class="sidebar">
-          <h5>Categories</h5>
-          <ul class="list-unstyled">
-            <li><a href="{% url 'learn_index'%}">All categories</a></li>
-            {% for category in all_categories %}
-                <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</li>
-            {% endfor %}
-            
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-
-            <!-- Add more categories as needed -->
-          </ul>
-        </div>
-      </div>      
     </div>
-  </div>
-  {% endblock posts %}
-  
+    <div class="row">
+        {% for job in jobs %}
+        <div class="col-md-3 mb-4">
+            <div class="job-card rounded">
+                <div class="job-card-body p-3 job-bg">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="date-pill">{{ job.date }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0 flex-grow-1">{{ job.title }}</h5>
+                        <img src="{% static 'v2.png' %}" alt="{{ job.company }} logo" class="job-logo">
+                    </div>
+                    <h6 class="text-muted mb-3">{{ job.company }}</h6>
+                    <div class="d-flex flex-wrap mb-3">
+                        <span class="badge rounded-pill me-1">{{ job.job_type }}</span>
+                        <span class="badge rounded-pill me-1">{{ job.level }}</span>
+                        <span class="badge rounded-pill me-1">{{ job.location_type }}</span>
+                        <span class="badge rounded-pill me-1">{{ job.schedule }}</span>
+                    </div>
+                </div>
+                <div class="job-card-footer d-flex justify-content-between align-items-center p-3 mt-2">
+                    <small>₹{{ job.rate }} Lacs</small>
+                    <small class="text-muted">{{ job.location }}</small>
+                    <a href="{{ job.url }}" class="btn btn-sm btn-outline-dark rounded-pill">Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock page_content %}
