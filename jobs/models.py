@@ -9,6 +9,7 @@ class Jobs(models.Model):
     company = models.CharField(max_length=100, blank=True)
     # logo = models.ImageField(upload_to='images/')
     job_type = models.CharField(max_length=100 , blank=True)
+    job_rate = models.IntegerField(blank=True)
     location = models.CharField(max_length=100, blank=True)
     url = models.URLField(blank=True)
     

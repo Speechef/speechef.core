@@ -1,35 +1,28 @@
 .job-card {
-    border: 1px solid #162b99;
+    border: 1px solid #141c52;
     overflow: hidden; /* Ensures that child elements don't exceed border radius */
     box-shadow: 0 2px 4px rgba(57, 156, 95, 0.1);
-    height: 280px;
-    border-radius: 25px;
+    height: 300px;
+    border-radius: 20px;
     display: flex;
     flex-direction: column; /* Make the card a flex container with column layout */
 }
 
 .job-card-body {
     padding: 20px;
-    border: 1px solid #1bae31;
+    /* border: 1px solid #1bae31; */
     flex: 1 1 auto; /* Allow the body to take up remaining space but not push footer */
     overflow: auto; /* Add scroll if content overflows */
 }
 
 .job-card-footer {
-    background-color: #fff;
-    padding: 15px;
-    border: 1px solid #d71717;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0; /* Prevent footer from shrinking */
+    padding: 10px 20px 10px 20px;
 }
 
 .job-bg {
-    background-color: #FFEFD5; /* Set a consistent background color */
-    margin: 5px;
-    /* Make border radius responsive for mobile */
-    border-radius: 15px;
+    background: linear-gradient(to right, #FADB43, #fe9940);
+    margin: 8px;
+    border-radius: 20px;
 }
 
 .date-pill {
@@ -37,14 +30,16 @@
     border-radius: 50px;
     padding: 0.25em 0.75em;
     font-size: 0.75rem;
-    color: #333;
+    color: #141c52;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .job-card .job-logo {
     width: 24px;
     height: 24px;
-    margin-left: 8px; /* Ensure space between the logo and title */
+    margin: 0px 5px 0px 5px; /* Ensure space between the logo and title */
+    border-radius: 50%;
+    transform: scale(1.5);
 }
 
 .job-card h5 {
@@ -54,11 +49,14 @@
 
 .job-card h6 {
     font-size: 1rem;
-    color: #666;
+    color: #141c52;
+
 }
 
 .job-card .badge {
-    background-color: #c13131;
+    background-color: transparent;
+    border: 1px solid #141c52;
+    color: #141c52;
     font-size: 0.75rem;
 }
 
