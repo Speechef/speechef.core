@@ -1,27 +1,66 @@
 .card {
     border-radius: 15px;
+    margin: 0 0 15px 0;
+    flex: 1 1 auto;
+    overflow: auto;
     border: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
+.card-body {
+    /* max-height: 200px;  */
+    overflow: hidden;
+    background: linear-gradient(to right, #FADB43, #fe9940);
+    border-radius: 15px 0 0 0;
+}
+
 .card-title {
-    font-size: 1.5rem;
-    font-weight: 500;
-    text-decoration: none;
-    color: #141c52;
-}
-
-.sidebar {
-    background-color: #f8f9fa;
-    border-radius: 15px;
-    padding: 20px;
-    gap: 10px;
-}
-
-.card-title a {
     text-decoration: none;
     color: #141c52;
 }
 
 a{
-    text-decoration: none;
+    text-decoration: none;  /* for links to be shown without underline */
     color: #141c52;
+}
+
+.sidebar {
+    background-color: #141c52;
+    border-radius: 15px;
+    padding: 10px;
+    height: 100%;
+    position: sticky;
+    width: 100%;   
+    color: #fff;
+}
+
+.sidebar h5 {
+    color: #fe9940;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.sidebar a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    color: #fe9940;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 15px;
+}
+
+.list-unstyled li {
+    padding: 10px;
+    border-bottom: 1px solid #fff;
+}
+
+.card-footer {
+    background: transparent;
+    border: none;
+    margin: none;
 }

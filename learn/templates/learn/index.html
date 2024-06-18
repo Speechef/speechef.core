@@ -14,19 +14,17 @@
   {% block posts %}
   <div class="container">
     <div class="row">
-      <div class="col-md-10">    
+      <div class="col-md-8">    
         <div class="row">
           {% for post in posts %}
-            <div class="col-md-10">
-              <div class="card mb-4 shadow">
-                <div class="card-body" style="max-height: 200px; overflow: hidden;">
-                  <h5 class="card-title"><a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a></h5>     
-                  <!-- <button class="btn btn-primary rounded-pill gradient-button mt-2"><a href="{% url 'learn_detail' post.pk %}" class="text-white"> Read more</a> </button>            -->
-                  <!-- <p class="card-text">{{ post.body | slice:":400" }}...</p> -->
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title"><a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a></h6>
                 </div>
                 <div class="card-footer">
                   {% for category in post.categories.all %}    
-                    <span><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></span>                
+                    <span class="text-muted"><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></span>                
                     <span class="badge bg-warning"> {{ post.created_on.date }}</span>
                   {% endfor %}
                 </div>                                
@@ -35,26 +33,14 @@
             {% endfor %}
         </div>
       </div>
-      <div class="col-md-2">
+      <div class="col-md-4 pb-3">
         <div class="sidebar">
           <h5>Categories</h5>
           <ul class="list-unstyled">
             <li><a href="{% url 'learn_index'%}">All categories</a></li>
             {% for category in all_categories %}
-                <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</li>
+              <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></li>
             {% endfor %}
-            
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-
-            <!-- Add more categories as needed -->
           </ul>
         </div>
       </div>      
