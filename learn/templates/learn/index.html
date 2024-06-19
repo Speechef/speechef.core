@@ -25,7 +25,7 @@
                 <div class="card-footer">
                   {% for category in post.categories.all %}    
                     <span class="text-muted"><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></span>                
-                    <span class="badge bg-warning"> {{ post.created_on.date }}</span>
+                    <span class="badge"> {{ post.created_on.date }}</span>
                   {% endfor %}
                 </div>                                
               </div>

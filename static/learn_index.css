@@ -64,3 +64,11 @@ a{
     border: none;
     margin: none;
 }
+
+.badge {
+    background-color: #141c52;
+    color: #fff;
+    border-radius: 20px;
+    padding: 5px;
+    /* font-size: 0.8rem; */
+}
