@@ -4,34 +4,66 @@
     flex: 1 1 auto;
     overflow: auto;
     border: none;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #e8f4fa;
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(to right, #FADB43, #fe9940);
 }
 
 .card-body {
-    /* max-height: 200px;  */
     overflow: hidden;
-    background: linear-gradient(to right, #FADB43, #fe9940);
-    border-radius: 15px 0 0 0;
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .card-title {
     text-decoration: none;
     color: #141c52;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
 }
 
-a{
-    text-decoration: none;  /* for links to be shown without underline */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    border-color: none;
+}
+
+.card-footer {
+    background: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+a {
+    text-decoration: none;
     color: #141c52;
 }
 
+a:hover {
+    color: #fe9940;
+}
+
 .sidebar {
-    background-color: #141c52;
+    background-color: #e8f4fa;
     border-radius: 15px;
-    padding: 10px;
+    padding: 20px;
     height: 100%;
     position: sticky;
-    width: 100%;   
-    color: #fff;
+    width: 100%;
+    color: #141c52;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar h5 {
@@ -41,7 +73,7 @@ a{
 }
 
 .sidebar a {
-    color: #fff;
+    color: #000;
     text-decoration: none;
 }
 
@@ -51,18 +83,17 @@ a{
 
 .sidebar ul {
     list-style-type: none;
-    padding: 15px;
+    padding: 0;
 }
 
 .list-unstyled li {
     padding: 10px;
-    border-bottom: 1px solid #fff;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.card-footer {
-    background: transparent;
-    border: none;
-    margin: none;
+.list-unstyled li:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
 }
 
 .badge {
@@ -70,5 +101,19 @@ a{
     color: #fff;
     border-radius: 20px;
     padding: 5px;
-    /* font-size: 0.8rem; */
+    margin-left: auto;
+}
+
+.badge-status {
+    background-color: #28a745; /* Green for completed */
+    color: #fff;
+    border-radius: 20px;
+    padding: 5px;
+}
+
+.badge-status.pending {
+    background-color: #dc3545; /* Red for pending */
+    color: #fff;
+    border-radius: 20px;
+    padding: 5px;
 }
