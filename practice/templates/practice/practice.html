@@ -2,54 +2,96 @@
 {% load static %}
 
 {% block page_head %}
-{% endblock page_head%}
+  <link rel="stylesheet" href="{% static 'practice_page.css' %}"/>
+{% endblock page_head %}
 
 {% block page_content %}
-  {% block posts %}
+<div class="practice-page">
   <div class="container">
-  <h1>Practice</h1>
-    <div class="row">
-      <div class="col-md-10">    
-        <div class="row">
-            <!-- {% for practice in practices %} -->
-            <div class="col-md-10">
-              <div class="card mb-4 shadow">
-                <div class="card-body">
-                  <h5 class="card-title"><a href="">Title 1 </a></h5>     
-                </div>
-                <div class="card-footer">
-                    <span class="badge bg-warning"> Date </span>
-                </div>                                
-              </div>
-            </div>
-            <!-- {% endfor %} -->
+    <div class="section">
+      <h2 class="section-title">Language Learning Games</h2>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card game-thumbnail">
+            <img src="{% static 'images/game1.jpg' %}" alt="Game 1">
+            <h5>Guess the Word</h5>
+            <p>Improve your vocabulary by guessing the meaning of random words.</p>
+            <button class="btn rounded-pill gradient-button">Play Now</button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card game-thumbnail">
+            <img src="{% static 'images/game2.jpg' %}" alt="Game 2">
+            <h5>Memory Match</h5>
+            <p>Enhance your memory and vocabulary by matching words with their meanings.</p>
+            <button class="btn rounded-pill gradient-button">Play Now</button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card game-thumbnail">
+            <img src="{% static 'images/game3.jpg' %}" alt="Game 3">
+            <h5>Word Scramble</h5>
+            <p>Test your language skills by unscrambling words in the shortest time.</p>
+            <button class="btn rounded-pill gradient-button">Play Now</button>
+          </div>
         </div>
       </div>
-      <div class="col-md-2">
-        <div class="sidebar">
-          <h5>Categories</h5>
-          <ul class="list-unstyled">
-            <li><a href="{% url 'learn_index'%}">All categories</a></li>
-            {% for category in all_categories %}
-                <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</li>
-            {% endfor %}
-            
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-            <li><a href="#">Dummy category</a></li>
-
-            <!-- Add more categories as needed -->
-          </ul>
+    </div>
+    <div class="section">
+      <h2 class="section-title">Exam Preparation</h2>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card exam-thumbnail">
+            <img src="{% static 'images/ielts.jpg' %}" alt="IELTS">
+            <h5>IELTS Preparation</h5>
+            <p>Get ready for the IELTS exam with our comprehensive preparation materials.</p>
+            <button class="btn rounded-pill gradient-button">Start Learning</button>
+          </div>
         </div>
-      </div>      
+        <div class="col-md-4">
+          <div class="card exam-thumbnail">
+            <img src="{% static 'images/toefl.jpg' %}" alt="TOEFL">
+            <h5>TOEFL Preparation</h5>
+            <p>Prepare for the TOEFL exam with our extensive resources and practice tests.</p>
+            <button class="btn rounded-pill gradient-button">Start Learning</button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card exam-thumbnail">
+            <img src="{% static 'images/gre.jpg' %}" alt="GRE">
+            <h5>GRE Preparation</h5>
+            <p>Master the GRE exam with our targeted study guides and practice questions.</p>
+            <button class="btn rounded-pill gradient-button">Start Learning</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h2 class="section-title">Learning Tips</h2>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card tip-thumbnail">
+            <img src="{% static 'images/tip1.jpg' %}" alt="Tip 1">
+            <h5>Write Things Down</h5>
+            <p>Improve your language retention by writing things down by hand.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card tip-thumbnail">
+            <img src="{% static 'images/tip2.jpg' %}" alt="Tip 2">
+            <h5>Get Musical</h5>
+            <p>Learn a new language through music and improve your pronunciation and vocabulary.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card tip-thumbnail">
+            <img src="{% static 'images/tip3.jpg' %}" alt="Tip 3">
+            <h5>Watch TV Shows</h5>
+            <p>Enhance your listening skills by watching TV shows in your new language.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  {% endblock posts %}
-  
+</div>
 {% endblock page_content %}
