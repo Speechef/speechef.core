@@ -3,38 +3,146 @@
 
 {% block page_head %}
 <style>
-  .position-relative {
-    position: relative;
+  .dashboard {
+    background-color: #fff;
+    padding: 20px;
+    margin-top: 0;
+    padding-top: 0;    
   }
-
-  .centered {
-    position: absolute;
-    top: 50%;
-    left: 38%;
-    transform: translate(-50%, -50%);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  .continue-learning-section,
+  .upload-section,
+  .video-section,
+  .review-section,
+  .streak-section,
+  .ai-section,
+  .expert-section {
+    background-color: #e8f4fa;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 8px;
   }
-  </style>
+  .streak-section .streak-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 3px;
+  }
+  .streak-section .streak-circle.filled {
+    background-color: #ff6f61;
+  }
+  .streak-section .streak-circle.empty {
+    background-color: #ccc;
+  }
+  .video-thumbnail {
+    background-color: #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .btn-link {
+    display: block;
+    text-align: center;
+  }
+</style>
 {% endblock page_head %}
 
-
 {% block page_content %}
-  <div class="row">
-    <div class="col-md-12 position-relative">
-      <img src="{% static 'v1.jpg' %}" class="img-fluid" alt="Speechef">
-      <div class="centered text-white text-center">
-        <h1 class="display-4">Welcome to Speechef</h1>
-        <p class="lead">The best place to learn, practice and compete in public speaking.</p>
-        <p>Speechef is a platform that helps you to improve your public speaking skills. </p>
-          <p>You can learn from the best speakers, practice your skills and compete with others.</p>
-        {% if user.is_authenticated %}
-        <a href="{% url 'learn_index' %}" class="btn rounded-pill px-4 gradient-button">Learn</a>
-        <a href="{% url 'practice_index' %}" class="btn rounded-pill px-4 gradient-button">Practice</a>
-        {% else %}
-        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started</a>
-        <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">Log In</a>
-        {% endif %}
+<div class="dashboard">
+  <h5 style="margin-left: 20px;">Continue Your Learning</h5>
+  <div class="continue-learning-section">
+    <div class="row">
+      <div class="col-md-12 text-center">
+        <p>3 Free Reviews Left, earn more by helping others</p>
+        <button class="btn btn-warning">Upload Video</button>
       </div>
     </div>
   </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <h5 style="margin: 20px;">Your Videos <a href="#" class="float-right"></a></h5>
+      <div class="video-section">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="video-thumbnail">
+              <video width="100%" controls>
+                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <a href="#" class="btn btn-link">Feedback</a>
+          </div>
+          <div class="col-md-4">
+            <div class="video-thumbnail">
+              <video width="100%" controls>
+                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <a href="#" class="btn btn-link">Feedback</a>
+          </div>
+          <div class="col-md-4">
+            <div class="video-thumbnail">
+              <video width="100%" controls>
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <a href="#" class="btn btn-link">Feedback</a>
+          </div>
+        </div>
+      </div>
+      <h5 style="margin: 20px;">Please Review <a href="#" class="float-right"></a></h5>
+      <div class="review-section">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="video-thumbnail">
+              <video width="100%" controls>
+                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="video-thumbnail">
+              <video width="100%" controls>
+                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h5 style="margin: 20px;">Quick Links</h5>
+      <div class="streak-section text-center">
+        <h5>Daily Streak</h5>
+        <div>
+          <div class="streak-circle filled"></div>
+          <div class="streak-circle filled"></div>
+          <div class="streak-circle filled"></div>
+          <div class="streak-circle empty"></div>
+          <div class="streak-circle empty"></div>
+        </div>
+      </div>
+      <div class="ai-section text-center">
+        <button class="btn rounded-pill gradient-button">Talk with our AI bot</button>
+      </div>
+
+      <h5 style="margin: 20px;">Experts</h5>
+      <div class="expert-section">
+        <div class="expert-thumbnail mb-3">
+          <img src="https://via.placeholder.com/90" alt="Expert Thumbnail" class="img-fluid">
+          <button class="btn rounded-pill gradient-button">Talk Now</button>
+        </div>
+        <div class="expert-thumbnail mb-3">
+          <img src="https://via.placeholder.com/90" alt="Expert Thumbnail" class="img-fluid">
+          <button class="btn rounded-pill gradient-button">Talk Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock page_content %}
