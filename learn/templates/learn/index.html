@@ -3,49 +3,58 @@
 
 {% block page_head %}
 <link rel="stylesheet" href="{% static 'learn_index.css' %}"/>
-
-{% endblock page_head%}
+{% endblock page_head %}
 
 {% block page_title %}
-    <h2 class="text-center" style="padding: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"> Learn </h2>
+<h2 class="text-center" style="padding: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"> Learn </h2>
 {% endblock page_title %}
 
 {% block page_content %}
   {% block posts %}
   <div class="container">
     <div class="row">
-      <div class="col-md-8">    
+      <div class="col-md-8">
         <div class="row">
           {% for post in posts %}
             <div class="col-md-12">
-              <div class="card">
+              <div class="card learn-card">
                 <div class="card-body">
-                  <h6 class="card-title"><a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a></h6>
+                  <div class="card-header">
+                    <h6 class="card-title">
+                      <a href="{% url 'learn_detail' post.pk %}">{{ post.title }}</a>
+                    </h6>
+                    <span class="badge badge-status {{ post.completed|yesno:'completed,pending' }}">{{ post.completed|yesno:"Completed,Pending" }}</span>
+                  </div>
                 </div>
                 <div class="card-footer">
-                  {% for category in post.categories.all %}    
-                    <span class="text-muted"><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></span>                
-                    <span class="badge"> {{ post.created_on.date }}</span>
+                  {% for category in post.categories.all %}
+                    <span class="text-muted"><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></span>
+                    <small class="text-muted">{{ post.created_on.date }}</small>
                   {% endfor %}
-                </div>                                
+                </div>
               </div>
             </div>
-            {% endfor %}
+          {% endfor %}
         </div>
       </div>
       <div class="col-md-4 pb-3">
         <div class="sidebar">
-          <h5>Categories</h5>
           <ul class="list-unstyled">
-            <li><a href="{% url 'learn_index'%}">All categories</a></li>
+              <h6> Status </h6>
+              <li><a href="{% url 'learn_category' 'Completed' %}">Completed</a></li>
+              <li><a href="{% url 'learn_category' 'Pending' %}">Pending</a></li>
+          </ul>
+          <ul class="list-unstyled">
+            <h6> Categories </h6>
+            <li><a href="{% url 'learn_index' %}">All categories</a></li>
             {% for category in all_categories %}
-              <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a></li>
+              <li><a href="{% url 'learn_category' category.name %}">{{ category.name }}</a>
+              </li>
             {% endfor %}
           </ul>
         </div>
-      </div>      
+      </div>
     </div>
   </div>
   {% endblock posts %}
-  
 {% endblock page_content %}
