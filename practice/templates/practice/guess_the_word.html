@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_head %}
+<link rel="stylesheet" href="{% static 'practice_page.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<div class="guess-game-wrapper">
+  <h2>Guess the Meaning</h2>
+  <div class="question-word">{{ question.word }}</div>
+  <form method="post">
+    {% csrf_token %}
+    {% for option in options %}
+      <label>
+        <div class="option-card">
+          <input type="radio" name="option" value="{{ option }}" required hidden>
+          {{ option }}
+        </div>
+      </label>
+    {% endfor %}
+    <button type="submit" class="btn rounded-pill gradient-button">Submit Answer</button>
+  </form>
+</div>
+{% endblock %}

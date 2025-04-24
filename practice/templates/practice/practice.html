@@ -16,7 +16,11 @@
             <img src="{% static 'images/game1.jpg' %}" alt="Game 1">
             <h5>Guess the Word</h5>
             <p>Improve your vocabulary by guessing the meaning of random words.</p>
-            <button class="btn rounded-pill gradient-button">Play Now</button>
+            <button class="btn rounded-pill gradient-button">
+              <a href="{% url 'guess_the_word' %}" class="btn ...">
+                Play Now
+              </a>
+            </button>
           </div>
         </div>
         <div class="col-md-4">

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_head %}
+<link rel="stylesheet" href="{% static 'practice_page.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<div class="guess-game-wrapper">
+  <h2>Result</h2>
+  <div class="question-word">{{ question.word }}</div>
+  <p><strong>Your Answer:</strong> {{ selected }}</p>
+
+  {% if is_correct %}
+    <p style="color: green; font-weight: bold;">🎉 Correct! Great job!</p>
+  {% else %}
+    <p style="color: red; font-weight: bold;">❌ Oops! Correct Answer: {{ question.correct_meaning }}</p>
+  {% endif %}
+
+  <a href="{% url 'guess_the_word' %}" class="btn rounded-pill gradient-button mt-3">Try Another</a>
+</div>
+{% endblock %}
