@@ -1,6 +1,6 @@
 # F1.1 — Next.js Frontend Setup
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The current Django template approach limits interactivity for games (card flipping,
