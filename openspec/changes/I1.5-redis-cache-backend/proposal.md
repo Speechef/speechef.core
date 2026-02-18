@@ -1,7 +1,7 @@
 # I1.5 — Redis Cache Backend
 
 ## Status
-Unblocked (requires I1.3 — Docker/Redis running)
+Done
 
 ## Problem
 Redis is running in docker-compose but Django has no CACHES configuration pointing to it.
