@@ -1,7 +1,7 @@
 # I1.7 — Cloudflare R2 Media Storage
 
 ## Status
-Unblocked (requires I1.1 — env config in place)
+Done
 
 ## Problem
 Profile images and future media files are stored locally on the server filesystem.
