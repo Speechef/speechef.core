@@ -38,6 +38,38 @@ services:
       redis:
         condition: service_started
 
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A speechef worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=speechef.settings.development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A speechef beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./backend:/app
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=speechef.settings.development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   frontend:
     image: node:20-alpine
     working_dir: /app

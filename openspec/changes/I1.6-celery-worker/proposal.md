@@ -1,7 +1,7 @@
 # I1.6 — Celery Worker
 
 ## Status
-Unblocked (requires I1.3 — Redis running as broker)
+Done
 
 ## Problem
 The architecture diagram includes a Celery Worker service for:
