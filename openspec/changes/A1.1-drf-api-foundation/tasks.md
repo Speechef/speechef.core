@@ -1,15 +1,10 @@
 # A1.1 Tasks
 
-- [ ] `pip install djangorestframework djangorestframework-simplejwt django-cors-headers`
-- [ ] Update `requirements.txt`
-- [ ] Add to `INSTALLED_APPS`: `'rest_framework'`, `'rest_framework_simplejwt'`, `'corsheaders'`
-- [ ] Add `CorsMiddleware` to `MIDDLEWARE` (before `CommonMiddleware`)
-- [ ] Add DRF settings to `settings.py`:
-      REST_FRAMEWORK = {
-          'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
-          'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
-      }
-- [ ] Create `speechef/api_urls.py` with the API root router
-- [ ] Include in `speechef/urls.py`: `path('api/v1/', include('speechef.api_urls'))`
-- [ ] Add JWT token endpoints to `api_urls.py`
-- [ ] Verify `/api/v1/` returns 200 and `/api/v1/token/` accepts credentials
+- [x] Add `djangorestframework==3.14.0` and `djangorestframework-simplejwt==5.3.1` to `requirements.txt`
+- [x] Add `rest_framework` and `rest_framework_simplejwt` to `INSTALLED_APPS` in `base.py`
+- [x] Add `REST_FRAMEWORK` settings to `base.py` (JWT auth, IsAuthenticatedOrReadOnly, JSON renderer)
+- [x] Add `SIMPLE_JWT` settings to `base.py` (60min access, 7d refresh, rotate)
+- [x] Enable browsable API renderer in `development.py` only
+- [x] Create `backend/speechef/api_urls.py` with `api_root` view and JWT token endpoints
+- [x] Wire `path('api/v1/', include('speechef.api_urls'))` into root `urls.py`
+- [x] `python manage.py check` — 0 issues

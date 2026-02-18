@@ -13,3 +13,9 @@ DATABASES = {
 }
 
 CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
+
+# Browsable API in development
+REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
+    'rest_framework.renderers.JSONRenderer',
+    'rest_framework.renderers.BrowsableAPIRenderer',
+]

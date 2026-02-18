@@ -1,6 +1,6 @@
 # A1.1 — DRF API Foundation
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The project has no REST API. Adding Django REST Framework (DRF) enables:

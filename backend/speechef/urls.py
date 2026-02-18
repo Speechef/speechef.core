@@ -31,4 +31,5 @@ urlpatterns = [
     path("learn/", include("learn.urls")),
     path("practice/", include("practice.urls")),
     path("jobs/", include("jobs.urls")),
+    path('api/v1/', include('speechef.api_urls')),
 ]
