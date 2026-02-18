@@ -1,7 +1,5 @@
 from django.db import models
 
-# Create your models here.
-
 class Practice(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
@@ -24,3 +22,17 @@ class WordQuestion(models.Model):
     def __str__(self):
         return self.word
 
+class WordScramble(models.Model):
+    word = models.CharField(max_length=100)
+    scrambled_word = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.word
+
+#TODO
+class MemoryMatch(models.Model):
+    image = models.ImageField(upload_to='memory_match_images/')
+    description = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.description

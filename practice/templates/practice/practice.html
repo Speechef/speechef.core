@@ -36,7 +36,11 @@
             <img src="{% static 'images/game3.jpg' %}" alt="Game 3">
             <h5>Word Scramble</h5>
             <p>Test your language skills by unscrambling words in the shortest time.</p>
-            <button class="btn rounded-pill gradient-button">Play Now</button>
+            <button class="btn rounded-pill gradient-button">
+              <a href="{% url 'word_scramble' %}" class="btn ...">
+                Play Now
+              </a>
+            </button>
           </div>
         </div>
       </div>
