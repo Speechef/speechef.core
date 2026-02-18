@@ -10,6 +10,16 @@ DATABASES = {'default': dj_database_url.config(default=config('DATABASE_URL'))}
 
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=lambda v: [s.strip() for s in v.split(',')])
 
+# WhiteNoise manifest storage for production static files
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
 # Cloudflare R2 media storage (active only when R2_ACCESS_KEY_ID is set)
 if R2_ACCESS_KEY_ID:
     STORAGES = {

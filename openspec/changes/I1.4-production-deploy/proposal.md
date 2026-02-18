@@ -1,6 +1,6 @@
 # I1.4 — Production Deployment (Railway)
 
-## Status: Blocked (requires I1.1, I1.2, I1.3)
+## Status: Done (CI/CD automated; Railway deploy requires manual dashboard steps — see tasks.md)
 
 ## Why
 The app needs to be publicly accessible. Railway.app is recommended because:
