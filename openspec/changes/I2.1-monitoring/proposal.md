@@ -1,6 +1,6 @@
 # I2.1 — Monitoring + Error Tracking
 
-## Status: Blocked (requires I1.4)
+## Status: Done (Sentry + logging coded; UptimeRobot is a manual dashboard step — see tasks.md)
 
 ## Why
 Without monitoring, production errors are invisible. Users experience broken features
