@@ -1,6 +1,6 @@
 # I1.1 — Environment Configuration (.env)
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 `SECRET_KEY` is hardcoded in `settings.py` and exposed in version control.
@@ -21,8 +21,8 @@ separation between development and production configuration.
 - MEDIA storage credentials (for Phase B1.3)
 
 ## Acceptance Criteria
-- [ ] No secrets in `settings.py` or any tracked file
-- [ ] `.env` added to `.gitignore`
-- [ ] `.env.example` committed with placeholder values
-- [ ] App runs correctly with `.env` file in place
-- [ ] `python manage.py check --deploy` passes all critical checks
+- [x] No secrets in `settings.py` or any tracked file
+- [x] `.env` added to `.gitignore`
+- [x] `.env.example` committed with placeholder values
+- [x] App runs correctly with `.env` file in place
+- [x] `python manage.py check --deploy` passes all critical checks

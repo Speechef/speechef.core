@@ -1,6 +1,6 @@
 # I1.2 — Switch to PostgreSQL
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 SQLite is not suitable for production:
@@ -16,7 +16,7 @@ SQLite is not suitable for production:
 - Migrate existing data (for local dev convenience)
 
 ## Acceptance Criteria
-- [ ] Local development uses PostgreSQL via Docker (I1.3)
-- [ ] All migrations apply cleanly on PostgreSQL
-- [ ] No SQLite-specific queries remain in the codebase
-- [ ] `DATABASE_URL` env variable controls the connection
+- [x] Local development uses PostgreSQL via Docker (I1.3)
+- [x] All migrations apply cleanly on PostgreSQL
+- [x] No SQLite-specific queries remain in the codebase
+- [x] `DATABASE_URL` env variable controls the connection

@@ -1,6 +1,6 @@
 # I1.3 — Docker + Docker Compose
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 - "Works on my machine" problem eliminated
@@ -12,11 +12,14 @@
 - `db` — PostgreSQL 16
 - `redis` — Redis 7 (for Celery + caching later)
 - `web` — Django app
+- `celery` — Celery worker
+- `celery-beat` — Celery scheduler
+- `frontend` — Next.js dev server
 
 ## Acceptance Criteria
-- [ ] `docker compose up` starts the full stack
-- [ ] `docker compose run web python manage.py migrate` works
-- [ ] Django app accessible at `http://localhost:8000`
-- [ ] PostgreSQL data persisted via named volume
-- [ ] `.env` file used by Docker Compose for secrets
-- [ ] `Dockerfile` suitable for production build (no dev tools)
+- [x] `docker compose up` starts the full stack
+- [x] `docker compose run web python manage.py migrate` works
+- [x] Django app accessible at `http://localhost:8000`
+- [x] PostgreSQL data persisted via named volume
+- [x] `.env` file used by Docker Compose for secrets
+- [x] `Dockerfile` suitable for production build (no dev tools)
