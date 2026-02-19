@@ -6,19 +6,25 @@
 
 {% block page_content %}
 <div class="guess-game-wrapper">
-  <h2>Guess the Meaning</h2>
-  <div class="question-word">{{ question.word }}</div>
-  <form method="post">
-    {% csrf_token %}
-    {% for option in options %}
-      <label>
-        <div class="option-card">
-          <input type="radio" name="option" value="{{ option }}" required hidden>
-          {{ option }}
-        </div>
-      </label>
-    {% endfor %}
-    <button type="submit" class="btn rounded-pill gradient-button">Submit Answer</button>
-  </form>
+  {% if no_questions %}
+    <h2>Guess the Meaning</h2>
+    <p>No questions are available yet. Please check back later.</p>
+    <a href="{% url 'practice_index' %}" class="btn rounded-pill gradient-button">Back to Practice</a>
+  {% else %}
+    <h2>Guess the Meaning</h2>
+    <div class="question-word">{{ question.word }}</div>
+    <form method="post">
+      {% csrf_token %}
+      {% for option in options %}
+        <label>
+          <div class="option-card">
+            <input type="radio" name="option" value="{{ option }}" required hidden>
+            {{ option }}
+          </div>
+        </label>
+      {% endfor %}
+      <button type="submit" class="btn rounded-pill gradient-button">Submit Answer</button>
+    </form>
+  {% endif %}
 </div>
 {% endblock %}

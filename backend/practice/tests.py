@@ -12,3 +12,9 @@ class PracticeViewTest(TestCase):
         # word_scramble handles empty WordQuestion gracefully
         response = self.client.get(reverse('word_scramble'))
         self.assertEqual(response.status_code, 200)
+
+    def test_guess_the_word_empty_queryset_returns_200(self):
+        # guess_the_word must not 500 when WordQuestion table is empty
+        response = self.client.get(reverse('guess_the_word'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No questions are available yet')

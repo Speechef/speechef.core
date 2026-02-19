@@ -10,8 +10,12 @@ def practice_index(request):
 
 
 def guess_the_word(request):
-    question = random.choice(WordQuestion.objects.all())
-    
+    questions = list(WordQuestion.objects.all())
+    if not questions:
+        return render(request, 'practice/guess_the_word.html', {'no_questions': True})
+
+    question = random.choice(questions)
+
     if request.method == 'POST':
         selected = request.POST.get('option')
         is_correct = (selected == question.correct_meaning)
