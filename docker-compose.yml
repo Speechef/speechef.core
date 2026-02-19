@@ -32,6 +32,8 @@ services:
     env_file: .env
     environment:
       - DJANGO_SETTINGS_MODULE=speechef.settings.development
+      - DATABASE_URL=postgres://speechef:speechef@db:5432/speechef
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
@@ -48,6 +50,8 @@ services:
     env_file: .env
     environment:
       - DJANGO_SETTINGS_MODULE=speechef.settings.development
+      - DATABASE_URL=postgres://speechef:speechef@db:5432/speechef
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
@@ -64,6 +68,8 @@ services:
     env_file: .env
     environment:
       - DJANGO_SETTINGS_MODULE=speechef.settings.development
+      - DATABASE_URL=postgres://speechef:speechef@db:5432/speechef
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
