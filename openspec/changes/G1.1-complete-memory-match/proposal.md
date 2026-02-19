@@ -1,6 +1,6 @@
 # G1.1 — Complete Memory Match Game
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The Practice page shows a "Memory Match" card with a "Play Now" button that leads nowhere.
@@ -21,8 +21,8 @@ templates need to be wired up.
 - Track attempts and time; show result on completion
 
 ## Acceptance Criteria
-- [ ] Memory Match accessible via URL
-- [ ] Cards display and flip correctly
-- [ ] Match/mismatch logic works
-- [ ] Result page shows attempts and score
-- [ ] "Play Now" button on practice page navigates to the game
+- [x] Memory Match accessible via URL
+- [x] Cards display and flip correctly
+- [x] Match/mismatch logic works
+- [x] Result page shows attempts and score
+- [x] "Play Now" button on practice page navigates to the game

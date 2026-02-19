@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Max
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+from practice.models import GameSession
 
 
 def register(request):
@@ -34,9 +36,23 @@ def profile(request):
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
 
+    sessions = GameSession.objects.filter(user=request.user)
+    game_stats = []
+    for value, label in GameSession.GAME_CHOICES:
+        qs = sessions.filter(game=value)
+        game_stats.append({
+            'label': label,
+            'played': qs.count(),
+            'best': qs.aggregate(best=Max('score'))['best'] or 0,
+        })
+
     context = {
         'u_form': u_form,
-        'p_form': p_form
+        'p_form': p_form,
+        'game_stats': game_stats,
+        'total_games': sessions.count(),
+        'total_score': sessions.aggregate(total=Sum('score'))['total'] or 0,
+        'streak': request.user.profile.current_streak,
     }
 
     return render(request, 'users/profile.html', context)

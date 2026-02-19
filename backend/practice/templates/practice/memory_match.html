@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_head %}
+<link rel="stylesheet" href="{% static 'practice_page.css' %}">
+<style>
+  .mm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 640px; margin: 0 auto; }
+  .mm-card { height: 90px; perspective: 600px; cursor: pointer; }
+  .mm-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d; }
+  .mm-card.flipped .mm-card-inner { transform: rotateY(180deg); }
+  .mm-card.matched .mm-card-inner { transform: rotateY(180deg); }
+  .mm-front, .mm-back {
+    position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 600; padding: 8px; text-align: center;
+  }
+  .mm-front { background: #141c52; color: #fff; }
+  .mm-back { background: #FADB43; color: #141c52; transform: rotateY(180deg); }
+  .mm-card.matched .mm-front { background: #198754; }
+  .mm-card.matched .mm-back { background: #d1fae5; color: #065f46; }
+  .mm-stats { text-align: center; margin-bottom: 16px; font-size: 1rem; color: #555; }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div style="padding: 24px 16px; max-width: 700px; margin: 0 auto;">
+  <h2 class="text-center mb-2">Memory Match</h2>
+
+  {% if no_questions %}
+    <p class="text-center text-muted">No questions available yet. Please check back later.</p>
+    <div class="text-center">
+      <a href="{% url 'practice_index' %}" class="btn rounded-pill gradient-button">Back to Practice</a>
+    </div>
+  {% else %}
+    <p class="text-center text-muted mb-4">Match each word to its meaning. Click two cards to flip them.</p>
+
+    <div class="mm-stats">
+      Attempts: <span id="attempt-count">0</span>
+      &nbsp;|&nbsp;
+      Matched: <span id="matched-count">0</span> / {{ total_pairs }}
+    </div>
+
+    <div class="mm-grid" id="mm-grid"></div>
+
+    <form method="post" id="result-form" style="display:none;">
+      {% csrf_token %}
+      <input type="hidden" name="attempts" id="form-attempts" value="0">
+      <input type="hidden" name="total_pairs" value="{{ total_pairs }}">
+    </form>
+
+    <script>
+      const pairs = {{ pairs_json|safe }};
+      const totalPairs = {{ total_pairs }};
+      let attempts = 0, matched = 0;
+      let flipped = [], locked = false;
+
+      // Build 12 cards: word cards + meaning cards
+      const cards = [];
+      pairs.forEach(p => {
+        cards.push({ id: p.id, type: 'word',    text: p.word,    pairId: p.id });
+        cards.push({ id: p.id, type: 'meaning', text: p.meaning, pairId: p.id });
+      });
+
+      // Fisher-Yates shuffle
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+
+      const grid = document.getElementById('mm-grid');
+      cards.forEach((card, idx) => {
+        const el = document.createElement('div');
+        el.className = 'mm-card';
+        el.dataset.index = idx;
+        el.dataset.pairId = card.pairId;
+        el.dataset.type = card.type;
+        el.innerHTML = `
+          <div class="mm-card-inner">
+            <div class="mm-front">?</div>
+            <div class="mm-back">${card.text}</div>
+          </div>`;
+        el.addEventListener('click', () => flipCard(el));
+        grid.appendChild(el);
+      });
+
+      function flipCard(el) {
+        if (locked || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+        el.classList.add('flipped');
+        flipped.push(el);
+        if (flipped.length === 2) {
+          locked = true;
+          attempts++;
+          document.getElementById('attempt-count').textContent = attempts;
+          checkMatch();
+        }
+      }
+
+      function checkMatch() {
+        const [a, b] = flipped;
+        const samePair = a.dataset.pairId === b.dataset.pairId;
+        const diffType = a.dataset.type !== b.dataset.type;
+        if (samePair && diffType) {
+          a.classList.add('matched');
+          b.classList.add('matched');
+          matched++;
+          document.getElementById('matched-count').textContent = matched;
+          flipped = [];
+          locked = false;
+          if (matched === totalPairs) {
+            document.getElementById('form-attempts').value = attempts;
+            setTimeout(() => document.getElementById('result-form').submit(), 600);
+          }
+        } else {
+          setTimeout(() => {
+            a.classList.remove('flipped');
+            b.classList.remove('flipped');
+            flipped = [];
+            locked = false;
+          }, 900);
+        }
+      }
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

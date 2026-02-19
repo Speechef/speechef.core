@@ -1,6 +1,6 @@
 # B1.2 — Fix job_rate Null Constraint
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 `jobs/models.py` defines `job_rate = models.IntegerField(blank=True)`.
@@ -12,6 +12,6 @@ Saving a Jobs instance without `job_rate` will raise an `IntegrityError`.
 - Create and run a migration
 
 ## Acceptance Criteria
-- [ ] `Jobs` can be saved without a `job_rate`
-- [ ] Migration created and applied cleanly
-- [ ] No data loss on existing records
+- [x] `Jobs` can be saved without a `job_rate`
+- [x] Migration created and applied cleanly
+- [x] No data loss on existing records

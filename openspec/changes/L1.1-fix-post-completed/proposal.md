@@ -1,6 +1,6 @@
 # L1.1 — Fix post.completed Field in Learn Templates
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 `learn/templates/learn/index.html` references `post.completed` and uses it to display
@@ -19,7 +19,6 @@ category filter links for "Completed" and "Pending".
 - Remove the "Completed / Pending" sidebar links
 
 ## Acceptance Criteria
-- [ ] Learn index page renders without template errors
-- [ ] "Completed" and "Pending" status correctly reflected (Option A)
-  OR badge is cleanly removed (Option B)
-- [ ] Admin can toggle completed status on posts
+- [x] Learn index page renders without template errors
+- [x] "Completed" and "Pending" status correctly reflected (Option A)
+- [x] Admin can toggle completed status on posts

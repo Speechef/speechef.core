@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_head %}
+<link rel="stylesheet" href="{% static 'practice_page.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<div class="guess-game-wrapper">
+  <h2>Word Scramble</h2>
+
+  {% if is_correct %}
+    <div class="alert alert-success mt-3">Correct! Well done.</div>
+  {% else %}
+    <div class="alert alert-danger mt-3">
+      Not quite. The correct word was <strong>{{ word.word }}</strong>.
+      {% if user_answer %}
+        You answered: <em>{{ user_answer }}</em>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <p class="text-muted">Meaning: {{ word.correct_meaning }}</p>
+
+  <div class="mt-4">
+    <a href="{% url 'word_scramble' %}" class="btn rounded-pill gradient-button me-2">Play Again</a>
+    <a href="{% url 'practice_index' %}" class="btn rounded-pill btn-outline-secondary">Back to Practice</a>
+  </div>
+</div>
+{% endblock %}

@@ -7,15 +7,15 @@
     background-color: #fff;
     padding: 20px;
     margin-top: 0;
-    padding-top: 0;    
+    padding-top: 0;
   }
-  .continue-learning-section,
-  .upload-section,
-  .video-section,
-  .review-section,
-  .streak-section,
-  .ai-section,
-  .expert-section {
+  .dashboard-section {
+    background-color: #e8f4fa;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 8px;
+  }
+  .streak-section {
     background-color: #e8f4fa;
     padding: 20px;
     margin: 20px;
@@ -28,121 +28,200 @@
     display: inline-block;
     margin: 0 3px;
   }
-  .streak-section .streak-circle.filled {
-    background-color: #ff6f61;
-  }
-  .streak-section .streak-circle.empty {
-    background-color: #ccc;
-  }
-  .video-thumbnail {
-    background-color: #ddd;
+  .streak-section .streak-circle.filled { background-color: #ff6f61; }
+  .streak-section .streak-circle.empty  { background-color: #ccc; }
+  .stat-card {
+    background: #fff;
     border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 10px;
-  }
-  .btn-link {
-    display: block;
+    padding: 15px;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+  }
+  .stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #141c52;
+  }
+  .stat-card .stat-label { color: #666; font-size: .85rem; }
+  .game-label {
+    font-size: .75rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .coming-soon-badge {
+    display: inline-block;
+    background: #FADB43;
+    color: #141c52;
+    font-size: .7rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
   }
 </style>
 {% endblock page_head %}
 
 {% block page_content %}
 <div class="dashboard">
-  <h5 style="margin-left: 20px;">Continue Your Learning</h5>
-  <div class="continue-learning-section">
-    <div class="row">
-      <div class="col-md-12 text-center">
-        <p>3 Free Reviews Left, earn more by helping others</p>
-        <button class="btn btn-warning">Upload Video</button>
+  <h5 style="margin-left:20px; padding-top:20px;">
+    {% if request.user.is_authenticated %}
+      Welcome back, {{ request.user.username }}!
+    {% else %}
+      Your Learning Dashboard
+    {% endif %}
+  </h5>
+
+  {% if stats %}
+  <!-- Stats summary row -->
+  <div class="row mx-2 mb-0">
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_games }}</div>
+        <div class="stat-label">Games Played</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total_score }}</div>
+        <div class="stat-label">Total Score</div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ streak_data.current }}</div>
+        <div class="stat-label">Day Streak</div>
       </div>
     </div>
   </div>
+  {% endif %}
 
   <div class="row">
+    <!-- ── Left column ── -->
     <div class="col-md-8">
-      <h5 style="margin: 20px;">Your Videos <a href="#" class="float-right"></a></h5>
-      <div class="video-section">
-        <div class="row">
-          <div class="col-md-4">
-            <div class="video-thumbnail">
-              <video width="100%" controls>
-                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </div>
-            <a href="#" class="btn btn-link">Feedback</a>
-          </div>
-          <div class="col-md-4">
-            <div class="video-thumbnail">
-              <video width="100%" controls>
-                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </div>
-            <a href="#" class="btn btn-link">Feedback</a>
-          </div>
-          <div class="col-md-4">
-            <div class="video-thumbnail">
-              <video width="100%" controls>
-                <source src="" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </div>
-            <a href="#" class="btn btn-link">Feedback</a>
-          </div>
-        </div>
-      </div>
-      <h5 style="margin: 20px;">Please Review <a href="#" class="float-right"></a></h5>
-      <div class="review-section">
-        <div class="row">
-          <div class="col-md-4">
-            <div class="video-thumbnail">
-              <video width="100%" controls>
-                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="video-thumbnail">
-              <video width="100%" controls>
-                <source src="{% static 'home/videos/sample.mp4' %}" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <h5 style="margin: 20px;">Quick Links</h5>
-      <div class="streak-section text-center">
-        <h5>Daily Streak</h5>
-        <div>
-          <div class="streak-circle filled"></div>
-          <div class="streak-circle filled"></div>
-          <div class="streak-circle filled"></div>
-          <div class="streak-circle empty"></div>
-          <div class="streak-circle empty"></div>
-        </div>
-      </div>
-      <div class="ai-section text-center">
-        <button class="btn rounded-pill gradient-button">Talk with our AI bot</button>
+
+      <!-- Recent Games -->
+      <h5 style="margin:20px 20px 0;">Recent Games</h5>
+      <div class="dashboard-section">
+        {% if recent_sessions %}
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr><th>Game</th><th>Score</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+              {% for session in recent_sessions %}
+              <tr>
+                <td>
+                  {% if session.game == 'guess' %}Guess the Word
+                  {% elif session.game == 'memory' %}Memory Match
+                  {% else %}Word Scramble{% endif %}
+                </td>
+                <td><strong>{{ session.score }}</strong></td>
+                <td class="text-muted small">{{ session.played_at|date:"M j, g:i a" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <a href="{% url 'practice_index' %}" class="btn btn-sm btn-outline-primary mt-3">Play More</a>
+        {% else %}
+          <p class="text-muted mb-2">No games played yet.</p>
+          <a href="{% url 'practice_index' %}" class="btn btn-warning">Start Playing</a>
+        {% endif %}
       </div>
 
-      <h5 style="margin: 20px;">Experts</h5>
-      <div class="expert-section">
-        <div class="expert-thumbnail mb-3">
-          <img src="https://via.placeholder.com/90" alt="Expert Thumbnail" class="img-fluid">
-          <button class="btn rounded-pill gradient-button">Talk Now</button>
-        </div>
-        <div class="expert-thumbnail mb-3">
-          <img src="https://via.placeholder.com/90" alt="Expert Thumbnail" class="img-fluid">
-          <button class="btn rounded-pill gradient-button">Talk Now</button>
+      <!-- Recommended -->
+      {% if recommended %}
+      <h5 style="margin:20px 20px 0;">Recommended for You</h5>
+      <div class="dashboard-section">
+        <p class="mb-1 text-muted small">Based on your scores, try improving at:</p>
+        <h6>{{ recommended.name }}</h6>
+        {% if recommended.key == 'guess' %}
+          <a href="{% url 'guess_the_word' %}" class="btn btn-warning">Play Now</a>
+        {% elif recommended.key == 'memory' %}
+          <a href="{% url 'memory_match' %}" class="btn btn-warning">Play Now</a>
+        {% else %}
+          <a href="{% url 'word_scramble' %}" class="btn btn-warning">Play Now</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- Per-game stats -->
+      {% if stats %}
+      <h5 style="margin:20px 20px 0;">Game Stats</h5>
+      <div class="dashboard-section">
+        <div class="row">
+          {% for key, gs in stats.per_game.items %}
+          <div class="col-md-4 mb-2">
+            <div class="stat-card">
+              <div class="game-label">{{ gs.name }}</div>
+              <div class="stat-value" style="font-size:1.4rem;">{{ gs.count }}</div>
+              <div class="stat-label">played &bull; Best: {{ gs.best }}</div>
+            </div>
+          </div>
+          {% endfor %}
         </div>
       </div>
-    </div>
-  </div>
-</div>
+      {% endif %}
+
+      <!-- Video Upload — Coming Soon -->
+      <h5 style="margin:20px 20px 0;">
+        Your Videos <span class="coming-soon-badge">Coming Soon</span>
+      </h5>
+      <div class="dashboard-section text-center text-muted">
+        <p class="mb-0">Video upload and peer review will be available in a future update.</p>
+      </div>
+
+    </div><!-- /col-md-8 -->
+
+    <!-- ── Right column ── -->
+    <div class="col-md-4">
+
+      <!-- Daily Streak -->
+      <h5 style="margin:20px 20px 0;">Daily Streak</h5>
+      <div class="streak-section text-center">
+        {% if streak_data %}
+          <div>
+            {% for circle in streak_data.circles %}
+              <div class="streak-circle {{ circle }}"></div>
+            {% endfor %}
+          </div>
+          <p class="mt-2 mb-0 small text-muted">
+            {{ streak_data.current }} day{{ streak_data.current|pluralize }} &bull; Best: {{ streak_data.longest }}
+          </p>
+        {% else %}
+          <div>
+            {% for i in "1234567" %}
+              <div class="streak-circle empty"></div>
+            {% endfor %}
+          </div>
+          <p class="mt-2 mb-0 small text-muted">
+            <a href="{% url 'login' %}">Log in</a> to track your streak
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- Quick Links -->
+      <h5 style="margin:20px 20px 0;">Quick Links</h5>
+      <div class="dashboard-section">
+        <div class="d-grid gap-2">
+          <a href="{% url 'guess_the_word' %}" class="btn btn-outline-primary btn-sm">Guess the Word</a>
+          <a href="{% url 'memory_match' %}" class="btn btn-outline-primary btn-sm">Memory Match</a>
+          <a href="{% url 'word_scramble' %}" class="btn btn-outline-primary btn-sm">Word Scramble</a>
+          <a href="{% url 'leaderboard' %}" class="btn btn-outline-secondary btn-sm">Leaderboard</a>
+          <a href="{% url 'learn_index' %}" class="btn btn-outline-secondary btn-sm">Learning Posts</a>
+        </div>
+      </div>
+
+      <!-- Experts — Coming Soon -->
+      <h5 style="margin:20px 20px 0;">
+        Experts <span class="coming-soon-badge">Coming Soon</span>
+      </h5>
+      <div class="dashboard-section text-center text-muted">
+        <p class="mb-0">Connect with expert tutors — available soon.</p>
+      </div>
+
+    </div><!-- /col-md-4 -->
+  </div><!-- /row -->
+</div><!-- /dashboard -->
 {% endblock page_content %}

@@ -28,7 +28,9 @@
             <img src="{% static 'images/game2.jpg' %}" alt="Game 2">
             <h5>Memory Match</h5>
             <p>Enhance your memory and vocabulary by matching words with their meanings.</p>
-            <button class="btn rounded-pill gradient-button">Play Now</button>
+            <button class="btn rounded-pill gradient-button">
+              <a href="{% url 'memory_match' %}" class="btn ...">Play Now</a>
+            </button>
           </div>
         </div>
         <div class="col-md-4">
@@ -100,6 +102,9 @@
         </div>
       </div>
     </div>
+  </div>
+  <div class="text-center mt-3 mb-4">
+    <a href="{% url 'leaderboard' %}" class="btn rounded-pill gradient-button">View Leaderboard</a>
   </div>
 </div>
 {% endblock page_content %}

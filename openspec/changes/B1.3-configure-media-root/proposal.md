@@ -1,6 +1,6 @@
 # B1.3 — Configure MEDIA_ROOT for Profile Images
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 `users/models.py` defines `image = models.ImageField(upload_to='profile_pics')`.
@@ -15,7 +15,7 @@ The profile template also has `{{ user.profile.image.url }}` commented out.
 - Re-enable image resize logic in `users/models.py`
 
 ## Acceptance Criteria
-- [ ] Profile image upload works end-to-end
-- [ ] Image is resized to 300x300 on save
-- [ ] Profile page shows the user's avatar
-- [ ] Default image (`default.jpg`) is served correctly
+- [x] Profile image upload works end-to-end
+- [x] Image is resized to 300x300 on save
+- [x] Profile page shows the user's avatar
+- [x] Default image (`default.jpg`) is served correctly

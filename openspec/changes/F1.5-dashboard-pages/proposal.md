@@ -1,6 +1,6 @@
 # F1.5 — Frontend Dashboard + Streak UI
 
-## Status: Blocked (requires F1.4, U1.2)
+## Status: Done
 
 ## Why
 The home dashboard has hardcoded, placeholder UI. This proposal wires it to real data
@@ -15,8 +15,8 @@ from the API and replaces all placeholder sections with live content.
 - **Coming Soon** — Label video upload and experts sections with roadmap badge
 
 ## Acceptance Criteria
-- [ ] Dashboard shows real streak from API
-- [ ] Recent games list updates after each played game
-- [ ] Stats cards show correct aggregated data
-- [ ] Recommended card dynamically picks the right game
-- [ ] Dashboard requires login (redirect if not authenticated)
+- [x] Dashboard shows real streak from API
+- [x] Recent games list updates after each played game
+- [x] Stats cards show correct aggregated data
+- [x] Recommended card dynamically picks the right game
+- [x] Dashboard requires login (redirect if not authenticated)

@@ -1,6 +1,6 @@
 # G1.2 — Complete Word Scramble Game
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The Practice page shows a "Word Scramble" card that is a stub with no backend.
@@ -19,7 +19,7 @@ The migration `0003_memorymatch_wordscramble.py` includes a WordScramble model.
 - Show result with the correct answer and option to try again
 
 ## Acceptance Criteria
-- [ ] Word Scramble accessible via URL
-- [ ] Scrambled word is always different from original
-- [ ] Correct/incorrect feedback shown
-- [ ] "Play Now" button on practice page navigates to the game
+- [x] Word Scramble accessible via URL
+- [x] Scrambled word is always different from original
+- [x] Correct/incorrect feedback shown
+- [x] "Play Now" button on practice page navigates to the game

@@ -1,6 +1,6 @@
 # L1.2 — Add Comment Posting
 
-## Status: Blocked (requires L1.1)
+## Status: Done
 
 ## Why
 The `Comment` model and the detail template already display comments, but there is
@@ -12,8 +12,8 @@ no way for users to post a comment. The form is missing entirely from `learn_det
 - Only authenticated users can comment; show login prompt otherwise
 
 ## Acceptance Criteria
-- [ ] Comment form visible on post detail page
-- [ ] Authenticated user can submit a comment
-- [ ] Comment appears below the post immediately after submission
-- [ ] Unauthenticated user sees "Log in to comment" prompt
-- [ ] Empty comments are rejected with a validation error
+- [x] Comment form visible on post detail page
+- [x] Authenticated user can submit a comment
+- [x] Comment appears below the post immediately after submission
+- [x] Unauthenticated user sees "Log in to comment" prompt
+- [x] Empty comments are rejected with a validation error

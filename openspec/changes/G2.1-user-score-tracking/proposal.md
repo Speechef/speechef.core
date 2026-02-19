@@ -1,6 +1,6 @@
 # G2.1 — User Score Tracking
 
-## Status: Blocked (requires G1.1, G1.2)
+## Status: Done
 
 ## Why
 There is currently no way to track a user's game history, scores, or progress.
@@ -26,6 +26,6 @@ class GameSession(models.Model):
 ```
 
 ## Acceptance Criteria
-- [ ] GameSession saved after each completed game (logged-in users only)
-- [ ] Admin can view all sessions
-- [ ] User profile shows games played count and best scores
+- [x] GameSession saved after each completed game (logged-in users only)
+- [x] Admin can view all sessions
+- [x] User profile shows games played count and best scores

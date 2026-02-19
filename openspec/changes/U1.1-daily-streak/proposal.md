@@ -1,6 +1,6 @@
 # U1.1 — Daily Streak Tracking
 
-## Status: Blocked (requires G2.1)
+## Status: Done
 
 ## Why
 The Home dashboard has a hardcoded streak UI (3 filled circles, 2 empty) with no real data.
@@ -18,7 +18,7 @@ A real streak counter drives daily engagement and habit formation.
 - If last session was 2+ days ago → reset to 1
 
 ## Acceptance Criteria
-- [ ] Streak increments correctly on consecutive days
-- [ ] Streak resets on a missed day
-- [ ] Home dashboard shows real streak circles
-- [ ] Longest streak is preserved
+- [x] Streak increments correctly on consecutive days
+- [x] Streak resets on a missed day
+- [x] Home dashboard shows real streak circles
+- [x] Longest streak is preserved

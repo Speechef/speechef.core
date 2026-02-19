@@ -15,6 +15,7 @@
     <div class="question-word">{{ question.word }}</div>
     <form method="post">
       {% csrf_token %}
+      <input type="hidden" name="question_id" value="{{ question.id }}">
       {% for option in options %}
         <label>
           <div class="option-card">

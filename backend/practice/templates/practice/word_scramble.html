@@ -6,19 +6,30 @@
 
 {% block page_content %}
 <div class="guess-game-wrapper">
-  <h2>Guess the Meaning</h2>
-  <div class="question-word">{{ question.word }}</div>
-  <form method="post">
-    {% csrf_token %}
-    {% for option in options %}
-      <label>
-        <div class="option-card">
-          <input type="radio" name="option" value="{{ option }}" required hidden>
-          {{ option }}
-        </div>
-      </label>
-    {% endfor %}
-    <button type="submit" class="btn rounded-pill gradient-button">Submit Answer</button>
-  </form>
+  <h2>Word Scramble</h2>
+
+  {% if no_words %}
+    <p>No words are available yet. Please check back later.</p>
+    <a href="{% url 'practice_index' %}" class="btn rounded-pill gradient-button">Back to Practice</a>
+  {% else %}
+    <p class="text-muted mb-4">Unscramble the letters to form the correct word.</p>
+    <div class="question-word" style="letter-spacing: 0.3em;">{{ scrambled_word }}</div>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="word_id" value="{{ word.id }}">
+      <div class="mb-3">
+        <input
+          type="text"
+          name="user_answer"
+          class="form-control text-center"
+          placeholder="Type your answer…"
+          autocomplete="off"
+          required
+        >
+      </div>
+      <button type="submit" class="btn rounded-pill gradient-button">Submit</button>
+    </form>
+  {% endif %}
 </div>
 {% endblock %}

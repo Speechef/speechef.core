@@ -1,6 +1,6 @@
 # F1.4 — Frontend Games Pages (Interactive)
 
-## Status: Blocked (requires F1.1, A1.3)
+## Status: Done
 
 ## Why
 Games require JavaScript interactivity (card flipping, countdown timers, scramble input)

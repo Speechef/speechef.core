@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_head %}
+<link rel="stylesheet" href="{% static 'practice_page.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<div class="guess-game-wrapper text-center">
+  <h2>Memory Match — Result</h2>
+
+  <div class="mt-4 mb-2">
+    <p class="fs-5">You matched all <strong>{{ total_pairs }}</strong> pairs in <strong>{{ attempts }}</strong> attempt{{ attempts|pluralize }}.</p>
+    <p class="fs-4 fw-bold" style="color: #141c52;">Score: {{ score }}</p>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'memory_match' %}" class="btn rounded-pill gradient-button me-2">Play Again</a>
+    <a href="{% url 'practice_index' %}" class="btn rounded-pill btn-outline-secondary">Back to Practice</a>
+  </div>
+</div>
+{% endblock %}

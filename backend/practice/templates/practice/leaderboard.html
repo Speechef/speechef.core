@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_head %}
+<link rel="stylesheet" href="{% static 'practice_page.css' %}">
+{% endblock %}
+
+{% block page_content %}
+<div style="max-width: 700px; margin: 40px auto; padding: 0 16px;">
+  <h2 class="text-center mb-4">Leaderboard</h2>
+
+  <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
+    <a href="{% url 'leaderboard' %}"
+       class="btn rounded-pill {% if not game_filter %}gradient-button{% else %}btn-outline-secondary{% endif %}">
+      All Games
+    </a>
+    {% for value, label in game_choices %}
+    <a href="{% url 'leaderboard' %}?game={{ value }}"
+       class="btn rounded-pill {% if game_filter == value %}gradient-button{% else %}btn-outline-secondary{% endif %}">
+      {{ label }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="card shadow-sm">
+    {% if entries %}
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Player</th>
+          <th class="text-end">Score</th>
+          <th class="text-end">Games</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr {% if request.user.is_authenticated and entry.user__username == request.user.username %}
+            style="background-color: #fffbe6; font-weight: 600;"{% endif %}>
+          <td>
+            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+          </td>
+          <td>{{ entry.user__username }}</td>
+          <td class="text-end" style="color: #141c52;">{{ entry.total_score }}</td>
+          <td class="text-end text-muted">{{ entry.sessions }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center text-muted py-5">
+      No scores yet. <a href="{% url 'practice_index' %}">Be the first to play!</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{% url 'practice_index' %}" class="btn rounded-pill btn-outline-secondary">← Back to Practice</a>
+  </div>
+</div>
+{% endblock page_content %}

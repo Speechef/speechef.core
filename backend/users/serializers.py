@@ -6,7 +6,7 @@ from .models import Profile
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['image']
+        fields = ['image', 'current_streak', 'longest_streak']
 
 
 class UserSerializer(serializers.ModelSerializer):
