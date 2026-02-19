@@ -29,6 +29,26 @@ class WordScramble(models.Model):
     def __str__(self):
         return self.word
 
+class GameSession(models.Model):
+    GAME_CHOICES = [
+        ('guess', 'Guess the Word'),
+        ('memory', 'Memory Match'),
+        ('scramble', 'Word Scramble'),
+    ]
+    user = models.ForeignKey(
+        'auth.User', on_delete=models.CASCADE, related_name='game_sessions'
+    )
+    game = models.CharField(max_length=20, choices=GAME_CHOICES)
+    score = models.IntegerField(default=0)
+    played_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-played_at']
+
+    def __str__(self):
+        return f'{self.user.username} — {self.game} — {self.score}'
+
+
 #TODO
 class MemoryMatch(models.Model):
     image = models.ImageField(upload_to='memory_match_images/')

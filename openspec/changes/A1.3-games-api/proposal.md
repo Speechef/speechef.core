@@ -1,6 +1,6 @@
 # A1.3 — Games API Endpoints
 
-## Status: Blocked (requires A1.1, G1.1, G1.2)
+## Status: Done
 
 ## Why
 Expose game data and session submission via REST API for future mobile and

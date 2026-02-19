@@ -1,6 +1,6 @@
 # A1.2 — Auth API Endpoints
 
-## Status: Blocked (requires A1.1)
+## Status: Done
 
 ## Why
 Expose user registration and profile management via REST API so future mobile

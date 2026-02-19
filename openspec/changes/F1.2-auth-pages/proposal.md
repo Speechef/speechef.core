@@ -1,6 +1,6 @@
 # F1.2 — Frontend Auth Pages
 
-## Status: Blocked (requires F1.1, A1.2)
+## Status: Done
 
 ## Why
 Login, register, and profile pages need to be ported from Django templates to Next.js
