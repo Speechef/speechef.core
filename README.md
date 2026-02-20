@@ -68,9 +68,10 @@ speechef.core/
 
 | Tool | Version |
 |---|---|
-| Docker Desktop | latest |
-| Python | 3.12+ |
-| Node.js | 20+ LTS |
+| [Homebrew](https://brew.sh) | latest (macOS) |
+| Docker + Colima | installed via `dev.sh` automatically |
+| Python | 3.12+ (manual setup only) |
+| Node.js | 20+ LTS (manual setup only) |
 
 ### 1. Clone and configure
 
@@ -82,45 +83,59 @@ cp .env.example .env
 # Edit .env — set SECRET_KEY at minimum for local dev
 ```
 
-### 2. Start backing services
+### 2. Start the full stack (recommended)
 
 ```bash
-docker compose up -d db redis
+./dev.sh
 ```
 
-### 3. Backend
+This single command will:
+- Install Docker CLI, docker-compose, and Colima via Homebrew (if not already present)
+- Start the Colima VM (lightweight Docker runtime — no Docker Desktop needed)
+- Build and start all services: Postgres, Redis, Django, Celery worker, Celery beat, and Next.js
+
+| Service | URL |
+|---|---|
+| Next.js frontend | http://localhost:3000 |
+| Django backend | http://localhost:8000 |
+| Django admin | http://localhost:8000/admin |
+| Postgres | localhost:5432 |
+| Redis | localhost:6379 |
+
+Press `Ctrl+C` to stop all services.
+
+### Manual setup (alternative)
+
+**Install dependencies (one-time, macOS):**
 
 ```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\Activate
-
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-# → http://localhost:8000
-# → http://localhost:8000/api/v1/   (DRF browsable API)
-# → http://localhost:8000/admin/
+brew install docker docker-compose colima
+mkdir -p ~/.docker/cli-plugins
+ln -sfn "$(brew --prefix)/opt/docker-compose/bin/docker-compose" ~/.docker/cli-plugins/docker-compose
 ```
 
-### 4. Frontend
+**Start Colima VM:**
 
 ```bash
-cd frontend
-npm install
-npm run dev
-# → http://localhost:3000
+colima start --cpu 2 --memory 4
 ```
 
-### Or — run everything with Docker
+**Build and start all services:**
 
 ```bash
 docker compose up --build
-# Django:   http://localhost:8000
-# Next.js:  http://localhost:3000
-# Postgres: localhost:5432
-# Redis:    localhost:6379
+```
+
+**Stop all services:**
+
+```bash
+docker compose down
+```
+
+**Stop and wipe the database volume:**
+
+```bash
+docker compose down -v
 ```
 
 ---
