@@ -9,4 +9,6 @@ urlpatterns = [
     path('word-scramble/check/', api_views.word_scramble_check, name='practice-word-scramble-check'),
     path('leaderboard/', api_views.leaderboard, name='practice-leaderboard'),
     path('sessions/', api_views.sessions, name='practice-sessions'),
+    path('guess/complete/', api_views.guess_complete, name='practice-guess-complete'),
+    path('my-best/', api_views.my_best, name='practice-my-best'),
 ]

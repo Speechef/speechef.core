@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from django.db.models import Max
 
 from .models import WordQuestion, GameSession
 from .serializers import (
@@ -51,12 +52,8 @@ def guess(request):
         return Response({'detail': 'Question not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     correct = answer == q.correct_meaning
-    score = 10 if correct else 0
 
-    if request.user.is_authenticated:
-        GameSession.objects.create(user=request.user, game='guess', score=score)
-
-    return Response({'correct': correct, 'score': score, 'correct_meaning': q.correct_meaning})
+    return Response({'correct': correct, 'correct_meaning': q.correct_meaning})
 
 
 @api_view(['GET'])
@@ -134,3 +131,26 @@ def sessions(request):
         return Response([])
     qs = GameSession.objects.filter(user=request.user)[:20]
     return Response(GameSessionSerializer(qs, many=True).data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def guess_complete(request):
+    """Save the final score of a completed Guess the Word run."""
+    score = int(request.data.get('score', 0))
+    if request.user.is_authenticated:
+        GameSession.objects.create(user=request.user, game='guess', score=score)
+    return Response({'saved': request.user.is_authenticated, 'score': score})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def my_best(request):
+    """Return the authenticated user's highest score for a given game."""
+    if not request.user.is_authenticated:
+        return Response({'best': 0})
+    game = request.query_params.get('game', 'guess')
+    best = GameSession.objects.filter(user=request.user, game=game).aggregate(
+        best=Max('score')
+    )['best']
+    return Response({'best': best or 0})
