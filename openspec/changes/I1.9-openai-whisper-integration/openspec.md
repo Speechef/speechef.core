@@ -1,6 +1,6 @@
 # I1.9 — OpenAI Whisper + GPT-4 Scoring Integration
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The core AI analysis feature depends on two external AI calls: transcription (Whisper) and scoring (GPT-4). These integrations need to be isolated, testable, and rate-limit safe before any analysis pipeline (I1.8) is built on top of them.

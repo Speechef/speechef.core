@@ -1,6 +1,6 @@
 # J2.1 — Jobs Board: Score-Match Job Model + Employer Portal
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The existing jobs model is basic. To make the board a meaningful product feature, jobs must carry a minimum communication score requirement, and employers need a way to post and manage their listings.

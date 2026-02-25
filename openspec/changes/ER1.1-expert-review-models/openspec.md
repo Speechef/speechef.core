@@ -1,6 +1,6 @@
 # ER1.1 — Expert Panel: Models + Admin
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 Expert review is a premium feature that needs its own data model — separate from AI analysis. Experts are a distinct user type with profiles, and reviews are a workflow (submitted → assigned → in-review → delivered).

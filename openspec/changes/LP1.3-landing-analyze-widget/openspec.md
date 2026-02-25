@@ -1,6 +1,6 @@
 # LP1.3 — Landing Page: Inline Analyze Upload Widget
 
-## Status: Blocked → LP1.1
+## Status: Done — AnalyzeWidget.tsx with drag-and-drop, file validation, guest/auth flows
 
 ## Why
 The fastest conversion path is letting users try the product without leaving the landing page. An embedded upload widget drops them directly into the value — before they've even signed up.

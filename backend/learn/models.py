@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Category(models.Model):
     name = models.CharField(max_length=30)
@@ -24,6 +25,30 @@ class Comment(models.Model):
     body = models.TextField()
     created_on = models.DateTimeField(auto_now_add=True)
     post = models.ForeignKey("Post", on_delete=models.CASCADE)
-    
+
     def __str__(self):
-        return f"{self.author} on '{self.post}'"      
+        return f"{self.author} on '{self.post}'"
+
+
+class UserBookmark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='learn_bookmarks')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='bookmarks')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'post']
+
+    def __str__(self):
+        return f"{self.user.username} → {self.post.title}"
+
+
+class UserPostCompletion(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='learn_completions')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='completions')
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'post']
+
+    def __str__(self):
+        return f"{self.user.username} completed '{self.post.title}'"

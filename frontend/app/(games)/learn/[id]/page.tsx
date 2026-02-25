@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 import Cookies from 'js-cookie';
@@ -25,6 +25,7 @@ interface Post {
   created_on: string;
   categories: Category[];
   completed: boolean;
+  is_completed: boolean;
   comments: Comment[];
 }
 
@@ -40,6 +41,21 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
   const { data: post, isLoading } = useQuery<Post>({
     queryKey: ['learn-post', id],
     queryFn: () => api.get(`/learn/posts/${id}/`).then((r) => r.data),
+  });
+
+  const firstCategory = post?.categories?.[0]?.name;
+  const { data: relatedPosts = [] } = useQuery<Post[]>({
+    queryKey: ['learn-related', firstCategory],
+    enabled: !!firstCategory,
+    queryFn: () => api.get('/learn/posts/', { params: { category: firstCategory } }).then((r) => r.data),
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () => api.post(`/learn/posts/${id}/complete/`).then((r) => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['learn-post', id] });
+      queryClient.invalidateQueries({ queryKey: ['learn-posts'] });
+    },
   });
 
   async function handleComment(e: React.FormEvent) {
@@ -99,14 +115,29 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
                 {cat.name}
               </Link>
             ))}
-            <span className="ml-auto">
-              <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  post.completed ? 'bg-green-200 text-green-800' : 'bg-white text-yellow-700'
-                }`}
-              >
-                {post.completed ? 'Completed' : 'Pending'}
-              </span>
+            <span className="ml-auto flex items-center gap-2">
+              {isLoggedIn && (
+                <button
+                  onClick={() => completeMutation.mutate()}
+                  disabled={completeMutation.isPending}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full transition-colors disabled:opacity-60 ${
+                    post.is_completed
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-white text-[#141c52] hover:bg-green-100'
+                  }`}
+                >
+                  {post.is_completed ? '✓ Completed' : 'Mark Complete'}
+                </button>
+              )}
+              {!isLoggedIn && (
+                <span
+                  className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    post.completed ? 'bg-green-200 text-green-800' : 'bg-white text-yellow-700'
+                  }`}
+                >
+                  {post.completed ? 'Completed' : 'Pending'}
+                </span>
+              )}
             </span>
           </div>
         </div>
@@ -124,6 +155,28 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
             ) : null
           )}
         </div>
+
+        {/* Related Articles */}
+        {(() => {
+          const related = relatedPosts.filter((p) => String(p.id) !== id).slice(0, 3);
+          if (related.length === 0) return null;
+          return (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-[#141c52] mb-4">Related Articles</h2>
+              <div className="space-y-2">
+                {related.map((p) => (
+                  <Link key={p.id} href={`/learn/${p.id}`}
+                    className="flex items-center justify-between border border-gray-100 rounded-xl px-4 py-3 hover:border-[#141c52] hover:shadow-sm transition-all group">
+                    <p className="text-sm font-medium text-[#141c52] group-hover:underline">{p.title}</p>
+                    <span className="text-xs text-gray-400 shrink-0 ml-3">
+                      {new Date(p.created_on).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         <hr className="my-8" />
 

@@ -1,6 +1,6 @@
 # I1.8 — Celery Media Processing Pipeline
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 AI analysis of audio/video is not instant — it can take 30–120 seconds depending on file length. Processing must happen asynchronously via Celery so the web request returns immediately, and the user is notified when results are ready. Celery is already in the stack (I1.6), so this is about wiring it for media tasks specifically.

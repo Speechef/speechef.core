@@ -1,6 +1,6 @@
 # MM1.3 — Mentor Marketplace Frontend (/mentors)
 
-## Status: Blocked → MM1.2
+## Status: Done
 
 ## Why
 The mentor marketplace is the highest-revenue feature. The frontend must give users confidence to book and pay — clear profiles, real ratings, transparent pricing, and a smooth calendar booking flow.

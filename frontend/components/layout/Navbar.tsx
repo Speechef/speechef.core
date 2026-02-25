@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function Navbar() {
 
         {isLoggedIn ? (
           <div className="flex items-center gap-3">
+            <NotificationBell />
             <Link
               href="/profile"
               className="text-white/80 hover:text-white text-sm transition-colors"

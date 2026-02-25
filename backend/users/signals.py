@@ -13,3 +13,17 @@ def create_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+
+@receiver(post_save, sender=Profile)
+def check_streak_badges(sender, instance, **kwargs):
+    """Award streak badges when milestones are reached."""
+    try:
+        from .badges import award_badge
+        streak = instance.current_streak
+        if streak >= 30:
+            award_badge(instance.user, 'streak_30')
+        elif streak >= 7:
+            award_badge(instance.user, 'streak_7')
+    except Exception:
+        pass

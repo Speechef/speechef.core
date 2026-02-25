@@ -1,6 +1,6 @@
 # TP1.3 — Test Prep Frontend (/practice/test-prep)
 
-## Status: Blocked → TP1.2
+## Status: Done
 
 ## Why
 Test prep is the feature that attracts the most motivated users — those preparing for IELTS, TOEFL, etc. The frontend must feel like a real exam environment: timed, focused, distraction-free.

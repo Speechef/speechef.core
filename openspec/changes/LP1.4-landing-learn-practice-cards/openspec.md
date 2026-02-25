@@ -1,6 +1,6 @@
 # LP1.4 — Landing Page: Learn + Practice Preview Cards
 
-## Status: Blocked → LP1.1
+## Status: Done — Completed inside LP1.1 implementation
 
 ## Why
 The landing page needs to surface the Learn and Practice sections to drive users towards habit-forming content. Card grids with visible filter tags communicate depth without overwhelming.

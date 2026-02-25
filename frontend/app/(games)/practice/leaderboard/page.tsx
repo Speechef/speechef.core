@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores/auth';
 
 interface LeaderboardEntry {
-  username: string;
+  user__username: string;
   total_score: number;
-  sessions: number;
+  games_played: number;
 }
 
 const GAME_FILTERS = [
@@ -16,16 +17,29 @@ const GAME_FILTERS = [
   { label: 'Guess the Word', value: 'guess' },
   { label: 'Memory Match', value: 'memory' },
   { label: 'Word Scramble', value: 'scramble' },
+  { label: 'Vocabulary Blitz', value: 'blitz' },
+  { label: 'Sentence Builder', value: 'sentence' },
+  { label: 'Daily Challenge', value: 'daily' },
+  { label: 'Pronunciation', value: 'pronunciation' },
 ];
 
 export default function LeaderboardPage() {
   const [game, setGame] = useState('');
+  const { isLoggedIn } = useAuthStore();
 
   const { data: entries = [], isLoading } = useQuery<LeaderboardEntry[]>({
     queryKey: ['leaderboard', game],
     queryFn: () =>
       api.get(`/practice/leaderboard/${game ? `?game=${game}` : ''}`).then((r) => r.data),
   });
+
+  const { data: profile } = useQuery<{ username: string }>({
+    queryKey: ['profile'],
+    enabled: isLoggedIn,
+    queryFn: () => api.get('/auth/profile/').then((r) => r.data),
+  });
+
+  const currentUsername = profile?.username;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -72,21 +86,34 @@ export default function LeaderboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {entries.map((entry, i) => (
-                  <tr key={entry.username} className="border-b last:border-0 hover:bg-gray-50">
-                    <td className="px-5 py-3 text-gray-400 font-mono">{i + 1}</td>
-                    <td className="px-5 py-3 font-medium" style={{ color: '#141c52' }}>
-                      {i === 0 && '🥇 '}
-                      {i === 1 && '🥈 '}
-                      {i === 2 && '🥉 '}
-                      {entry.username}
-                    </td>
-                    <td className="px-5 py-3 text-right font-bold" style={{ color: '#141c52' }}>
-                      {entry.total_score}
-                    </td>
-                    <td className="px-5 py-3 text-right text-gray-400">{entry.sessions}</td>
-                  </tr>
-                ))}
+                {entries.map((entry, i) => {
+                  const isMe = currentUsername && entry.user__username === currentUsername;
+                  return (
+                    <tr
+                      key={entry.user__username}
+                      className="border-b last:border-0"
+                      style={isMe ? { backgroundColor: '#eef0fa' } : undefined}
+                    >
+                      <td className="px-5 py-3 text-gray-400 font-mono">{i + 1}</td>
+                      <td className="px-5 py-3 font-medium" style={{ color: '#141c52' }}>
+                        {i === 0 && '🥇 '}
+                        {i === 1 && '🥈 '}
+                        {i === 2 && '🥉 '}
+                        <span className={isMe ? 'font-bold' : ''}>{entry.user__username}</span>
+                        {isMe && (
+                          <span className="ml-2 text-xs font-bold px-1.5 py-0.5 rounded"
+                            style={{ backgroundColor: '#141c52', color: '#FADB43' }}>
+                            You
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right font-bold" style={{ color: '#141c52' }}>
+                        {entry.total_score}
+                      </td>
+                      <td className="px-5 py-3 text-right text-gray-400">{entry.games_played}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
