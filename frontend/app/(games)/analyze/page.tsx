@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { uploadAnalysis, getAnalysisResult } from '@/lib/api/analysis';
@@ -233,6 +234,7 @@ function CompareTab({ result }: { result: AnalysisResult }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AnalyzePage() {
+  const searchParams = useSearchParams();
   const [pageState, setPageState] = useState<PageState>('idle');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -241,6 +243,8 @@ export default function AnalyzePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('transcript');
   const inputRef = useRef<HTMLInputElement>(null);
+  // Capture the ?session= param once on mount (avoids stale-closure issues)
+  const initialSessionRef = useRef(searchParams.get('session'));
 
   // Fetch prior sessions to compute score delta (shared cache with dashboard)
   const { data: prevSessions = [] } = useQuery<Array<{
@@ -267,6 +271,16 @@ export default function AnalyzePage() {
       setPageState('error');
     }
   }, []);
+
+  // If opened via /analyze?session=id (from history "View →"), load that session
+  useEffect(() => {
+    const sid = initialSessionRef.current;
+    if (sid) {
+      setSessionId(sid);
+      setPageState('processing');
+      fetchResult(sid);
+    }
+  }, [fetchResult]);
 
   // Watch polling status
   const prevStatus = useRef<string | null>(null);

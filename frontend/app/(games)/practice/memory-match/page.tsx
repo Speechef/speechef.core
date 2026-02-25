@@ -97,6 +97,7 @@ export default function MemoryMatchPage() {
           if (pairs && newMatched === pairs.length) {
             const finalScore = Math.max(0, pairs.length * 10 - Math.max(0, newAttempts - pairs.length));
             setScore(finalScore);
+            api.post('/practice/guess/complete/', { score: finalScore, game: 'memory' }).catch(() => null);
             setTimeout(() => setDone(true), 400);
           }
         } else {
@@ -162,6 +163,12 @@ export default function MemoryMatchPage() {
             >
               Play Again
             </Button>
+            <Link
+              href="/practice/history?game=memory"
+              className="block text-sm text-gray-400 hover:underline mt-3"
+            >
+              View session history →
+            </Link>
           </div>
         ) : (
           <>

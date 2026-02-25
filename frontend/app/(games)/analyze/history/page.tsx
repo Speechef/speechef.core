@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -141,7 +141,13 @@ const STATUS_TABS: { key: string; label: string }[] = [
 ];
 
 export default function AnalysisHistoryPage() {
-  const [filterStatus, setFilterStatus] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const filterStatus = searchParams.get('status') ?? '';
+  function setFilterStatus(val: string) {
+    const url = val ? `/analyze/history?status=${val}` : '/analyze/history';
+    router.push(url);
+  }
 
   const { data: sessions = [], isLoading } = useQuery<AnalysisSession[]>({
     queryKey: ['analysis-sessions'],
