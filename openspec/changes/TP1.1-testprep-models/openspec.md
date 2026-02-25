@@ -1,6 +1,6 @@
 # TP1.1 — Test Prep: Exam + Question Models
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 Test prep (IELTS, TOEFL, PTE, OET, CELPIP, etc.) requires a flexible data model that can accommodate different exam structures, question types, and scoring bands. This foundation must be right before building API or frontend.

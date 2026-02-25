@@ -1,6 +1,6 @@
 # AI1.2 — Analysis API Endpoints (Frontend Integration Layer)
 
-## Status: Blocked → AI1.1
+## Status: Done
 
 ## Why
 The frontend `/analyze` page needs typed API client functions and proper error/loading state handling. This proposal standardises the frontend data-fetching layer for all analysis operations.

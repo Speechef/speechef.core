@@ -1,6 +1,6 @@
 # MM1.1 — Mentorship Marketplace: Mentor + Booking Models
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The mentorship marketplace requires a distinct data model from expert review. Mentors offer recurring sessions at their own rates, with calendar-based availability and a booking/payment flow. This is the data foundation everything else depends on.

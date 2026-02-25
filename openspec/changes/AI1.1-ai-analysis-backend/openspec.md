@@ -1,6 +1,6 @@
 # AI1.1 — AI Analysis Backend
 
-## Status: Blocked → I1.8, I1.9
+## Status: Done
 
 ## Why
 This is the core value proposition of Speechef: upload audio/video and get an AI-generated scorecard. With the media pipeline (I1.8) and AI integrations (I1.9) in place, this ties them together into a complete analysis flow.

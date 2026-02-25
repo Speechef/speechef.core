@@ -1,6 +1,6 @@
 # TP1.2 — Test Prep API Endpoints
 
-## Status: Blocked → TP1.1
+## Status: Done
 
 ## Why
 The test prep frontend needs endpoints to list exams, fetch questions, submit answers, and retrieve predicted scores. Scored free-speech answers must go through the AI pipeline (I1.9).

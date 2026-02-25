@@ -1,6 +1,6 @@
 # MM1.2 — Mentor API + Stripe Connect Integration
 
-## Status: Blocked → MM1.1
+## Status: Done
 
 ## Why
 The mentor marketplace needs a booking API that handles calendar availability, creates video meeting rooms, and routes payments to the mentor via Stripe Connect.

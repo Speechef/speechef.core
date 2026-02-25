@@ -11,4 +11,7 @@ urlpatterns = [
     path('sessions/', api_views.sessions, name='practice-sessions'),
     path('guess/complete/', api_views.guess_complete, name='practice-guess-complete'),
     path('my-best/', api_views.my_best, name='practice-my-best'),
+    path('daily/', api_views.daily_challenge, name='practice-daily'),
+    path('sentence-check/', api_views.sentence_check, name='practice-sentence-check'),
+    path('pronunciation-check/', api_views.pronunciation_check, name='practice-pronunciation-check'),
 ]

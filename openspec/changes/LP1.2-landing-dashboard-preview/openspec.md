@@ -1,6 +1,6 @@
 # LP1.2 — Landing Page: Dashboard Preview / Motivation Widget
 
-## Status: Blocked → LP1.1
+## Status: Done — DashboardPreview.tsx with SVG gauge, skill bars, heatmap, and sessions feed
 
 ## Why
 Users need to see what they'll get before signing up. A live-looking dashboard preview showing scores, streaks, and skill breakdowns communicates the product's value better than any paragraph of text.

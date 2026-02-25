@@ -11,6 +11,11 @@ INSTALLED_APPS = [
     'learn.apps.LearnConfig',
     'practice.apps.PracticeConfig',
     'jobs.apps.JobsConfig',
+    'analysis.apps.AnalysisConfig',
+    'review.apps.ReviewConfig',
+    'mentorship.apps.MentorshipConfig',
+    'testprep.apps.TestPrepConfig',
+    'roleplay.apps.RolePlayConfig',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
@@ -175,3 +180,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+
+# OpenAI (used by analysis app)
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')

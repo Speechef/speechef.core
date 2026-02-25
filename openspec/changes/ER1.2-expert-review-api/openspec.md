@@ -1,6 +1,6 @@
 # ER1.2 — Expert Review API
 
-## Status: Blocked → ER1.1
+## Status: Done
 
 ## Why
 The `/review` frontend needs endpoints to submit a review request, pay, track status, and retrieve delivered feedback.

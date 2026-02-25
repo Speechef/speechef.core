@@ -1,6 +1,6 @@
 # LP1.1 — Landing Page: Hero + Layout Scaffold
 
-## Status: Unblocked
+## Status: Done
 
 ## Why
 The current landing page (`/public/page.tsx`) is a stub. Users arriving at speechef.com see no value proposition, no CTA, and no indication of what the product does. This is the entry point for all growth — it must be built first before any other landing page sections can be layered on.

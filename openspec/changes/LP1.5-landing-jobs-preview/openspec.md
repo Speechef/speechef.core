@@ -1,6 +1,6 @@
 # LP1.5 — Landing Page: Jobs Board Preview
 
-## Status: Blocked → LP1.1
+## Status: Done — Completed inside LP1.1 implementation
 
 ## Why
 The jobs board is a strong differentiator — no other speech platform connects learners directly to employers. Surfacing it on the landing page drives both candidate sign-ups and employer leads.

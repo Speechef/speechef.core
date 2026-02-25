@@ -1,6 +1,6 @@
 # LP1.6 — Landing Page: Mentors Section + Pricing + Social Proof
 
-## Status: Blocked → LP1.1
+## Status: Done — Completed inside LP1.1 implementation
 
 ## Why
 Mentorship and pricing complete the landing page's conversion funnel. Social proof (testimonials, before/after scores) closes the deal for users on the fence.

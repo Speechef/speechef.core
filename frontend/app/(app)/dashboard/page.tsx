@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
+import ScorecardWidget from '@/components/dashboard/ScorecardWidget';
 
 interface Profile {
   image: string;
@@ -19,34 +20,68 @@ interface UserProfile {
 
 interface GameSession {
   id: number;
-  game: 'guess' | 'memory' | 'scramble';
+  game: 'guess' | 'memory' | 'scramble' | 'blitz' | 'sentence' | 'daily' | 'pronunciation';
   score: number;
   played_at: string;
+}
+
+interface RolePlaySession {
+  id: number;
+  status: string;
+  score: number | null;
 }
 
 const GAME_LABELS: Record<string, string> = {
   guess: 'Guess the Word',
   memory: 'Memory Match',
   scramble: 'Word Scramble',
+  blitz: 'Vocabulary Blitz',
+  sentence: 'Sentence Builder',
+  daily: 'Daily Challenge',
+  pronunciation: 'Pronunciation',
 };
 
 const GAME_HREFS: Record<string, string> = {
   guess: '/practice/guess-the-word',
   memory: '/practice/memory-match',
   scramble: '/practice/word-scramble',
+  blitz: '/practice/vocabulary-blitz',
+  sentence: '/practice/sentence-builder',
+  daily: '/practice/daily-challenge',
+  pronunciation: '/practice/pronunciation-challenge',
 };
 
-function StreakCircles({ current }: { current: number }) {
+function CalendarStrip({ sessions }: { sessions: { played_at: string }[] }) {
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d;
+  });
+  const activeDates = new Set(sessions.map((s) => new Date(s.played_at).toDateString()));
+  const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
   return (
-    <div className="flex gap-1 justify-center">
-      {Array.from({ length: 7 }, (_, i) => (
-        <span
-          key={i}
-          className={`inline-block w-5 h-5 rounded-full ${
-            i < Math.min(current, 7) ? 'bg-[#ff6f61]' : 'bg-gray-300'
-          }`}
-        />
-      ))}
+    <div className="flex gap-2 justify-center">
+      {days.map((d, i) => {
+        const active = activeDates.has(d.toDateString());
+        const isToday = d.toDateString() === new Date().toDateString();
+        return (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <span className="text-xs text-gray-400">{DAY_LABELS[d.getDay()]}</span>
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                active
+                  ? 'bg-[#ff6f61] text-white'
+                  : isToday
+                  ? 'border-2 border-[#FADB43] text-gray-300'
+                  : 'bg-gray-100 text-gray-300'
+              }`}
+            >
+              {active ? '✓' : d.getDate()}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -62,6 +97,11 @@ export default function DashboardPage() {
     queryFn: () => api.get('/practice/sessions/').then((r) => r.data),
   });
 
+  const { data: roleplaySessions = [] } = useQuery<RolePlaySession[]>({
+    queryKey: ['roleplay-sessions'],
+    queryFn: () => api.get('/roleplay/my/').then((r) => r.data).catch(() => []),
+  });
+
   const profile = user?.profile;
   const currentStreak = profile?.current_streak ?? 0;
   const longestStreak = profile?.longest_streak ?? 0;
@@ -71,20 +111,52 @@ export default function DashboardPage() {
   const totalGames = sessions.length;
   const totalScore = sessions.reduce((s, x) => s + x.score, 0);
 
-  const bestByGame: Record<string, number> = { guess: 0, memory: 0, scramble: 0 };
-  const countByGame: Record<string, number> = { guess: 0, memory: 0, scramble: 0 };
+  const allGameKeys = Object.keys(GAME_LABELS);
+  const bestByGame: Record<string, number> = Object.fromEntries(allGameKeys.map((k) => [k, 0]));
+  const countByGame: Record<string, number> = Object.fromEntries(allGameKeys.map((k) => [k, 0]));
   for (const s of sessions) {
-    countByGame[s.game] = (countByGame[s.game] ?? 0) + 1;
-    if (s.score > (bestByGame[s.game] ?? 0)) bestByGame[s.game] = s.score;
+    if (s.game in countByGame) {
+      countByGame[s.game] = (countByGame[s.game] ?? 0) + 1;
+      if (s.score > (bestByGame[s.game] ?? 0)) bestByGame[s.game] = s.score;
+    }
   }
 
+  // Roleplay stats
+  const roleplayCount = roleplaySessions.length;
+  const finishedRoleplays = roleplaySessions.filter((s) => s.status === 'finished' && s.score !== null);
+  const roleplayAvgScore = finishedRoleplays.length > 0
+    ? Math.round(finishedRoleplays.reduce((sum, s) => sum + (s.score ?? 0), 0) / finishedRoleplays.length)
+    : 0;
+
   // Recommended: first game never played, otherwise lowest best score
-  const neverPlayed = Object.keys(countByGame).find((k) => countByGame[k] === 0);
+  const neverPlayed = allGameKeys.find((k) => countByGame[k] === 0);
   const recommendedKey =
-    neverPlayed ?? Object.keys(bestByGame).reduce((a, b) => (bestByGame[a] <= bestByGame[b] ? a : b));
+    neverPlayed ?? allGameKeys.reduce((a, b) => (bestByGame[a] <= bestByGame[b] ? a : b));
+
+  // Streak risk: streak > 0 and no session played today
+  const todayStr = new Date().toDateString();
+  const playedToday = sessions.some(
+    (s) => new Date(s.played_at).toDateString() === todayStr
+  );
+  const streakAtRisk = currentStreak > 0 && !playedToday;
 
   return (
     <div className="min-h-screen bg-white p-6">
+      {streakAtRisk && (
+        <div className="mb-5 rounded-xl px-5 py-4 flex items-center justify-between gap-4"
+          style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
+          <p className="text-sm font-semibold" style={{ color: '#92400e' }}>
+            🔥 Your {currentStreak}-day streak is at risk! Play something today to keep it alive.
+          </p>
+          <Link
+            href="/practice/daily-challenge"
+            className="shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
+            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+          >
+            Daily Challenge →
+          </Link>
+        </div>
+      )}
       <h4 className="text-[#141c52] font-bold mb-6">
         Welcome back{user ? `, ${user.username}` : ''}!
       </h4>
@@ -163,31 +235,22 @@ export default function DashboardPage() {
 
           {/* Per-game stats */}
           <Section title="Game Stats">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {Object.entries(GAME_LABELS).map(([key, name]) => (
-                <div key={key} className="bg-white rounded-lg p-3 text-center shadow-sm border">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">{name}</p>
+                <Link key={key} href={GAME_HREFS[key]}
+                  className="bg-white rounded-lg p-3 text-center shadow-sm border hover:border-[#141c52] transition-colors">
+                  <p className="text-xs text-gray-500 truncate">{name}</p>
                   <p className="text-2xl font-bold text-[#141c52]">{countByGame[key] ?? 0}</p>
-                  <p className="text-xs text-gray-500">played · Best: {bestByGame[key] ?? 0}</p>
-                </div>
+                  <p className="text-xs text-gray-500">Best: {bestByGame[key] ?? 0}</p>
+                </Link>
               ))}
+              <Link href="/practice/roleplay"
+                className="bg-white rounded-lg p-3 text-center shadow-sm border hover:border-[#141c52] transition-colors">
+                <p className="text-xs text-gray-500 truncate">🎭 Role Play</p>
+                <p className="text-2xl font-bold text-[#141c52]">{roleplayCount}</p>
+                <p className="text-xs text-gray-500">Avg: {roleplayAvgScore > 0 ? roleplayAvgScore : '—'}</p>
+              </Link>
             </div>
-          </Section>
-
-          {/* Video upload — Coming Soon */}
-          <Section
-            title={
-              <span>
-                Your Videos{' '}
-                <span className="text-xs bg-[#FADB43] text-[#141c52] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ml-1">
-                  Coming Soon
-                </span>
-              </span>
-            }
-          >
-            <p className="text-sm text-gray-500 text-center py-2">
-              Video upload and peer review will be available in a future update.
-            </p>
           </Section>
 
         </div>
@@ -195,26 +258,51 @@ export default function DashboardPage() {
         {/* ── Right column ── */}
         <div className="space-y-6">
 
+          {/* Communication Scorecard */}
+          <ScorecardWidget />
+
           {/* Daily Streak */}
           <Section title="Daily Streak">
             <div className="text-center">
-              <StreakCircles current={currentStreak} />
-              <p className="mt-2 text-sm text-gray-500">
-                {currentStreak} day{currentStreak !== 1 ? 's' : ''} &bull; Best: {longestStreak}
+              <CalendarStrip sessions={sessions} />
+              <p className="mt-3 text-sm text-gray-500">
+                🔥 {currentStreak} day{currentStreak !== 1 ? 's' : ''} &bull; Best: {longestStreak}
               </p>
             </div>
           </Section>
 
+          {/* Personal Best */}
+          {sessions.length > 0 && (() => {
+            const best = sessions.reduce((a, b) => (a.score >= b.score ? a : b));
+            return (
+              <Section title="Personal Best">
+                <div className="text-center">
+                  <p className="text-4xl font-extrabold mb-1" style={{ color: '#141c52' }}>{best.score}</p>
+                  <p className="text-xs text-gray-400 mb-1">{GAME_LABELS[best.game]}</p>
+                  <p className="text-xs text-gray-300">
+                    {new Date(best.played_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+              </Section>
+            );
+          })()}
+
           {/* Quick Links */}
           <Section title="Quick Links">
             <div className="flex flex-col gap-2">
-              {Object.entries(GAME_HREFS).map(([key, href]) => (
+              {[
+                { href: '/practice/daily-challenge', label: '🔥 Daily Challenge' },
+                { href: '/practice/vocabulary-blitz', label: '⚡ Vocabulary Blitz' },
+                { href: '/practice/sentence-builder', label: '✍️ Sentence Builder' },
+                { href: '/practice/pronunciation-challenge', label: '🎙️ Pronunciation' },
+                { href: '/practice/roleplay', label: '🎭 AI Role Play' },
+              ].map(({ href, label }) => (
                 <Link
-                  key={key}
+                  key={href}
                   href={href}
                   className="text-center border border-blue-500 text-blue-600 text-sm rounded-lg py-2 hover:bg-blue-50"
                 >
-                  {GAME_LABELS[key]}
+                  {label}
                 </Link>
               ))}
               <Link
@@ -229,23 +317,32 @@ export default function DashboardPage() {
               >
                 Learning Posts
               </Link>
+              <Link
+                href="/jobs/applications"
+                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50"
+              >
+                My Applications
+              </Link>
             </div>
           </Section>
 
-          {/* Experts — Coming Soon */}
-          <Section
-            title={
-              <span>
-                Experts{' '}
-                <span className="text-xs bg-[#FADB43] text-[#141c52] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ml-1">
-                  Coming Soon
-                </span>
-              </span>
-            }
-          >
-            <p className="text-sm text-gray-500 text-center py-2">
-              Connect with expert tutors — available soon.
-            </p>
+          {/* Expert + Mentor Quick Links */}
+          <Section title="Get Coached">
+            <div className="flex flex-col gap-2">
+              <Link href="/review"
+                className="text-center border-2 text-sm rounded-lg py-2 font-semibold hover:opacity-90 transition-opacity"
+                style={{ borderColor: '#141c52', color: '#141c52', background: 'linear-gradient(to right,#FADB43,#fe9940)' }}>
+                Expert Panel Review →
+              </Link>
+              <Link href="/mentors"
+                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50">
+                Find a Mentor
+              </Link>
+              <Link href="/practice/test-prep"
+                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50">
+                Test Prep (IELTS / TOEFL)
+              </Link>
+            </div>
           </Section>
 
         </div>

@@ -1,6 +1,6 @@
 # ER1.3 — Expert Review Submission Frontend (/review)
 
-## Status: Blocked → ER1.2
+## Status: Done
 
 ## Why
 Users need a clear, trustworthy flow to upload a video and pay for expert review. The UI must feel premium to justify the price and match the dark-card aesthetic teased on the landing page.

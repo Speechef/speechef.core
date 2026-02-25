@@ -1,6 +1,6 @@
 # J2.2 — Jobs Board Frontend (/jobs)
 
-## Status: Blocked → J2.1
+## Status: Done
 
 ## Why
 The jobs page needs to surface the score-match feature prominently — this is what makes Speechef's job board unique versus LinkedIn or Indeed. Candidates should instantly see if they qualify for a role.
