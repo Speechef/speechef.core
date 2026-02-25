@@ -132,9 +132,10 @@ export default function MyApplicationsPage() {
         ) : (
           <div className="space-y-3">
             {displayed.map((app) => (
-              <div
+              <Link
                 key={app.id}
-                className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-4"
+                href={`/jobs/applications/${app.id}`}
+                className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow"
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate" style={{ color: '#141c52' }}>
@@ -169,7 +170,7 @@ export default function MyApplicationsPage() {
                     })}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
 
             <p className="text-center text-xs text-gray-400 pt-2">

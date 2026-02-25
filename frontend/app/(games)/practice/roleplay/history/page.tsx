@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -40,9 +40,22 @@ function ScorePill({ score }: { score: number }) {
   );
 }
 
+const VALID_SORTS = ['newest', 'score_desc', 'score_asc'] as const;
+type SortBy = typeof VALID_SORTS[number];
+
 export default function RolePlayHistoryPage() {
-  const [activeMode, setActiveMode] = useState('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'score_desc' | 'score_asc'>('newest');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeMode = searchParams.get('mode') ?? 'all';
+  const sortParam = searchParams.get('sort') as SortBy | null;
+  const sortBy: SortBy = (sortParam && VALID_SORTS.includes(sortParam)) ? sortParam : 'newest';
+
+  function pushParams(mode: string, sort: SortBy) {
+    const p = new URLSearchParams();
+    if (mode && mode !== 'all') p.set('mode', mode);
+    if (sort !== 'newest') p.set('sort', sort);
+    router.push(`/practice/roleplay/history${p.size ? `?${p}` : ''}`);
+  }
 
   const { data: sessions = [], isLoading } = useQuery<RolePlaySession[]>({
     queryKey: ['roleplay-sessions-all'],
@@ -92,7 +105,7 @@ export default function RolePlayHistoryPage() {
           {MODES.map((m) => (
             <button
               key={m.id}
-              onClick={() => setActiveMode(m.id)}
+              onClick={() => pushParams(m.id, sortBy)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
               style={activeMode === m.id
                 ? { backgroundColor: '#141c52', color: '#fff' }
@@ -104,7 +117,7 @@ export default function RolePlayHistoryPage() {
           ))}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            onChange={(e) => pushParams(activeMode, e.target.value as SortBy)}
             className="ml-auto text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600"
           >
             <option value="newest">Newest First</option>

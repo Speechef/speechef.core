@@ -198,24 +198,32 @@ def public_profile(request, username):
         return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     profile = getattr(user, 'profile', None)
+    prefs = (profile.privacy_prefs or {}) if profile else {}
+
+    # Respect privacy: if profile is set to private, return 403
+    if not prefs.get('public_profile', True):
+        return Response({'detail': 'This profile is private.'}, status=status.HTTP_403_FORBIDDEN)
+
     badges = UserBadge.objects.filter(user=user).select_related('badge')
 
     # Latest Speechef score (from analysis sessions if available)
     latest_score = None
-    try:
-        from analysis.models import AnalysisSession, AnalysisResult
-        session = AnalysisSession.objects.filter(user=user, status='done').order_by('-created_at').first()
-        if session:
-            result = AnalysisResult.objects.filter(session=session).first()
-            if result:
-                latest_score = result.overall_score
-    except Exception:
-        pass
+    if prefs.get('show_score', True):
+        try:
+            from analysis.models import AnalysisSession, AnalysisResult
+            session = AnalysisSession.objects.filter(user=user, status='done').order_by('-created_at').first()
+            if session:
+                result = AnalysisResult.objects.filter(session=session).first()
+                if result:
+                    latest_score = result.overall_score
+        except Exception:
+            pass
 
+    show_streak = prefs.get('show_streak', True)
     return Response({
         'username': user.username,
-        'current_streak': profile.current_streak if profile else 0,
-        'longest_streak': profile.longest_streak if profile else 0,
+        'current_streak': (profile.current_streak if profile else 0) if show_streak else None,
+        'longest_streak': (profile.longest_streak if profile else 0) if show_streak else None,
         'latest_score': latest_score,
         'badges': UserBadgeSerializer(badges, many=True).data,
     })

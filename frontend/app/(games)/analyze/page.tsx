@@ -296,19 +296,12 @@ export default function AnalyzePage() {
     setUploadPct(0);
     setErrorMsg('');
 
-    // Fake upload progress for demo
-    const interval = setInterval(() => {
-      setUploadPct((p) => Math.min(p + 12, 90));
-    }, 200);
-
     try {
-      const res = await uploadAnalysis(file, fileType);
-      clearInterval(interval);
+      const res = await uploadAnalysis(file, fileType, setUploadPct);
       setUploadPct(100);
       setSessionId(res.sessionId);
       setPageState('processing');
     } catch {
-      clearInterval(interval);
       setErrorMsg('Upload failed. Check your connection and try again.');
       setPageState('error');
     }

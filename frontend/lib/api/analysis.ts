@@ -36,13 +36,17 @@ function normalizeSession(data: Record<string, unknown>): AnalysisSession {
 
 export async function uploadAnalysis(
   file: File,
-  fileType: 'audio' | 'video'
+  fileType: 'audio' | 'video',
+  onProgress?: (pct: number) => void,
 ): Promise<UploadResponse> {
   const form = new FormData();
   form.append('file', file);
   form.append('file_type', fileType);
   const { data } = await api.post('/analysis/upload/', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: onProgress
+      ? (e) => { if (e.total) onProgress(Math.round((e.loaded / e.total) * 100)); }
+      : undefined,
   });
   return { sessionId: String(data.session_id), status: 'pending' };
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
@@ -465,9 +466,14 @@ function DangerTab() {
   );
 }
 
+const VALID_TABS: Tab[] = ['account', 'notifications', 'privacy', 'danger'];
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('account');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as Tab | null;
+  const activeTab: Tab = (tabParam && VALID_TABS.includes(tabParam)) ? tabParam : 'account';
 
   const { data: user, isLoading } = useQuery<UserProfile>({
     queryKey: ['profile'],
@@ -498,7 +504,7 @@ export default function SettingsPage() {
               {tabs.map((t) => (
                 <button
                   key={t.key}
-                  onClick={() => setActiveTab(t.key)}
+                  onClick={() => router.push(`/settings?tab=${t.key}`)}
                   className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors text-left ${
                     activeTab === t.key
                       ? 'font-semibold'
