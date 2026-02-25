@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -32,14 +32,27 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function LearnPage() {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState('');
-  const [showBookmarks, setShowBookmarks] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'az'>('newest');
-  const search = useDebounce(searchInput, 300);
-  const { isLoggedIn } = useAuthStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isLoggedIn } = useAuthStore();
   const queryClient = useQueryClient();
+
+  // All filter state lives in the URL
+  const activeCategory = searchParams.get('category') || null;
+  const showBookmarks = searchParams.get('bookmarks') === '1';
+  const sortBy = (searchParams.get('sort') ?? 'newest') as 'newest' | 'oldest' | 'az';
+  // Search is local for responsive typing; synced to URL on blur
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') ?? '');
+  const search = useDebounce(searchInput, 300);
+
+  function pushParams(cat: string | null, bm: boolean, sort: string, q: string) {
+    const p = new URLSearchParams();
+    if (cat) p.set('category', cat);
+    if (bm) p.set('bookmarks', '1');
+    if (sort && sort !== 'newest') p.set('sort', sort);
+    if (q) p.set('search', q);
+    router.push(`/learn${p.size ? `?${p}` : ''}`);
+  }
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['learn-categories'],
@@ -94,12 +107,13 @@ export default function LearnPage() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
+            onBlur={() => pushParams(activeCategory, showBookmarks, sortBy, searchInput)}
             placeholder="Search articles…"
             className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 bg-gray-50 focus:bg-white transition-colors"
           />
           {searchInput && (
             <button
-              onClick={() => setSearchInput('')}
+              onClick={() => { setSearchInput(''); pushParams(activeCategory, showBookmarks, sortBy, ''); }}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
             >
               ✕
@@ -110,11 +124,11 @@ export default function LearnPage() {
         {/* Mobile category row (hidden on md+) */}
         <div className="md:hidden flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 scrollbar-hide">
           {[
-            { label: 'All', action: () => { setActiveCategory(null); setSearchInput(''); setShowBookmarks(false); }, active: !activeCategory && !search && !showBookmarks },
-            { label: '🔖 Saved', action: () => { setShowBookmarks(true); setActiveCategory(null); setSearchInput(''); }, active: showBookmarks },
+            { label: 'All', action: () => { setSearchInput(''); pushParams(null, false, sortBy, ''); }, active: !activeCategory && !search && !showBookmarks },
+            { label: '🔖 Saved', action: () => { setSearchInput(''); pushParams(null, true, sortBy, ''); }, active: showBookmarks },
             ...categories.map((cat) => ({
               label: cat.name,
-              action: () => { setActiveCategory(cat.name); setSearchInput(''); setShowBookmarks(false); },
+              action: () => { setSearchInput(''); pushParams(cat.name, false, sortBy, ''); },
               active: activeCategory === cat.name && !search && !showBookmarks,
             })),
           ].map((item) => (
@@ -142,7 +156,7 @@ export default function LearnPage() {
                 <p className="text-sm text-gray-400">{posts.length} article{posts.length !== 1 ? 's' : ''}</p>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  onChange={(e) => pushParams(activeCategory, showBookmarks, e.target.value, searchInput)}
                   className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600"
                 >
                   <option value="newest">Newest First</option>
@@ -166,7 +180,7 @@ export default function LearnPage() {
                     <p className="font-semibold">No results for "{search}"</p>
                     <p className="text-sm mt-1">Try a different keyword or clear the search.</p>
                     <button
-                      onClick={() => setSearchInput('')}
+                      onClick={() => { setSearchInput(''); pushParams(activeCategory, showBookmarks, sortBy, ''); }}
                       className="mt-3 text-sm font-semibold text-indigo-600 hover:underline"
                     >
                       Clear search
@@ -224,8 +238,8 @@ export default function LearnPage() {
                           key={cat.id}
                           onClick={(e) => {
                             e.preventDefault();
-                            setActiveCategory(cat.name);
                             setSearchInput('');
+                            pushParams(cat.name, false, sortBy, '');
                           }}
                           className="text-xs bg-[#e8f4fa] text-[#141c52] px-2 py-0.5 rounded-full hover:bg-blue-100 transition-colors"
                         >
@@ -282,7 +296,7 @@ export default function LearnPage() {
               <ul className="space-y-1">
                 <li>
                   <button
-                    onClick={() => { setActiveCategory(null); setSearchInput(''); setShowBookmarks(false); }}
+                    onClick={() => { setSearchInput(''); pushParams(null, false, sortBy, ''); }}
                     className={`w-full text-left text-sm px-2 py-1 rounded-lg ${
                       activeCategory === null && !search && !showBookmarks
                         ? 'bg-[#141c52] text-white font-semibold'
@@ -294,7 +308,7 @@ export default function LearnPage() {
                 </li>
                 <li>
                   <button
-                    onClick={() => { setShowBookmarks(true); setActiveCategory(null); setSearchInput(''); }}
+                    onClick={() => { setSearchInput(''); pushParams(null, true, sortBy, ''); }}
                     className={`w-full text-left text-sm px-2 py-1 rounded-lg ${
                       showBookmarks
                         ? 'bg-[#141c52] text-white font-semibold'
@@ -307,7 +321,7 @@ export default function LearnPage() {
                 {categories.map((cat) => (
                   <li key={cat.id}>
                     <button
-                      onClick={() => { setActiveCategory(cat.name); setSearchInput(''); setShowBookmarks(false); }}
+                      onClick={() => { setSearchInput(''); pushParams(cat.name, false, sortBy, ''); }}
                       className={`w-full text-left text-sm px-2 py-1 rounded-lg ${
                         activeCategory === cat.name && !search && !showBookmarks
                           ? 'bg-[#141c52] text-white font-semibold'
@@ -322,7 +336,7 @@ export default function LearnPage() {
 
               {(activeCategory || search || showBookmarks) && (
                 <button
-                  onClick={() => { setActiveCategory(null); setSearchInput(''); setShowBookmarks(false); }}
+                  onClick={() => { setSearchInput(''); pushParams(null, false, sortBy, ''); }}
                   className="w-full mt-3 text-xs text-gray-400 hover:text-gray-600 text-left"
                 >
                   ✕ Clear filters

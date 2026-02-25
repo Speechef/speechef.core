@@ -88,11 +88,13 @@ export default function WordGamesSection() {
         const key = GAME_KEY_MAP[game.href];
         const stats = key ? statsMap[key] : null;
         return (
-          <Link
+          <div
             key={game.href}
-            href={game.href}
             className="flex flex-col bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow relative"
           >
+            {/* Invisible overlay — clicking the card goes to the game */}
+            <Link href={game.href} className="absolute inset-0 rounded-2xl" aria-label={`Play ${game.title}`} />
+
             {game.badge && (
               <span
                 className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full"
@@ -105,24 +107,30 @@ export default function WordGamesSection() {
             <h3 className="font-bold text-sm mb-1.5" style={{ color: '#141c52' }}>{game.title}</h3>
             <p className="text-gray-500 text-xs leading-relaxed flex-1">{game.description}</p>
 
-            {/* Live stats */}
+            {/* Live stats + history link */}
             {stats && stats.count > 0 ? (
               <div className="mt-3 pt-3 border-t border-gray-50">
                 <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
                   <span>Played {stats.count}×</span>
                   <span className="font-semibold" style={{ color: '#141c52' }}>Best: {stats.best}</span>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
                   <div
                     className="h-full rounded-full"
-                    style={{ width: `${stats.best}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }}
+                    style={{ width: `${Math.min(stats.best, 100)}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }}
                   />
                 </div>
+                <Link
+                  href={`/practice/history?game=${key}`}
+                  className="relative z-10 text-[10px] font-semibold text-gray-400 hover:text-gray-600 hover:underline"
+                >
+                  View history →
+                </Link>
               </div>
             ) : (
               <p className="mt-3 text-[10px] text-gray-300">Not played yet</p>
             )}
-          </Link>
+          </div>
         );
       })}
     </div>

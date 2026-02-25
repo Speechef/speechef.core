@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -56,7 +56,13 @@ const SCORING_GUIDES = [
 ];
 
 export default function TestPrepHubPage() {
-  const [sectionFilter, setSectionFilter] = useState('all');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sectionFilter = searchParams.get('section') ?? 'all';
+  function setSectionFilter(val: string) {
+    const url = val && val !== 'all' ? `/practice/test-prep?section=${val}` : '/practice/test-prep';
+    router.push(url);
+  }
 
   const { data: exams = [], isLoading } = useQuery<Exam[]>({
     queryKey: ['testprep-exams'],
