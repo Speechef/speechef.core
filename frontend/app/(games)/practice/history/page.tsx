@@ -45,6 +45,7 @@ const FILTERS = [
 
 export default function GameHistoryPage() {
   const [game, setGame] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'score_desc' | 'score_asc'>('newest');
 
   const { data: sessions = [], isLoading } = useQuery<GameSession[]>({
     queryKey: ['game-sessions', game],
@@ -55,6 +56,12 @@ export default function GameHistoryPage() {
 
   const totalScore = sessions.reduce((s, x) => s + x.score, 0);
   const bestScore = sessions.length ? Math.max(...sessions.map((s) => s.score)) : 0;
+
+  const sortedSessions = [...sessions].sort((a, b) => {
+    if (sortBy === 'score_desc') return b.score - a.score;
+    if (sortBy === 'score_asc') return a.score - b.score;
+    return new Date(b.played_at).getTime() - new Date(a.played_at).getTime();
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -89,8 +96,8 @@ export default function GameHistoryPage() {
           </div>
         )}
 
-        {/* Game filter tabs */}
-        <div className="flex gap-2 flex-wrap mb-5">
+        {/* Game filter tabs + sort */}
+        <div className="flex flex-wrap items-center gap-2 mb-5">
           {FILTERS.map((f) => (
             <button key={f.value} onClick={() => setGame(f.value)}
               className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
@@ -102,6 +109,15 @@ export default function GameHistoryPage() {
               {f.label}
             </button>
           ))}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="ml-auto text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600"
+          >
+            <option value="newest">Newest First</option>
+            <option value="score_desc">Highest Score</option>
+            <option value="score_asc">Lowest Score</option>
+          </select>
         </div>
 
         {/* Session list */}
@@ -135,7 +151,7 @@ export default function GameHistoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {sessions.map((s) => (
+                {sortedSessions.map((s) => (
                   <tr key={s.id} className="border-b last:border-0 hover:bg-gray-50">
                     <td className="px-5 py-3">
                       <span className="mr-2">{GAME_EMOJIS[s.game] ?? '🎮'}</span>

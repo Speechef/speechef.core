@@ -1,7 +1,7 @@
 # Speechef OpenSpec — Feature Proposal Tracker
 
 > Tracks all feature proposals, bug fixes, and improvements using the OpenSpec workflow.
-> Last updated: 2026-02-25 (Phase 25)
+> Last updated: 2026-02-25 (Phase 26)
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Status    | Count | Proposals |
 |-----------|-------|-----------|
-| Done      | 97    | B1.1, B1.2, B1.3, I1.1, I1.2, I1.3, I1.4, I1.5, I1.6, I1.7, I1.8, I1.9, I2.1, G1.1, G1.2, G2.1, G2.2, U1.1, U1.2, A1.1, A1.2, A1.3, L1.1, L1.2, F1.1, F1.2, F1.3, F1.4, F1.5, LP1.1, LP1.2, LP1.3, LP1.4, LP1.5, LP1.6, ER1.1, ER1.2, ER1.3, ER1.4, J2.1, J2.2, MM1.1, MM1.2, MM1.3, TP1.1, TP1.2, TP1.3, AI1.1, AI1.2, AI1.3, AI1.4, UG1.1, RP1.1, RP1.2, J2.3, G3.1, G3.2, N1.1, AC1.1, INT1.1, G3.3, L2.1, MY1.1, DB1.1, L2.2, G3.4, G4.1, L3.1, PR1.1, RP1.3, AN1.1, SC1.1, G5.1, ST1.1, J3.1, RP2.1, PR1.2, WL1.1, RP3.1, G7.1, G8.1, L4.1, RP4.1, J5.1, DB2.1, L5.1, M2.1, RP5.1, AN2.1, PR3.1, J6.1, SC2.1, LB2.1, DB3.1 |
+| Done      | 101   | B1.1, B1.2, B1.3, I1.1, I1.2, I1.3, I1.4, I1.5, I1.6, I1.7, I1.8, I1.9, I2.1, G1.1, G1.2, G2.1, G2.2, U1.1, U1.2, A1.1, A1.2, A1.3, L1.1, L1.2, F1.1, F1.2, F1.3, F1.4, F1.5, LP1.1, LP1.2, LP1.3, LP1.4, LP1.5, LP1.6, ER1.1, ER1.2, ER1.3, ER1.4, J2.1, J2.2, MM1.1, MM1.2, MM1.3, TP1.1, TP1.2, TP1.3, AI1.1, AI1.2, AI1.3, AI1.4, UG1.1, RP1.1, RP1.2, J2.3, G3.1, G3.2, N1.1, AC1.1, INT1.1, G3.3, L2.1, MY1.1, DB1.1, L2.2, G3.4, G4.1, L3.1, PR1.1, RP1.3, AN1.1, SC1.1, G5.1, ST1.1, J3.1, RP2.1, PR1.2, WL1.1, RP3.1, G7.1, G8.1, L4.1, RP4.1, J5.1, DB2.1, L5.1, M2.1, RP5.1, AN2.1, PR3.1, J6.1, SC2.1, LB2.1, DB3.1, J7.1, RP8.1, G10.1, WL2.1 |
 | Unblocked | 0     | — |
 | Blocked   | 0     | — |
 | Archived  | 0     | — |
@@ -95,6 +95,12 @@ J6.1  (job detail more jobs)       ✅ → no dependencies
 SC2.1 (scorecard social share)     ✅ → no dependencies
 LB2.1 (leaderboard user highlight) ✅ → no dependencies
 DB3.1 (dashboard roleplay stats)   ✅ → no dependencies
+
+── PHASE 26: Applications Tabs + Roleplay Resume Banner + History Sort + Learn Prev/Next ──
+J7.1  (applications status tabs)   ✅ → no dependencies
+RP8.1 (roleplay hub resume banner) ✅ → no dependencies
+G10.1 (game history sort)          ✅ → no dependencies
+WL2.1 (learn prev/next navigation) ✅ → no dependencies
 
 ── PHASE 20: Analysis History + Shareable Scorecard + Game History + Streak Banner ──
 AN1.1 (analysis history page)    ✅ → no dependencies

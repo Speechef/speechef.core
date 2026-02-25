@@ -57,6 +57,7 @@ export default function RolePlayHubPage() {
     queryFn: () => api.get('/roleplay/my/').then((r) => r.data).catch(() => []),
   });
 
+  const activeSession = sessions.find((s) => s.status === 'active');
   const recentSessions = sessions.slice(0, 5);
 
   return (
@@ -75,6 +76,32 @@ export default function RolePlayHubPage() {
             History →
           </Link>
         </div>
+
+        {/* Active session resume banner */}
+        {activeSession && (() => {
+          const meta = MODES.find((m) => m.id === activeSession.mode);
+          return (
+            <div
+              className="rounded-xl px-5 py-4 flex items-center justify-between gap-4 mb-8"
+              style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}
+            >
+              <div>
+                <p className="text-xs font-semibold text-white/60 mb-0.5">Unfinished Session</p>
+                <p className="text-sm font-bold">
+                  {meta?.emoji ?? '🗣️'} {meta?.title ?? activeSession.mode}
+                  {activeSession.topic ? ` — ${activeSession.topic}` : ''}
+                </p>
+              </div>
+              <Link
+                href={`/practice/roleplay/${activeSession.mode}`}
+                className="shrink-0 text-sm font-bold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
+                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              >
+                Resume →
+              </Link>
+            </div>
+          );
+        })()}
 
         {/* Mode Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">

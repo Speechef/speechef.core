@@ -50,6 +50,12 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
     queryFn: () => api.get('/learn/posts/', { params: { category: firstCategory } }).then((r) => r.data),
   });
 
+  const { data: allPosts = [] } = useQuery<Post[]>({
+    queryKey: ['learn-posts-all-nav'],
+    enabled: !!post,
+    queryFn: () => api.get('/learn/posts/').then((r) => r.data),
+  });
+
   const completeMutation = useMutation({
     mutationFn: () => api.post(`/learn/posts/${id}/complete/`).then((r) => r.data),
     onSuccess: () => {
@@ -174,6 +180,34 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
                   </Link>
                 ))}
               </div>
+            </div>
+          );
+        })()}
+
+        {/* Prev / Next navigation */}
+        {(() => {
+          const sorted = [...allPosts].sort((a, b) => a.id - b.id);
+          const idx = sorted.findIndex((p) => String(p.id) === id);
+          if (idx === -1) return null;
+          const prev = idx > 0 ? sorted[idx - 1] : null;
+          const next = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+          if (!prev && !next) return null;
+          return (
+            <div className="flex items-stretch gap-3 my-8">
+              {prev ? (
+                <Link href={`/learn/${prev.id}`}
+                  className="flex-1 flex flex-col justify-center border border-gray-200 rounded-xl px-4 py-3 hover:border-[#141c52] hover:shadow-sm transition-all group">
+                  <p className="text-xs text-gray-400 mb-0.5">← Previous</p>
+                  <p className="text-sm font-semibold text-[#141c52] group-hover:underline line-clamp-2">{prev.title}</p>
+                </Link>
+              ) : <div className="flex-1" />}
+              {next ? (
+                <Link href={`/learn/${next.id}`}
+                  className="flex-1 flex flex-col justify-center border border-gray-200 rounded-xl px-4 py-3 hover:border-[#141c52] hover:shadow-sm transition-all group text-right">
+                  <p className="text-xs text-gray-400 mb-0.5">Next →</p>
+                  <p className="text-sm font-semibold text-[#141c52] group-hover:underline line-clamp-2">{next.title}</p>
+                </Link>
+              ) : <div className="flex-1" />}
             </div>
           );
         })()}

@@ -32,26 +32,43 @@ interface RolePlaySession {
 }
 
 const GAME_LABELS: Record<string, string> = {
-  guess: 'Guess the Word',
-  memory: 'Memory Match',
-  scramble: 'Word Scramble',
-  blitz: 'Vocabulary Blitz',
-  sentence: 'Sentence Builder',
-  daily: 'Daily Challenge',
+  guess:         'Guess the Word',
+  memory:        'Memory Match',
+  scramble:      'Word Scramble',
+  blitz:         'Vocabulary Blitz',
+  sentence:      'Sentence Builder',
+  daily:         'Daily Challenge',
   pronunciation: 'Pronunciation',
 };
 
+const GAME_EMOJIS: Record<string, string> = {
+  guess:         '🧠',
+  memory:        '🃏',
+  scramble:      '🔤',
+  blitz:         '⚡',
+  sentence:      '✍️',
+  daily:         '🔥',
+  pronunciation: '🎙️',
+};
+
 const GAME_HREFS: Record<string, string> = {
-  guess: '/practice/guess-the-word',
-  memory: '/practice/memory-match',
-  scramble: '/practice/word-scramble',
-  blitz: '/practice/vocabulary-blitz',
-  sentence: '/practice/sentence-builder',
-  daily: '/practice/daily-challenge',
+  guess:         '/practice/guess-the-word',
+  memory:        '/practice/memory-match',
+  scramble:      '/practice/word-scramble',
+  blitz:         '/practice/vocabulary-blitz',
+  sentence:      '/practice/sentence-builder',
+  daily:         '/practice/daily-challenge',
   pronunciation: '/practice/pronunciation-challenge',
 };
 
-function CalendarStrip({ sessions }: { sessions: { played_at: string }[] }) {
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function CalendarStrip({ sessions, streak }: { sessions: { played_at: string }[]; streak: number }) {
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -61,21 +78,22 @@ function CalendarStrip({ sessions }: { sessions: { played_at: string }[] }) {
   const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-1.5 justify-between">
       {days.map((d, i) => {
-        const active = activeDates.has(d.toDateString());
+        const active  = activeDates.has(d.toDateString());
         const isToday = d.toDateString() === new Date().toDateString();
         return (
-          <div key={i} className="flex flex-col items-center gap-1">
-            <span className="text-xs text-gray-400">{DAY_LABELS[d.getDay()]}</span>
+          <div key={i} className="flex flex-col items-center gap-1 flex-1">
+            <span className="text-[10px] text-gray-400 font-medium">{DAY_LABELS[d.getDay()]}</span>
             <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 active
-                  ? 'bg-[#ff6f61] text-white'
+                  ? 'text-white shadow-sm'
                   : isToday
-                  ? 'border-2 border-[#FADB43] text-gray-300'
+                  ? 'border-2 border-[#FADB43] text-gray-400'
                   : 'bg-gray-100 text-gray-300'
               }`}
+              style={active ? { background: 'linear-gradient(135deg,#ff6f61,#ff9a44)' } : undefined}
             >
               {active ? '✓' : d.getDate()}
             </span>
@@ -83,6 +101,16 @@ function CalendarStrip({ sessions }: { sessions: { played_at: string }[] }) {
         );
       })}
     </div>
+  );
+}
+
+function ScorePill({ score }: { score: number }) {
+  const color = score >= 80 ? '#166534' : score >= 50 ? '#92400e' : '#991b1b';
+  const bg    = score >= 80 ? '#dcfce7' : score >= 50 ? '#fef3c7' : '#fee2e2';
+  return (
+    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color, backgroundColor: bg }}>
+      {score}
+    </span>
   );
 }
 
@@ -102,17 +130,15 @@ export default function DashboardPage() {
     queryFn: () => api.get('/roleplay/my/').then((r) => r.data).catch(() => []),
   });
 
-  const profile = user?.profile;
-  const currentStreak = profile?.current_streak ?? 0;
-  const longestStreak = profile?.longest_streak ?? 0;
-
-  // Derived stats
-  const recentSessions = sessions.slice(0, 5);
-  const totalGames = sessions.length;
-  const totalScore = sessions.reduce((s, x) => s + x.score, 0);
+  const profile        = user?.profile;
+  const currentStreak  = profile?.current_streak ?? 0;
+  const longestStreak  = profile?.longest_streak ?? 0;
+  const recentSessions = sessions.slice(0, 6);
+  const totalGames     = sessions.length;
+  const totalScore     = sessions.reduce((s, x) => s + x.score, 0);
 
   const allGameKeys = Object.keys(GAME_LABELS);
-  const bestByGame: Record<string, number> = Object.fromEntries(allGameKeys.map((k) => [k, 0]));
+  const bestByGame: Record<string, number>  = Object.fromEntries(allGameKeys.map((k) => [k, 0]));
   const countByGame: Record<string, number> = Object.fromEntries(allGameKeys.map((k) => [k, 0]));
   for (const s of sessions) {
     if (s.game in countByGame) {
@@ -121,255 +147,354 @@ export default function DashboardPage() {
     }
   }
 
-  // Roleplay stats
-  const roleplayCount = roleplaySessions.length;
+  const roleplayCount    = roleplaySessions.length;
   const finishedRoleplays = roleplaySessions.filter((s) => s.status === 'finished' && s.score !== null);
-  const roleplayAvgScore = finishedRoleplays.length > 0
+  const roleplayAvgScore  = finishedRoleplays.length > 0
     ? Math.round(finishedRoleplays.reduce((sum, s) => sum + (s.score ?? 0), 0) / finishedRoleplays.length)
     : 0;
 
-  // Recommended: first game never played, otherwise lowest best score
-  const neverPlayed = allGameKeys.find((k) => countByGame[k] === 0);
-  const recommendedKey =
-    neverPlayed ?? allGameKeys.reduce((a, b) => (bestByGame[a] <= bestByGame[b] ? a : b));
+  const neverPlayed    = allGameKeys.find((k) => countByGame[k] === 0);
+  const recommendedKey = neverPlayed ?? allGameKeys.reduce((a, b) => (bestByGame[a] <= bestByGame[b] ? a : b));
 
-  // Streak risk: streak > 0 and no session played today
-  const todayStr = new Date().toDateString();
-  const playedToday = sessions.some(
-    (s) => new Date(s.played_at).toDateString() === todayStr
-  );
+  const todayStr    = new Date().toDateString();
+  const playedToday = sessions.some((s) => new Date(s.played_at).toDateString() === todayStr);
   const streakAtRisk = currentStreak > 0 && !playedToday;
 
+  const personalBest = sessions.length > 0
+    ? sessions.reduce((a, b) => (a.score >= b.score ? a : b))
+    : null;
+
   return (
-    <div className="min-h-screen bg-white p-6">
-      {streakAtRisk && (
-        <div className="mb-5 rounded-xl px-5 py-4 flex items-center justify-between gap-4"
-          style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
-          <p className="text-sm font-semibold" style={{ color: '#92400e' }}>
-            🔥 Your {currentStreak}-day streak is at risk! Play something today to keep it alive.
-          </p>
-          <Link
-            href="/practice/daily-challenge"
-            className="shrink-0 text-xs font-bold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-          >
-            Daily Challenge →
-          </Link>
-        </div>
-      )}
-      <h4 className="text-[#141c52] font-bold mb-6">
-        Welcome back{user ? `, ${user.username}` : ''}!
-      </h4>
+    <div className="min-h-screen bg-gray-50">
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard value={totalGames} label="Games Played" />
-        <StatCard value={totalScore} label="Total Score" />
-        <StatCard value={currentStreak} label="Day Streak" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* ── Left / main column (2 cols wide) ── */}
-        <div className="md:col-span-2 space-y-6">
-
-          {/* Recent Games */}
-          <Section title="Recent Games">
-            {recentSessions.length > 0 ? (
-              <>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500 border-b">
-                      <th className="pb-2">Game</th>
-                      <th className="pb-2">Score</th>
-                      <th className="pb-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentSessions.map((s) => (
-                      <tr key={s.id} className="border-b last:border-0">
-                        <td className="py-2">{GAME_LABELS[s.game]}</td>
-                        <td className="py-2 font-bold">{s.score}</td>
-                        <td className="py-2 text-gray-400">
-                          {new Date(s.played_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <Link
-                  href="/practice"
-                  className="inline-block mt-3 text-sm text-blue-600 hover:underline"
-                >
-                  Play more games →
-                </Link>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-gray-500 mb-3">No games played yet.</p>
-                <Link
-                  href="/practice"
-                  className="bg-[#FADB43] text-[#141c52] font-semibold px-4 py-2 rounded-lg hover:opacity-90"
-                >
-                  Start Playing
-                </Link>
+      {/* ── Hero strip ── */}
+      <div
+        className="px-6 py-8"
+        style={{ background: 'linear-gradient(135deg,#141c52 0%,#1e2d78 60%,#162560 100%)' }}
+      >
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-6 flex-wrap">
+          <div>
+            <p className="text-white/50 text-sm mb-1">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+            <h1 className="text-2xl font-extrabold text-white">
+              {greeting()}{user ? `, ${user.username}` : ''}!
+            </h1>
+            <p className="text-white/60 text-sm mt-1">Here's your Speechef overview.</p>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {currentStreak > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full"
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <span className="text-lg">🔥</span>
+                <div>
+                  <p className="text-white font-bold text-sm leading-none">{currentStreak} day streak</p>
+                  <p className="text-white/50 text-xs mt-0.5">Best: {longestStreak}</p>
+                </div>
               </div>
             )}
-          </Section>
-
-          {/* Recommended */}
-          <Section title="Recommended for You">
-            <p className="text-sm text-gray-500 mb-2">Based on your scores, try improving at:</p>
-            <p className="font-semibold text-[#141c52] mb-3">{GAME_LABELS[recommendedKey]}</p>
-            <Link
-              href={GAME_HREFS[recommendedKey]}
-              className="bg-[#FADB43] text-[#141c52] font-semibold px-4 py-2 rounded-lg hover:opacity-90 text-sm"
-            >
-              Play Now
-            </Link>
-          </Section>
-
-          {/* Per-game stats */}
-          <Section title="Game Stats">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {Object.entries(GAME_LABELS).map(([key, name]) => (
-                <Link key={key} href={GAME_HREFS[key]}
-                  className="bg-white rounded-lg p-3 text-center shadow-sm border hover:border-[#141c52] transition-colors">
-                  <p className="text-xs text-gray-500 truncate">{name}</p>
-                  <p className="text-2xl font-bold text-[#141c52]">{countByGame[key] ?? 0}</p>
-                  <p className="text-xs text-gray-500">Best: {bestByGame[key] ?? 0}</p>
-                </Link>
-              ))}
-              <Link href="/practice/roleplay"
-                className="bg-white rounded-lg p-3 text-center shadow-sm border hover:border-[#141c52] transition-colors">
-                <p className="text-xs text-gray-500 truncate">🎭 Role Play</p>
-                <p className="text-2xl font-bold text-[#141c52]">{roleplayCount}</p>
-                <p className="text-xs text-gray-500">Avg: {roleplayAvgScore > 0 ? roleplayAvgScore : '—'}</p>
+            {streakAtRisk && (
+              <Link
+                href="/practice/daily-challenge"
+                className="text-sm font-bold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
+                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              >
+                🎯 Play today →
               </Link>
-            </div>
-          </Section>
+            )}
+            {!streakAtRisk && (
+              <Link
+                href="/practice"
+                className="text-sm font-bold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
+                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              >
+                Practice →
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-6 py-6">
+
+        {/* ── Stat bar ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { icon: '🎮', value: totalGames, label: 'Games Played', sub: 'all time' },
+            { icon: '⭐', value: totalScore.toLocaleString(), label: 'Total Score', sub: 'cumulative' },
+            { icon: '🔥', value: currentStreak, label: 'Day Streak', sub: `Best: ${longestStreak}` },
+            { icon: '🎭', value: roleplayCount, label: 'Role Play', sub: roleplayAvgScore > 0 ? `Avg: ${roleplayAvgScore}` : 'No sessions yet' },
+          ].map(({ icon, value, label, sub }) => (
+            <div key={label} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">{icon}</span>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+              </div>
+              <p className="text-3xl font-extrabold" style={{ color: '#141c52' }}>{value}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
+            </div>
+          ))}
         </div>
 
-        {/* ── Right column ── */}
-        <div className="space-y-6">
+        {/* ── Main layout ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Communication Scorecard */}
-          <ScorecardWidget />
+          {/* ── Left column (2/3) ── */}
+          <div className="lg:col-span-2 space-y-6">
 
-          {/* Daily Streak */}
-          <Section title="Daily Streak">
-            <div className="text-center">
-              <CalendarStrip sessions={sessions} />
-              <p className="mt-3 text-sm text-gray-500">
-                🔥 {currentStreak} day{currentStreak !== 1 ? 's' : ''} &bull; Best: {longestStreak}
-              </p>
-            </div>
-          </Section>
-
-          {/* Personal Best */}
-          {sessions.length > 0 && (() => {
-            const best = sessions.reduce((a, b) => (a.score >= b.score ? a : b));
-            return (
-              <Section title="Personal Best">
-                <div className="text-center">
-                  <p className="text-4xl font-extrabold mb-1" style={{ color: '#141c52' }}>{best.score}</p>
-                  <p className="text-xs text-gray-400 mb-1">{GAME_LABELS[best.game]}</p>
-                  <p className="text-xs text-gray-300">
-                    {new Date(best.played_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
+            {/* Recent Activity */}
+            <Card title="Recent Activity" action={{ label: 'View history →', href: '/practice/history' }}>
+              {recentSessions.length > 0 ? (
+                <div className="space-y-2">
+                  {recentSessions.map((s) => (
+                    <div key={s.id}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <span className="text-xl w-8 text-center shrink-0">{GAME_EMOJIS[s.game] ?? '🎮'}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[#141c52] truncate">{GAME_LABELS[s.game] ?? s.game}</p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(s.played_at).toLocaleDateString('en-US', {
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      <ScorePill score={s.score} />
+                    </div>
+                  ))}
+                  <Link href="/practice" className="block text-center text-xs font-semibold text-indigo-600 hover:underline mt-2">
+                    Play more games →
+                  </Link>
                 </div>
-              </Section>
-            );
-          })()}
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-4xl mb-3">🎮</p>
+                  <p className="text-gray-500 text-sm mb-4">No games played yet. Start your journey!</p>
+                  <Link href="/practice"
+                    className="inline-block text-sm font-bold px-5 py-2 rounded-full transition-opacity hover:opacity-90"
+                    style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+                    Start Playing →
+                  </Link>
+                </div>
+              )}
+            </Card>
 
-          {/* Quick Links */}
-          <Section title="Quick Links">
-            <div className="flex flex-col gap-2">
-              {[
-                { href: '/practice/daily-challenge', label: '🔥 Daily Challenge' },
-                { href: '/practice/vocabulary-blitz', label: '⚡ Vocabulary Blitz' },
-                { href: '/practice/sentence-builder', label: '✍️ Sentence Builder' },
-                { href: '/practice/pronunciation-challenge', label: '🎙️ Pronunciation' },
-                { href: '/practice/roleplay', label: '🎭 AI Role Play' },
-              ].map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="text-center border border-blue-500 text-blue-600 text-sm rounded-lg py-2 hover:bg-blue-50"
-                >
-                  {label}
+            {/* Recommended + Game Stats side by side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Recommended */}
+              <Card title="Recommended">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-3xl">{GAME_EMOJIS[recommendedKey] ?? '🎮'}</span>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-0.5">
+                      {countByGame[recommendedKey] === 0 ? 'Never played' : 'Needs improvement'}
+                    </p>
+                    <p className="font-bold text-[#141c52]">{GAME_LABELS[recommendedKey]}</p>
+                  </div>
+                </div>
+                {countByGame[recommendedKey] > 0 && (
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                      <span>Best score</span>
+                      <span className="font-bold text-[#141c52]">{bestByGame[recommendedKey]}</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full"
+                        style={{
+                          width: `${bestByGame[recommendedKey]}%`,
+                          background: 'linear-gradient(to right,#FADB43,#fe9940)',
+                        }} />
+                    </div>
+                  </div>
+                )}
+                <Link href={GAME_HREFS[recommendedKey]}
+                  className="block w-full text-center text-sm font-bold py-2 rounded-full transition-opacity hover:opacity-90"
+                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+                  Play Now →
                 </Link>
-              ))}
-              <Link
-                href="/practice/leaderboard"
-                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50"
-              >
-                Leaderboard
-              </Link>
-              <Link
-                href="/learn"
-                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50"
-              >
-                Learning Posts
-              </Link>
-              <Link
-                href="/jobs/applications"
-                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50"
-              >
-                My Applications
-              </Link>
-            </div>
-          </Section>
+              </Card>
 
-          {/* Expert + Mentor Quick Links */}
-          <Section title="Get Coached">
-            <div className="flex flex-col gap-2">
-              <Link href="/review"
-                className="text-center border-2 text-sm rounded-lg py-2 font-semibold hover:opacity-90 transition-opacity"
-                style={{ borderColor: '#141c52', color: '#141c52', background: 'linear-gradient(to right,#FADB43,#fe9940)' }}>
-                Expert Panel Review →
-              </Link>
-              <Link href="/mentors"
-                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50">
-                Find a Mentor
-              </Link>
-              <Link href="/practice/test-prep"
-                className="text-center border border-gray-400 text-gray-600 text-sm rounded-lg py-2 hover:bg-gray-50">
-                Test Prep (IELTS / TOEFL)
-              </Link>
+              {/* Personal Best */}
+              <Card title="Personal Best">
+                {personalBest ? (
+                  <div className="text-center">
+                    <p className="text-5xl font-extrabold mb-1" style={{ color: '#141c52' }}>
+                      {personalBest.score}
+                    </p>
+                    <p className="text-xs text-gray-400 mb-0.5">out of 100</p>
+                    <div className="flex items-center justify-center gap-2 mt-3">
+                      <span className="text-lg">{GAME_EMOJIS[personalBest.game] ?? '🎮'}</span>
+                      <p className="text-sm font-semibold text-[#141c52]">{GAME_LABELS[personalBest.game]}</p>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(personalBest.played_at).toLocaleDateString('en-US', {
+                        month: 'long', day: 'numeric', year: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-400 text-sm">
+                    Play a game to set your first personal best.
+                  </div>
+                )}
+              </Card>
             </div>
-          </Section>
 
+            {/* Game Stats */}
+            <Card title="Game Stats" action={{ label: 'Full history →', href: '/practice/history' }}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {allGameKeys.map((key) => (
+                  <Link key={key} href={GAME_HREFS[key]}
+                    className="group bg-gray-50 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 rounded-xl p-3 transition-all">
+                    <div className="text-xl mb-1">{GAME_EMOJIS[key]}</div>
+                    <p className="text-xs text-gray-500 truncate leading-tight mb-2">{GAME_LABELS[key]}</p>
+                    <p className="text-2xl font-extrabold text-[#141c52] leading-none">{countByGame[key]}</p>
+                    {bestByGame[key] > 0 && (
+                      <>
+                        <div className="h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                          <div className="h-full rounded-full"
+                            style={{
+                              width: `${bestByGame[key]}%`,
+                              background: 'linear-gradient(to right,#FADB43,#fe9940)',
+                            }} />
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Best: {bestByGame[key]}</p>
+                      </>
+                    )}
+                  </Link>
+                ))}
+                <Link href="/practice/roleplay"
+                  className="group bg-gray-50 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 rounded-xl p-3 transition-all">
+                  <div className="text-xl mb-1">🎭</div>
+                  <p className="text-xs text-gray-500 truncate leading-tight mb-2">Role Play</p>
+                  <p className="text-2xl font-extrabold text-[#141c52] leading-none">{roleplayCount}</p>
+                  {roleplayAvgScore > 0 && (
+                    <>
+                      <div className="h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full rounded-full"
+                          style={{
+                            width: `${roleplayAvgScore}%`,
+                            background: 'linear-gradient(to right,#FADB43,#fe9940)',
+                          }} />
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Avg: {roleplayAvgScore}</p>
+                    </>
+                  )}
+                </Link>
+              </div>
+            </Card>
+
+          </div>
+
+          {/* ── Right column (1/3) ── */}
+          <div className="space-y-6">
+
+            {/* Scorecard */}
+            <ScorecardWidget />
+
+            {/* 7-day streak calendar */}
+            <Card title="Daily Streak">
+              <CalendarStrip sessions={sessions} streak={currentStreak} />
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                <div className="text-center">
+                  <p className="text-lg font-extrabold text-[#141c52]">{currentStreak}</p>
+                  <p className="text-xs text-gray-400">Current</p>
+                </div>
+                <div className="w-px h-8 bg-gray-100" />
+                <div className="text-center">
+                  <p className="text-lg font-extrabold text-[#141c52]">{longestStreak}</p>
+                  <p className="text-xs text-gray-400">Best</p>
+                </div>
+                <div className="w-px h-8 bg-gray-100" />
+                <div className="text-center">
+                  <p className="text-lg font-extrabold text-[#141c52]">
+                    {sessions.filter((s) => new Date(s.played_at).toDateString() === todayStr).length}
+                  </p>
+                  <p className="text-xs text-gray-400">Today</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Quick play */}
+            <Card title="Quick Play">
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { href: '/practice/daily-challenge',      label: 'Daily Challenge', emoji: '🔥' },
+                  { href: '/practice/vocabulary-blitz',     label: 'Vocab Blitz',     emoji: '⚡' },
+                  { href: '/practice/sentence-builder',     label: 'Sentences',       emoji: '✍️' },
+                  { href: '/practice/pronunciation-challenge', label: 'Pronunciation', emoji: '🎙️' },
+                  { href: '/practice/roleplay',             label: 'AI Role Play',    emoji: '🎭' },
+                  { href: '/practice/memory-match',         label: 'Memory Match',    emoji: '🃏' },
+                ].map(({ href, label, emoji }) => (
+                  <Link key={href} href={href}
+                    className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-gray-50 hover:bg-indigo-50 hover:border-indigo-200 border border-transparent transition-all text-center">
+                    <span className="text-xl">{emoji}</span>
+                    <span className="text-xs font-medium text-[#141c52] leading-tight">{label}</span>
+                  </Link>
+                ))}
+              </div>
+              <Link href="/practice/leaderboard"
+                className="block text-center mt-3 text-xs font-semibold py-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                🏆 Leaderboard
+              </Link>
+            </Card>
+
+            {/* Get Coached */}
+            <Card title="Get Coached">
+              <div className="space-y-2">
+                <Link href="/review"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
+                  style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}>
+                  <span className="text-lg">🎓</span>
+                  <div>
+                    <p className="font-bold text-sm">Expert Panel Review</p>
+                    <p className="text-white/60 text-xs">Get scored by real coaches</p>
+                  </div>
+                </Link>
+                <Link href="/mentors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-[#141c52] hover:bg-gray-50 transition-all text-sm">
+                  <span className="text-lg">🧑‍🏫</span>
+                  <div>
+                    <p className="font-semibold text-[#141c52] text-sm">Find a Mentor</p>
+                    <p className="text-gray-400 text-xs">1-on-1 video coaching</p>
+                  </div>
+                </Link>
+                <Link href="/practice/test-prep"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-[#141c52] hover:bg-gray-50 transition-all text-sm">
+                  <span className="text-lg">📝</span>
+                  <div>
+                    <p className="font-semibold text-[#141c52] text-sm">Test Prep</p>
+                    <p className="text-gray-400 text-xs">IELTS · TOEFL · PTE</p>
+                  </div>
+                </Link>
+              </div>
+            </Card>
+
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function StatCard({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="bg-[#e8f4fa] rounded-lg p-4 text-center">
-      <p className="text-3xl font-bold text-[#141c52]">{value}</p>
-      <p className="text-sm text-gray-600">{label}</p>
-    </div>
-  );
-}
-
-function Section({
+function Card({
   title,
   children,
+  action,
 }: {
-  title: React.ReactNode;
+  title: string;
   children: React.ReactNode;
+  action?: { label: string; href: string };
 }) {
   return (
-    <div className="bg-[#e8f4fa] rounded-lg p-5">
-      <h6 className="font-semibold text-[#141c52] mb-3">{title}</h6>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-bold text-[#141c52]">{title}</h2>
+        {action && (
+          <Link href={action.href} className="text-xs font-semibold text-indigo-600 hover:underline">
+            {action.label}
+          </Link>
+        )}
+      </div>
       {children}
     </div>
   );

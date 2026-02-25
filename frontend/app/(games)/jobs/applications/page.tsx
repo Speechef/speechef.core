@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -27,11 +28,25 @@ const STATUS_LABELS: Record<string, string> = {
   withdrawn: 'Withdrawn',
 };
 
+const STATUS_TABS = [
+  { key: '', label: 'All' },
+  { key: 'applied', label: 'Applied' },
+  { key: 'shortlisted', label: 'Shortlisted' },
+  { key: 'rejected', label: 'Rejected' },
+  { key: 'withdrawn', label: 'Withdrawn' },
+];
+
 export default function MyApplicationsPage() {
+  const [filterStatus, setFilterStatus] = useState('');
+
   const { data: applications = [], isLoading } = useQuery<Application[]>({
     queryKey: ['my-applications'],
     queryFn: () => api.get('/jobs/my-applications/').then((r) => r.data),
   });
+
+  const displayed = filterStatus
+    ? applications.filter((a) => a.status === filterStatus)
+    : applications;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -51,6 +66,35 @@ export default function MyApplicationsPage() {
             ← Browse Jobs
           </Link>
         </div>
+
+        {/* Status filter tabs */}
+        {!isLoading && applications.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {STATUS_TABS.map((tab) => {
+              const count = tab.key
+                ? applications.filter((a) => a.status === tab.key).length
+                : applications.length;
+              const isActive = filterStatus === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilterStatus(tab.key)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+                  style={
+                    isActive
+                      ? { backgroundColor: '#141c52', color: '#fff' }
+                      : { backgroundColor: '#e5e7eb', color: '#374151' }
+                  }
+                >
+                  {tab.label}
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-white/20' : 'bg-white text-gray-500'}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-4">
@@ -75,9 +119,19 @@ export default function MyApplicationsPage() {
               Browse Jobs →
             </Link>
           </div>
+        ) : displayed.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <p className="text-3xl mb-3">🔍</p>
+            <p className="font-semibold">No {STATUS_LABELS[filterStatus]} applications</p>
+            <button onClick={() => setFilterStatus('')}
+              className="mt-3 text-sm font-semibold underline"
+              style={{ color: '#141c52' }}>
+              View all applications
+            </button>
+          </div>
         ) : (
           <div className="space-y-3">
-            {applications.map((app) => (
+            {displayed.map((app) => (
               <div
                 key={app.id}
                 className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-4"
@@ -119,7 +173,7 @@ export default function MyApplicationsPage() {
             ))}
 
             <p className="text-center text-xs text-gray-400 pt-2">
-              {applications.length} application{applications.length !== 1 ? 's' : ''} total
+              {displayed.length}{filterStatus ? ` ${STATUS_LABELS[filterStatus].toLowerCase()}` : ''} application{displayed.length !== 1 ? 's' : ''}{filterStatus ? ` · ${applications.length} total` : ''}
             </p>
           </div>
         )}
