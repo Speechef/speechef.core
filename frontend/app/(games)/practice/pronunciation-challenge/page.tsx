@@ -284,6 +284,12 @@ export default function PronunciationChallengePage() {
               More Games
             </Link>
           </div>
+          <Link
+            href="/practice/history?game=pronunciation"
+            className="block text-center text-sm text-gray-400 hover:underline mt-3"
+          >
+            View session history →
+          </Link>
         </div>
       </div>
     );

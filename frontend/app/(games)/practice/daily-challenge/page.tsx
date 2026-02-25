@@ -252,6 +252,13 @@ function BonusSection() {
         </div>
         <span className="ml-auto text-gray-400 text-sm">→</span>
       </Link>
+
+      <Link
+        href="/practice/history?game=daily"
+        className="block text-center text-sm text-gray-400 hover:underline pt-1"
+      >
+        View session history →
+      </Link>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -37,7 +37,13 @@ const STATUS_TABS = [
 ];
 
 export default function MyApplicationsPage() {
-  const [filterStatus, setFilterStatus] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const filterStatus = searchParams.get('status') ?? '';
+  function setFilterStatus(val: string) {
+    const url = val ? `/jobs/applications?status=${val}` : '/jobs/applications';
+    router.push(url);
+  }
 
   const { data: applications = [], isLoading } = useQuery<Application[]>({
     queryKey: ['my-applications'],
