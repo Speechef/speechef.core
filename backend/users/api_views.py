@@ -60,6 +60,30 @@ def change_password(request):
     return Response({'ok': True})
 
 
+# ── User settings (notification + privacy prefs) ──────────────────────────────
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def user_settings(request):
+    profile = request.user.profile
+    if request.method == 'GET':
+        return Response({
+            'notification_prefs': profile.notification_prefs or {},
+            'privacy_prefs':      profile.privacy_prefs or {},
+        })
+    # PATCH — update whichever keys are provided
+    update_fields = []
+    if 'notification_prefs' in request.data:
+        profile.notification_prefs = request.data['notification_prefs']
+        update_fields.append('notification_prefs')
+    if 'privacy_prefs' in request.data:
+        profile.privacy_prefs = request.data['privacy_prefs']
+        update_fields.append('privacy_prefs')
+    if update_fields:
+        profile.save(update_fields=update_fields)
+    return Response({'ok': True})
+
+
 # ── Password reset ────────────────────────────────────────────────────────────
 
 @api_view(['POST'])

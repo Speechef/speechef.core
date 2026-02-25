@@ -194,6 +194,48 @@ function SkillBar({ label, score, color }: { label: string; score: number; color
   );
 }
 
+// ──────────────────────────────────────────────────── Weekly Goals
+const WEEKLY_GOAL = 5;
+
+function WeeklyGoals({ sessions }: { sessions: { played_at: string }[] }) {
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Sunday
+  weekStart.setHours(0, 0, 0, 0);
+  const count = sessions.filter((s) => new Date(s.played_at) >= weekStart).length;
+  const pct   = Math.min(100, Math.round((count / WEEKLY_GOAL) * 100));
+  const done  = count >= WEEKLY_GOAL;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Weekly Goal</p>
+        <span
+          className="text-xs font-bold px-2 py-0.5 rounded-full"
+          style={done
+            ? { backgroundColor: '#dcfce7', color: '#166534' }
+            : { backgroundColor: '#fef3c7', color: '#92400e' }}
+        >
+          {done ? '✓ Complete!' : `${count} / ${WEEKLY_GOAL}`}
+        </span>
+      </div>
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-2">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${pct}%`,
+            background: done ? '#22c55e' : 'linear-gradient(to right,#FADB43,#fe9940)',
+          }}
+        />
+      </div>
+      <p className="text-xs text-gray-400">
+        {done
+          ? `Great work! You've played ${count} game${count !== 1 ? 's' : ''} this week.`
+          : `Play ${WEEKLY_GOAL - count} more game${WEEKLY_GOAL - count !== 1 ? 's' : ''} to hit your weekly goal.`}
+      </p>
+    </div>
+  );
+}
+
 // ──────────────────────────────────────────────────── Score Trend Sparkline
 function ScoreTrend({ sessions }: { sessions: AnalysisSession[] }) {
   const dataPoints = sessions
@@ -828,6 +870,9 @@ export default function DashboardPage() {
 
             {/* Communication Scorecard */}
             <ScorecardWidget />
+
+            {/* Weekly Goals */}
+            <WeeklyGoals sessions={sessions} />
 
             {/* Score Trend */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">

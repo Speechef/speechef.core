@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 
@@ -44,8 +45,15 @@ const FILTERS = [
 ];
 
 export default function GameHistoryPage() {
-  const [game, setGame] = useState('');
+  const router      = useRouter();
+  const searchParams = useSearchParams();
+  const game        = searchParams.get('game') ?? '';
   const [sortBy, setSortBy] = useState<'newest' | 'score_desc' | 'score_asc'>('newest');
+
+  function setGame(value: string) {
+    const url = value ? `/practice/history?game=${value}` : '/practice/history';
+    router.push(url);
+  }
 
   const { data: sessions = [], isLoading } = useQuery<GameSession[]>({
     queryKey: ['game-sessions', game],

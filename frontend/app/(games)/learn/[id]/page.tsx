@@ -112,6 +112,10 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
           <div className="flex flex-wrap items-center gap-2 text-sm text-[#141c52]">
             <span>{new Date(post.created_on).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
             <span>·</span>
+            <span className="opacity-60">
+              {Math.max(1, Math.ceil(post.body.split(/\s+/).filter(Boolean).length / 200))} min read
+            </span>
+            <span>·</span>
             {post.categories.map((cat) => (
               <Link
                 key={cat.id}

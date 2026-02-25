@@ -1,7 +1,8 @@
 'use client';
 
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
@@ -88,11 +89,32 @@ function JobCard({ job, userScore }: { job: Job; userScore: number | null }) {
 
 export default function JobsPage() {
   const { isLoggedIn } = useAuthStore();
-  const [filterRemote, setFilterRemote] = useState<string>('');
-  const [filterType, setFilterType] = useState<string>('');
-  const [search, setSearch] = useState('');
-  const [forYou, setForYou] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'salary_desc' | 'score_asc'>('newest');
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+
+  const filterRemote = searchParams.get('remote') ?? '';
+  const filterType   = searchParams.get('type') ?? '';
+  const sortBy       = (searchParams.get('sort') ?? 'newest') as 'newest' | 'salary_desc' | 'score_asc';
+  const forYou       = searchParams.get('forYou') === '1';
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
+
+  function pushParams(overrides: Record<string, string>) {
+    const p = new URLSearchParams({
+      ...(filterRemote ? { remote: filterRemote } : {}),
+      ...(filterType   ? { type: filterType }     : {}),
+      ...(sortBy !== 'newest' ? { sort: sortBy }  : {}),
+      ...(forYou       ? { forYou: '1' }           : {}),
+      ...(search       ? { search }                : {}),
+      ...overrides,
+    });
+    for (const [k, v] of [...p.entries()]) { if (!v) p.delete(k); }
+    router.push(`/jobs${p.size ? `?${p}` : ''}`);
+  }
+
+  function setFilterRemote(v: string) { pushParams({ remote: v }); }
+  function setFilterType(v: string)   { pushParams({ type: v }); }
+  function setSortBy(v: string)       { pushParams({ sort: v === 'newest' ? '' : v }); }
+  function setForYou(v: boolean)      { pushParams({ forYou: v ? '1' : '' }); }
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: ['jobs', filterRemote, filterType],
@@ -202,24 +224,26 @@ export default function JobsPage() {
         )}
 
         {/* Keyword search */}
-        <div className="relative mb-4">
+        <form onSubmit={(e) => { e.preventDefault(); pushParams({ search }); }} className="relative mb-4">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">🔍</span>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onBlur={() => pushParams({ search })}
             placeholder="Search by title or company…"
             className="w-full border border-gray-200 rounded-xl pl-10 pr-10 py-2.5 text-sm bg-white focus:outline-none focus:border-indigo-400 transition-colors"
           />
           {search && (
             <button
-              onClick={() => setSearch('')}
+              type="button"
+              onClick={() => { setSearch(''); pushParams({ search: '' }); }}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
             >
               ✕
             </button>
           )}
-        </div>
+        </form>
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">

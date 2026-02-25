@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
@@ -240,15 +240,26 @@ function AccountTab({ user }: { user: UserProfile }) {
 function NotificationsTab() {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({});
   const [saved, setSaved] = useState(false);
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load from API (falls back to localStorage)
+  const { data: serverSettings } = useQuery<{ notification_prefs: Record<string, boolean> }>({
+    queryKey: ['user-settings'],
+    queryFn: () => api.get('/auth/settings/').then((r) => r.data),
+  });
 
   useEffect(() => {
     const stored = loadNotifPrefs();
+    const serverPrefs = serverSettings?.notification_prefs ?? {};
     const defaults: Record<string, boolean> = {};
     for (const t of NOTIF_TYPES) {
-      defaults[t.key] = stored[t.key] !== undefined ? stored[t.key] : true;
+      // Server wins over localStorage; fallback to true
+      defaults[t.key] = serverPrefs[t.key] !== undefined
+        ? serverPrefs[t.key]
+        : stored[t.key] !== undefined ? stored[t.key] : true;
     }
     setPrefs(defaults);
-  }, []);
+  }, [serverSettings]);
 
   function toggle(key: string, val: boolean) {
     const next = { ...prefs, [key]: val };
@@ -256,6 +267,11 @@ function NotificationsTab() {
     saveNotifPrefs(next);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    // Debounce API sync
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      api.patch('/auth/settings/', { notification_prefs: next }).catch(() => null);
+    }, 600);
   }
 
   return (
@@ -295,18 +311,34 @@ function PrivacyTab() {
   const [publicProfile, setPublicProfile] = useState(true);
   const [showScore, setShowScore]         = useState(true);
   const [showStreak, setShowStreak]       = useState(true);
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: serverSettings } = useQuery<{ privacy_prefs: Record<string, boolean> }>({
+    queryKey: ['user-settings'],
+    queryFn: () => api.get('/auth/settings/').then((r) => r.data),
+  });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setPublicProfile(localStorage.getItem('speechef_public_profile') !== 'false');
-      setShowScore(localStorage.getItem('speechef_show_score') !== 'false');
-      setShowStreak(localStorage.getItem('speechef_show_streak') !== 'false');
-    }
-  }, []);
+    const sp = serverSettings?.privacy_prefs ?? {};
+    setPublicProfile(sp['public_profile'] !== undefined ? sp['public_profile'] : localStorage.getItem('speechef_public_profile') !== 'false');
+    setShowScore(sp['show_score']       !== undefined ? sp['show_score']       : localStorage.getItem('speechef_show_score') !== 'false');
+    setShowStreak(sp['show_streak']     !== undefined ? sp['show_streak']      : localStorage.getItem('speechef_show_streak') !== 'false');
+  }, [serverSettings]);
 
-  function update(key: string, val: boolean, setter: (v: boolean) => void) {
+  function update(localKey: string, apiKey: string, val: boolean, setter: (v: boolean) => void) {
     setter(val);
-    localStorage.setItem(key, String(val));
+    localStorage.setItem(localKey, String(val));
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      // Build current snapshot for the patch
+      const snap: Record<string, boolean> = {
+        public_profile: publicProfile,
+        show_score:     showScore,
+        show_streak:    showStreak,
+        [apiKey]:       val,
+      };
+      api.patch('/auth/settings/', { privacy_prefs: snap }).catch(() => null);
+    }, 600);
   }
 
   return (
@@ -318,7 +350,8 @@ function PrivacyTab() {
       <div className="space-y-3">
         {[
           {
-            key: 'speechef_public_profile',
+            localKey: 'speechef_public_profile',
+            apiKey:   'public_profile',
             label: 'Public profile',
             desc: 'Allow anyone to view your profile at speechef.com/u/username',
             value: publicProfile,
@@ -326,7 +359,8 @@ function PrivacyTab() {
             emoji: '👤',
           },
           {
-            key: 'speechef_show_score',
+            localKey: 'speechef_show_score',
+            apiKey:   'show_score',
             label: 'Show communication score',
             desc: 'Display your latest speech analysis score on your public profile',
             value: showScore,
@@ -334,7 +368,8 @@ function PrivacyTab() {
             emoji: '📊',
           },
           {
-            key: 'speechef_show_streak',
+            localKey: 'speechef_show_streak',
+            apiKey:   'show_streak',
             label: 'Show streak',
             desc: 'Display your practice streak on your public profile',
             value: showStreak,
@@ -343,7 +378,7 @@ function PrivacyTab() {
           },
         ].map((item) => (
           <div
-            key={item.key}
+            key={item.localKey}
             className="flex items-center justify-between gap-4 bg-gray-50 rounded-xl px-4 py-3"
           >
             <div className="flex items-center gap-3">
@@ -355,7 +390,7 @@ function PrivacyTab() {
             </div>
             <Toggle
               checked={item.value}
-              onChange={(v) => update(item.key, v, item.setter)}
+              onChange={(v) => update(item.localKey, item.apiKey, v, item.setter)}
             />
           </div>
         ))}
