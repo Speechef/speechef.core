@@ -2,6 +2,7 @@ import Link from 'next/link';
 import ActiveSessionBanner from './ActiveSessionBanner';
 import PracticeStatsBanner from './PracticeStatsBanner';
 import WordGamesSection from './WordGamesSection';
+import TestPrepChips from './TestPrepChips';
 
 const rolePlayModes = [
   {
@@ -30,14 +31,6 @@ const rolePlayModes = [
   },
 ];
 
-const testPrepExams = [
-  { href: '/practice/test-prep/ielts', label: 'IELTS', color: '#dbeafe' },
-  { href: '/practice/test-prep/toefl', label: 'TOEFL', color: '#fce7f3' },
-  { href: '/practice/test-prep/pte', label: 'PTE', color: '#dcfce7' },
-  { href: '/practice/test-prep/oet', label: 'OET', color: '#fef3c7' },
-  { href: '/practice/test-prep/celpip', label: 'CELPIP', color: '#ede9fe' },
-  { href: '/practice/test-prep/dele', label: 'DELE', color: '#ffedd5' },
-];
 
 export default function PracticePage() {
   return (
@@ -123,21 +116,7 @@ export default function PracticePage() {
               All exams →
             </Link>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-            {testPrepExams.map((exam) => (
-              <Link key={exam.href} href={exam.href}
-                className="flex items-center justify-center py-4 rounded-xl font-bold text-sm hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: exam.color, color: '#141c52' }}>
-                {exam.label}
-              </Link>
-            ))}
-          </div>
-          <div className="mt-3 text-center">
-            <Link href="/practice/test-prep"
-              className="text-sm text-gray-400 hover:text-gray-600">
-              + More exams (PTE, OET, CELPIP, DALF, JLPT…)
-            </Link>
-          </div>
+          <TestPrepChips />
         </section>
 
       </div>

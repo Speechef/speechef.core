@@ -146,6 +146,13 @@ export default function Navbar() {
                     >
                       <span>🔔</span> Notifications
                     </Link>
+                    <Link
+                      href="/settings"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <span>⚙️</span> Settings
+                    </Link>
                     <div className="border-t border-gray-100 mt-1" />
                     <button
                       onClick={handleLogout}

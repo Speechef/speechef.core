@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -276,6 +276,116 @@ function ScoreTrend({ sessions }: { sessions: AnalysisSession[] }) {
   );
 }
 
+// ──────────────────────────────────────────────────── Onboarding card
+const ONBOARDING_KEY = 'speechef_onboarding_dismissed';
+
+function OnboardingCard({
+  hasGames, hasAnalysis, hasRoleplay,
+}: {
+  hasGames: boolean; hasAnalysis: boolean; hasRoleplay: boolean;
+}) {
+  const [dismissed, setDismissed] = useState(true); // default true to avoid flash
+  useEffect(() => {
+    setDismissed(localStorage.getItem(ONBOARDING_KEY) === 'true');
+  }, []);
+
+  if (dismissed) return null;
+
+  const steps = [
+    {
+      done: hasGames,
+      emoji: '🎮',
+      title: 'Play your first game',
+      desc: 'Sharpen vocabulary and recall with a quick word game.',
+      href: '/practice',
+      cta: 'Play now →',
+    },
+    {
+      done: hasAnalysis,
+      emoji: '🎙️',
+      title: 'Analyze your speech',
+      desc: 'Upload a recording and get your communication score.',
+      href: '/analyze',
+      cta: 'Upload →',
+    },
+    {
+      done: hasRoleplay,
+      emoji: '🎭',
+      title: 'Try AI Role Play',
+      desc: 'Have a real conversation with an AI coach.',
+      href: '/practice/roleplay',
+      cta: 'Start →',
+    },
+  ];
+
+  const completedCount = steps.filter((s) => s.done).length;
+
+  return (
+    <div
+      className="rounded-2xl p-5 mb-1"
+      style={{ background: 'linear-gradient(135deg,#141c52 0%,#1e2d78 100%)' }}
+    >
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <p className="text-white font-bold text-base">Welcome to Speechef! 🚀</p>
+          <p className="text-white/60 text-sm mt-0.5">
+            Complete these steps to get started · {completedCount}/3 done
+          </p>
+        </div>
+        <button
+          onClick={() => { localStorage.setItem(ONBOARDING_KEY, 'true'); setDismissed(true); }}
+          className="text-white/40 hover:text-white/70 transition-colors text-xl leading-none mt-0.5"
+          aria-label="Dismiss"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-4">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${(completedCount / 3) * 100}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {steps.map((step) => (
+          <div
+            key={step.title}
+            className="rounded-xl p-4 flex flex-col gap-2"
+            style={{ backgroundColor: step.done ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)' }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xl">{step.emoji}</span>
+              {step.done && (
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>
+                  Done
+                </span>
+              )}
+            </div>
+            <p className={`text-sm font-semibold leading-tight ${step.done ? 'text-white/50 line-through' : 'text-white'}`}>
+              {step.title}
+            </p>
+            {!step.done && (
+              <>
+                <p className="text-white/50 text-xs leading-relaxed">{step.desc}</p>
+                <Link
+                  href={step.href}
+                  className="mt-auto text-xs font-bold px-3 py-1.5 rounded-lg text-center transition-opacity hover:opacity-90"
+                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+                >
+                  {step.cta}
+                </Link>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ──────────────────────────────────────────────────── Card wrapper
 function Card({
   title, children, action,
@@ -430,6 +540,13 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+
+        {/* ── Onboarding guide — shown to new users only ── */}
+        <OnboardingCard
+          hasGames={sessions.length > 0}
+          hasAnalysis={analysisSessions.some((s) => s.status === 'done')}
+          hasRoleplay={roleplaySessions.length > 0}
+        />
 
         {/* ── Overview section — 3-column like DashboardPreview ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

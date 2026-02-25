@@ -215,11 +215,17 @@ export default function JobDetailPage() {
             ) : isLoggedIn ? (
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">Cover Note (optional)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm font-medium text-gray-600">Cover Note (optional)</label>
+                    <span className={`text-xs ${coverNote.length > 450 ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>
+                      {coverNote.length} / 500
+                    </span>
+                  </div>
                   <textarea
                     value={coverNote}
                     onChange={(e) => setCoverNote(e.target.value)}
                     rows={3}
+                    maxLength={500}
                     placeholder="Briefly introduce yourself and why you're a great fit..."
                     className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:ring-2"
                     style={{ '--tw-ring-color': '#FADB43' } as React.CSSProperties}

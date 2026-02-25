@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth';
@@ -24,8 +24,15 @@ const GAME_FILTERS = [
 ];
 
 export default function LeaderboardPage() {
-  const [game, setGame] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const game = searchParams.get('game') ?? '';
   const { isLoggedIn } = useAuthStore();
+
+  function setGame(value: string) {
+    const url = value ? `/practice/leaderboard?game=${value}` : '/practice/leaderboard';
+    router.push(url);
+  }
 
   const { data: entries = [], isLoading } = useQuery<LeaderboardEntry[]>({
     queryKey: ['leaderboard', game],

@@ -107,6 +107,32 @@ export default function LearnPage() {
           )}
         </div>
 
+        {/* Mobile category row (hidden on md+) */}
+        <div className="md:hidden flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 scrollbar-hide">
+          {[
+            { label: 'All', action: () => { setActiveCategory(null); setSearchInput(''); setShowBookmarks(false); }, active: !activeCategory && !search && !showBookmarks },
+            { label: '🔖 Saved', action: () => { setShowBookmarks(true); setActiveCategory(null); setSearchInput(''); }, active: showBookmarks },
+            ...categories.map((cat) => ({
+              label: cat.name,
+              action: () => { setActiveCategory(cat.name); setSearchInput(''); setShowBookmarks(false); },
+              active: activeCategory === cat.name && !search && !showBookmarks,
+            })),
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={item.action}
+              className="shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+              style={
+                item.active
+                  ? { backgroundColor: '#141c52', color: '#fff' }
+                  : { backgroundColor: '#e8f4fa', color: '#141c52' }
+              }
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex gap-6">
           {/* ── Posts ── */}
           <div className="flex-1">
@@ -223,7 +249,7 @@ export default function LearnPage() {
           </div>
 
           {/* ── Sidebar ── */}
-          <aside className="w-48 shrink-0 space-y-3">
+          <aside className="hidden md:block w-48 shrink-0 space-y-3">
             {isLoggedIn && allPosts.length > 0 && (() => {
               const completedCount = allPosts.filter((p) => p.is_completed).length;
               const bookmarkedCount = allPosts.filter((p) => p.is_bookmarked).length;

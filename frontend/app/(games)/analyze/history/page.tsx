@@ -36,6 +36,91 @@ const STATUS_LABELS: Record<string, string> = {
   failed:     'Failed',
 };
 
+// ── Score Trend Chart ─────────────────────────────────────────────────────────
+function ScoreTrendCard({ sessions }: { sessions: AnalysisSession[] }) {
+  const done = sessions
+    .filter((s) => s.status === 'done' && s.result?.overall_score != null)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  if (done.length < 2) return null;
+
+  const scores = done.map((s) => s.result!.overall_score);
+  const best   = Math.max(...scores);
+  const avg    = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const latest = scores[scores.length - 1];
+  const delta  = latest - scores[scores.length - 2];
+
+  // SVG sparkline
+  const pts  = scores.slice(-10);
+  const W = 320, H = 56, PAD = 6;
+  const minS = Math.max(0, Math.min(...pts) - 5);
+  const maxS = Math.min(100, Math.max(...pts) + 5);
+  const range = Math.max(maxS - minS, 1);
+  const xStep = (W - PAD * 2) / Math.max(pts.length - 1, 1);
+  const polyline = pts
+    .map((sc, i) => {
+      const x = PAD + i * xStep;
+      const y = PAD + (1 - (sc - minS) / range) * (H - PAD * 2);
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Score Trend</p>
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          <span>Best: <span className="font-bold" style={{ color: '#141c52' }}>{best}</span></span>
+          <span>Avg: <span className="font-bold" style={{ color: '#141c52' }}>{avg}</span></span>
+          {delta !== 0 && (
+            <span
+              className="font-bold px-2 py-0.5 rounded-full"
+              style={{
+                backgroundColor: delta > 0 ? '#dcfce7' : '#fee2e2',
+                color: delta > 0 ? '#166534' : '#991b1b',
+              }}
+            >
+              {delta > 0 ? '▲' : '▼'} {Math.abs(delta)} pts
+            </span>
+          )}
+        </div>
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+        <defs>
+          <linearGradient id="histTrendGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="#FADB43" />
+            <stop offset="100%" stopColor="#fe9940" />
+          </linearGradient>
+        </defs>
+        <polyline
+          points={polyline}
+          fill="none"
+          stroke="url(#histTrendGrad)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {pts.map((sc, i) => (
+          <circle
+            key={i}
+            cx={PAD + i * xStep}
+            cy={PAD + (1 - (sc - minS) / range) * (H - PAD * 2)}
+            r={i === pts.length - 1 ? 4 : 2.5}
+            fill={i === pts.length - 1 ? '#fe9940' : 'white'}
+            stroke="#fe9940"
+            strokeWidth="2"
+          />
+        ))}
+      </svg>
+      <div className="flex justify-between text-[10px] text-gray-400 mt-1.5">
+        <span>{new Date(done[done.length - pts.length]?.created_at ?? '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+        <span>{pts.length} session{pts.length !== 1 ? 's' : ''} shown</span>
+        <span>{new Date(done[done.length - 1].created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+      </div>
+    </div>
+  );
+}
+
 function ScorePill({ score }: { score: number }) {
   const color = score >= 80 ? '#166534' : score >= 60 ? '#92400e' : '#991b1b';
   const bg    = score >= 80 ? '#dcfce7' : score >= 60 ? '#fef3c7' : '#fee2e2';
@@ -83,6 +168,9 @@ export default function AnalysisHistoryPage() {
             ← New Analysis
           </Link>
         </div>
+
+        {/* Score trend chart */}
+        {!isLoading && <ScoreTrendCard sessions={sessions} />}
 
         {/* Status filter tabs */}
         {!isLoading && sessions.length > 0 && (
