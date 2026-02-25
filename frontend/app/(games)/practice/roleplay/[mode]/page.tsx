@@ -94,6 +94,7 @@ export default function RolePlaySessionPage() {
   const [draft, setDraft] = useState('');
   const [result, setResult] = useState<ResultData | null>(null);
   const [aiThinking, setAiThinking] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -244,6 +245,45 @@ export default function RolePlaySessionPage() {
             </div>
           )}
 
+          {/* Conversation transcript accordion */}
+          {result.turns.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 mb-6 overflow-hidden">
+              <button
+                onClick={() => setShowTranscript((v) => !v)}
+                className="w-full flex items-center justify-between px-6 py-4 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                style={{ color: '#141c52' }}
+              >
+                <span>View Conversation ({result.turns.length} turns)</span>
+                <span className="text-gray-400">{showTranscript ? '▲' : '▼'}</span>
+              </button>
+              {showTranscript && (
+                <div className="border-t border-gray-100 px-6 py-4 space-y-3 max-h-72 overflow-y-auto">
+                  {result.turns.map((t, i) => {
+                    const isUser = t.role === 'user';
+                    return (
+                      <div key={i} className={`flex gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                        {!isUser && (
+                          <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5"
+                            style={{ backgroundColor: '#141c52', color: 'white' }}>
+                            AI
+                          </span>
+                        )}
+                        <div
+                          className={`max-w-xs text-xs leading-relaxed rounded-xl px-3 py-2 ${
+                            isUser ? 'rounded-tr-sm' : 'rounded-tl-sm bg-gray-50'
+                          }`}
+                          style={isUser ? { backgroundColor: '#141c52', color: 'white' } : undefined}
+                        >
+                          {t.content}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={() => {
@@ -251,6 +291,7 @@ export default function RolePlaySessionPage() {
                 setTurns([]);
                 setResult(null);
                 setSessionId(null);
+                setShowTranscript(false);
               }}
               className="flex-1 py-3 rounded-full text-sm font-bold border-2 transition-colors hover:bg-gray-50"
               style={{ borderColor: '#141c52', color: '#141c52' }}

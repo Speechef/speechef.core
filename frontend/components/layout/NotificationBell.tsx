@@ -85,7 +85,7 @@ export default function NotificationBell() {
     <div className="relative" ref={dropRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
+        className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
         aria-label="Notifications"
       >
         <span className="text-lg">🔔</span>

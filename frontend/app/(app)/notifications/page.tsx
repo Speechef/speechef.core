@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -45,6 +46,7 @@ function timeAgo(iso: string): string {
 
 export default function NotificationsPage() {
   const qc = useQueryClient();
+  const [filterTab, setFilterTab] = useState<'all' | 'unread'>('all');
 
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['notifications-page'],
@@ -68,12 +70,13 @@ export default function NotificationsPage() {
   });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const displayed = filterTab === 'unread' ? notifications.filter((n) => !n.read) : notifications;
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-2xl font-bold" style={{ color: '#141c52' }}>Notifications</h1>
             <p className="text-gray-500 text-sm mt-0.5">
@@ -91,6 +94,32 @@ export default function NotificationsPage() {
           )}
         </div>
 
+        {/* Filter tabs */}
+        <div className="flex gap-2 mb-6">
+          {([
+            { id: 'all',    label: 'All',    count: notifications.length },
+            { id: 'unread', label: 'Unread', count: unreadCount },
+          ] as const).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setFilterTab(t.id)}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+              style={filterTab === t.id
+                ? { backgroundColor: '#141c52', color: '#fff' }
+                : { backgroundColor: '#e5e7eb', color: '#374151' }}
+            >
+              {t.label}
+              {t.count > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                  filterTab === t.id ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {t.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* List */}
         {isLoading ? (
           <div className="space-y-3">
@@ -104,9 +133,21 @@ export default function NotificationsPage() {
             <p className="font-semibold">No notifications yet</p>
             <p className="text-sm mt-1">We'll notify you about reviews, badges, and score updates.</p>
           </div>
+        ) : displayed.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <p className="text-4xl mb-3">✅</p>
+            <p className="font-semibold text-gray-600">You're all caught up!</p>
+            <p className="text-sm mt-1">No unread notifications.</p>
+            <button
+              onClick={() => setFilterTab('all')}
+              className="mt-4 text-sm font-semibold text-indigo-600 hover:underline"
+            >
+              View all notifications
+            </button>
+          </div>
         ) : (
           <div className="space-y-2">
-            {notifications.map((n) => {
+            {displayed.map((n) => {
               const icon = TYPE_ICONS[n.notification_type] ?? '🔔';
               const label = TYPE_LABELS[n.notification_type] ?? 'General';
               return (

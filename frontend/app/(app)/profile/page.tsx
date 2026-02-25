@@ -187,7 +187,7 @@ export default function ProfilePage() {
 
         {/* ── Account ── */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold" style={{ color: '#141c52' }}>Your Profile</h1>
             {user?.username && (
               <button
@@ -202,6 +202,21 @@ export default function ProfilePage() {
                 {copied ? '✓ Copied!' : '🔗 Share Profile'}
               </button>
             )}
+          </div>
+
+          {/* Stats strip */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {[
+              { label: 'Analyses',       value: sessions.length,        emoji: '🎤' },
+              { label: 'Expert Reviews', value: reviews.length,         emoji: '🎓' },
+              { label: 'Mentor Sessions',value: mentorSessions.length,  emoji: '📅' },
+            ].map(({ label, value, emoji }) => (
+              <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+                <p className="text-lg">{emoji}</p>
+                <p className="text-xl font-extrabold" style={{ color: '#141c52' }}>{value}</p>
+                <p className="text-xs text-gray-400">{label}</p>
+              </div>
+            ))}
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">

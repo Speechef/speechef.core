@@ -181,6 +181,14 @@ function BookingModal({
 export default function MentorProfilePage() {
   const { id } = useParams<{ id: string }>();
   const [showModal, setShowModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  function copyMentorLink() {
+    navigator.clipboard.writeText(`${window.location.origin}/mentors/${id}`).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#book') {
@@ -219,7 +227,18 @@ export default function MentorProfilePage() {
 
       <div className="min-h-screen bg-gray-50 py-10 px-4">
         <div className="max-w-3xl mx-auto">
-          <Link href="/mentors" className="text-sm text-gray-400 hover:text-gray-600 mb-6 block">← All Mentors</Link>
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/mentors" className="text-sm text-gray-400 hover:text-gray-600">← All Mentors</Link>
+            <button
+              onClick={copyMentorLink}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors"
+              style={copied
+                ? { backgroundColor: '#dcfce7', color: '#166534', borderColor: '#bbf7d0' }
+                : { backgroundColor: 'white', color: '#141c52', borderColor: '#e5e7eb' }}
+            >
+              {copied ? '✓ Copied!' : '🔗 Share Profile'}
+            </button>
+          </div>
 
           {/* Profile header */}
           <div className="bg-white rounded-2xl border border-gray-100 p-7 mb-6">

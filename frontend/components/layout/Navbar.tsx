@@ -21,6 +21,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { isLoggedIn, logout } = useAuthStore();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
 
   const { data: user } = useQuery<{ username: string }>({
@@ -39,6 +40,11 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   function handleLogout() {
     logout();
     router.replace('/');
@@ -47,22 +53,20 @@ export default function Navbar() {
   const initial = user?.username?.[0]?.toUpperCase() ?? '?';
 
   return (
-    <nav
-      className="sticky top-0 z-50 border-b border-white/10"
-      style={{ backgroundColor: '#141c52' }}
-    >
-      <div className="max-w-7xl mx-auto px-5 flex items-center h-14 gap-2">
+    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 flex items-center h-16 gap-2">
 
         {/* Logo */}
         <Link
-          href="/dashboard"
-          className="text-lg font-extrabold text-white tracking-tight shrink-0 mr-4"
+          href={isLoggedIn ? '/dashboard' : '/'}
+          className="text-xl font-extrabold tracking-tight shrink-0 mr-4"
+          style={{ color: '#141c52' }}
         >
           Speechef
         </Link>
 
-        {/* Nav links */}
-        <div className="flex items-center gap-0.5">
+        {/* Nav links — desktop */}
+        <div className="hidden md:flex items-center gap-0.5">
           {NAV_LINKS.map(({ href, label }) => {
             const active =
               href === '/dashboard'
@@ -74,8 +78,8 @@ export default function Navbar() {
                 href={href}
                 className={`text-sm px-3 py-1.5 rounded-lg font-medium transition-all ${
                   active
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/65 hover:text-white hover:bg-white/8'
+                    ? 'text-[#141c52] font-semibold bg-[#141c52]/8'
+                    : 'text-gray-500 hover:text-[#141c52] hover:bg-gray-50'
                 }`}
               >
                 {label}
@@ -88,7 +92,7 @@ export default function Navbar() {
         <div className="ml-auto flex items-center gap-2">
           {isLoggedIn ? (
             <>
-              {/* Analyze CTA */}
+              {/* Analyze CTA — gradient (desktop) */}
               <Link
                 href="/analyze"
                 className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold px-4 py-1.5 rounded-full transition-opacity hover:opacity-90"
@@ -100,13 +104,13 @@ export default function Navbar() {
               <NotificationBell />
 
               {/* Avatar + dropdown */}
-              <div className="relative" ref={dropRef}>
+              <div className="relative hidden md:block" ref={dropRef}>
                 <button
                   onClick={() => setProfileOpen((o) => !o)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white transition-opacity hover:opacity-80"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white transition-opacity hover:opacity-80"
                   style={{
-                    background: 'linear-gradient(135deg,#1e2d78,#2a3d9a)',
-                    border: '2px solid rgba(255,255,255,0.25)',
+                    background: 'linear-gradient(135deg,#141c52,#1e2d78)',
+                    border: '2px solid rgba(20,28,82,0.12)',
                   }}
                   aria-label="User menu"
                 >
@@ -154,16 +158,113 @@ export default function Navbar() {
               </div>
             </>
           ) : (
-            <Link
-              href="/login"
-              className="px-4 py-1.5 rounded-full text-sm font-semibold text-[#141c52] transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#FADB43' }}
-            >
-              Log in
-            </Link>
+            <>
+              <Link
+                href="/login"
+                className="hidden sm:inline-block px-5 py-2 rounded-full border-2 text-sm font-medium transition-colors hover:bg-gray-50"
+                style={{ borderColor: '#141c52', color: '#141c52' }}
+              >
+                Log In
+              </Link>
+              <Link
+                href="/register"
+                className="hidden sm:inline-block px-5 py-2 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              >
+                Get Started Free
+              </Link>
+            </>
           )}
+
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? (
+              <svg className="w-5 h-5" style={{ color: '#141c52' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" style={{ color: '#141c52' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden border-t border-gray-100 bg-white shadow-lg">
+          <div className="max-w-7xl mx-auto px-6 py-3 space-y-1">
+            {NAV_LINKS.map(({ href, label }) => {
+              const active =
+                href === '/dashboard'
+                  ? pathname === '/dashboard'
+                  : pathname === href || pathname.startsWith(href + '/');
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? 'text-[#141c52] font-semibold bg-[#141c52]/8'
+                      : 'text-gray-500 hover:text-[#141c52] hover:bg-gray-50'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+            <div className="pt-2 border-t border-gray-100 mt-2">
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/analyze"
+                    className="block w-full text-center text-sm font-bold px-4 py-2.5 rounded-xl mb-2 transition-opacity hover:opacity-90"
+                    style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+                  >
+                    + Analyze
+                  </Link>
+                  <div className="flex gap-2">
+                    <Link
+                      href="/profile"
+                      className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      My Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Log out
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex gap-2">
+                  <Link
+                    href="/login"
+                    className="flex-1 text-center px-4 py-2.5 rounded-xl border-2 text-sm font-medium"
+                    style={{ borderColor: '#141c52', color: '#141c52' }}
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="flex-1 text-center px-4 py-2.5 rounded-xl text-sm font-semibold"
+                    style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

@@ -12,11 +12,58 @@ interface Question {
   options: string[] | null;
   audio_url: string | null;
   image_url: string | null;
-  time_limit_seconds: number;
+  time_limit_seconds: number | null;
   difficulty: string;
+  band_descriptors: Record<string, string> | null;
 }
 
-function ExamTimer({ seconds, onExpire }: { seconds: number; onExpire: () => void }) {
+interface SectionInfo {
+  id: number;
+  name: string;
+  slug: string;
+  instructions: string;
+  duration_seconds: number;
+}
+
+interface ReviewItem {
+  question_id: number;
+  question_type: string;
+  prompt: string;
+  user_answer: string;
+  correct_answer: string | null;
+  is_correct: boolean | null;
+  ai_score: number | null;
+}
+
+interface FinalData {
+  predicted_score?: {
+    overall?: number;
+    answered?: number;
+    scored?: number;
+    band_estimate?: string;
+  };
+  review?: ReviewItem[];
+}
+
+const DIFFICULTY_STYLES: Record<string, { label: string; bg: string; color: string }> = {
+  easy:   { label: 'Easy',   bg: '#dcfce7', color: '#16a34a' },
+  medium: { label: 'Medium', bg: '#fef9c3', color: '#a16207' },
+  hard:   { label: 'Hard',   bg: '#fee2e2', color: '#dc2626' },
+};
+
+const SECTION_ICONS: Record<string, string> = {
+  speaking: '🎙️',
+  writing: '✍️',
+  listening: '🎧',
+  reading: '📖',
+};
+
+// ──────────────────────────────────────────────── ExamTimer
+function ExamTimer({
+  seconds, onExpire, compact = false,
+}: {
+  seconds: number; onExpire: () => void; compact?: boolean;
+}) {
   const [remaining, setRemaining] = useState(seconds);
 
   useEffect(() => {
@@ -27,7 +74,15 @@ function ExamTimer({ seconds, onExpire }: { seconds: number; onExpire: () => voi
 
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;
-  const danger = remaining < 30;
+  const danger = remaining < 60;
+
+  if (compact) {
+    return (
+      <span className={`font-mono font-bold text-sm ${danger ? 'text-red-500 animate-pulse' : 'text-gray-600'}`}>
+        {String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
+      </span>
+    );
+  }
 
   return (
     <div className={`text-xl font-mono font-bold ${danger ? 'text-red-500 animate-pulse' : 'text-gray-700'}`}>
@@ -36,6 +91,7 @@ function ExamTimer({ seconds, onExpire }: { seconds: number; onExpire: () => voi
   );
 }
 
+// ──────────────────────────────────────────────── AudioRecorder
 function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob) => void }) {
   const [state, setState] = useState<'idle' | 'recording' | 'done'>('idle');
   const mediaRef = useRef<MediaRecorder | null>(null);
@@ -57,12 +113,10 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob) => void }) {
     setState('recording');
   }, [onRecorded]);
 
-  const stop = useCallback(() => {
-    mediaRef.current?.stop();
-  }, []);
+  const stop = useCallback(() => { mediaRef.current?.stop(); }, []);
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-3 py-4">
       {state === 'idle' && (
         <button onClick={start}
           className="w-16 h-16 rounded-full flex items-center justify-center transition-transform hover:scale-105"
@@ -86,12 +140,15 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob) => void }) {
         </div>
       )}
       <p className="text-sm font-medium text-gray-500">
-        {state === 'idle' ? 'Tap to record' : state === 'recording' ? 'Recording… Tap to stop' : 'Recording saved ✓'}
+        {state === 'idle' ? 'Tap to record your answer'
+          : state === 'recording' ? 'Recording… tap to stop'
+          : 'Recording saved ✓'}
       </p>
     </div>
   );
 }
 
+// ──────────────────────────────────────────────── QuestionView
 function QuestionView({
   question, index, total, onAnswer, onNext,
 }: {
@@ -101,26 +158,48 @@ function QuestionView({
   const [answer, setAnswer] = useState('');
   const [saved, setSaved] = useState(false);
 
+  const diffStyle = DIFFICULTY_STYLES[question.difficulty] ?? DIFFICULTY_STYLES.medium;
+
   const save = () => {
     onAnswer(question.id, answer);
     setSaved(true);
   };
 
+  const qTypeLabel = question.question_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-          Question {index + 1} of {total} · <span className="capitalize">{question.question_type.replace('_', ' ')}</span>
-        </p>
-        {question.time_limit_seconds > 0 && (
-          <ExamTimer seconds={question.time_limit_seconds} onExpire={() => { if (!saved) save(); onNext(); }} />
+      {/* Meta row */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Q{index + 1} of {total}
+          </p>
+          <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{ background: diffStyle.bg, color: diffStyle.color }}>
+            {diffStyle.label}
+          </span>
+          <span className="text-xs text-gray-400 capitalize">{qTypeLabel}</span>
+        </div>
+        {question.time_limit_seconds && question.time_limit_seconds > 0 && (
+          <ExamTimer
+            seconds={question.time_limit_seconds}
+            onExpire={() => { if (!saved) save(); onNext(); }}
+          />
         )}
       </div>
 
+      {/* Prompt */}
       <div className="bg-gray-50 rounded-xl p-5">
-        <p className="text-gray-800 leading-relaxed">{question.prompt}</p>
+        <p className="text-gray-800 leading-relaxed whitespace-pre-line">{question.prompt}</p>
       </div>
 
+      {/* Band descriptors (collapsible hint) */}
+      {question.band_descriptors && Object.keys(question.band_descriptors).length > 0 && (
+        <BandDescriptorHint descriptors={question.band_descriptors} />
+      )}
+
+      {/* Answer inputs */}
       {question.question_type === 'multiple_choice' && question.options && (
         <div className="space-y-2">
           {question.options.map((opt, i) => (
@@ -131,29 +210,27 @@ function QuestionView({
                 backgroundColor: answer === opt ? '#f0f2ff' : 'white',
                 color: '#374151',
               }}>
-              <span className="font-medium mr-2" style={{ color: '#141c52' }}>{String.fromCharCode(65 + i)}.</span>
+              <span className="font-medium mr-2" style={{ color: '#141c52' }}>
+                {String.fromCharCode(65 + i)}.
+              </span>
               {opt}
             </button>
           ))}
         </div>
       )}
 
-      {(question.question_type === 'free_speech' || question.question_type === 'essay') && (
-        <>
-          {question.question_type === 'free_speech' ? (
-            <AudioRecorder onRecorded={(blob) => {
-              setAnswer(`audio:${blob.size}`);
-            }} />
-          ) : (
-            <textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Type your answer here…"
-              rows={6}
-              className="w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-indigo-400 resize-none"
-            />
-          )}
-        </>
+      {question.question_type === 'free_speech' && (
+        <AudioRecorder onRecorded={(blob) => setAnswer(`audio:${blob.size}`)} />
+      )}
+
+      {question.question_type === 'essay_prompt' && (
+        <textarea
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          placeholder="Type your essay response here…"
+          rows={8}
+          className="w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-indigo-400 resize-none"
+        />
       )}
 
       {question.question_type === 'fill_blank' && (
@@ -165,6 +242,18 @@ function QuestionView({
         />
       )}
 
+      {/* read_and_respond / listen_and_answer fallback */}
+      {(question.question_type === 'read_and_respond' || question.question_type === 'listen_and_answer') && (
+        <textarea
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          placeholder="Type your response…"
+          rows={5}
+          className="w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-indigo-400 resize-none"
+        />
+      )}
+
+      {/* Action buttons */}
       <div className="flex gap-3">
         {!saved ? (
           <button onClick={save} disabled={!answer}
@@ -176,7 +265,7 @@ function QuestionView({
           <button onClick={onNext}
             className="flex-1 py-3 rounded-xl text-sm font-bold"
             style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
-            {index === total - 1 ? 'Finish Exam →' : 'Next Question →'}
+            {index === total - 1 ? 'Finish Section →' : 'Next Question →'}
           </button>
         )}
       </div>
@@ -184,17 +273,167 @@ function QuestionView({
   );
 }
 
+function BandDescriptorHint({ descriptors }: { descriptors: Record<string, string> }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border border-indigo-100 rounded-xl overflow-hidden">
+      <button onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+        <span>Scoring Criteria</span>
+        <span>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="px-4 py-3 space-y-2 bg-white">
+          {Object.entries(descriptors).map(([k, v]) => (
+            <div key={k}>
+              <p className="text-xs font-semibold text-gray-500 capitalize">{k.replace(/_/g, ' ')}</p>
+              <p className="text-xs text-gray-600">{v}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────── Results screen
+function ResultsScreen({
+  finalData, questions, onRetry, onBack,
+}: {
+  finalData: FinalData; questions: Question[]; onRetry: () => void; onBack: () => void;
+}) {
+  const [showReview, setShowReview] = useState(false);
+  const score = finalData.predicted_score;
+  const review = finalData.review ?? [];
+  const reviewable = review.filter((r) => r.correct_answer !== null);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
+      <div className="max-w-lg w-full space-y-4">
+        {/* Score card */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }}>
+            <svg className="w-8 h-8" style={{ color: '#141c52' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>Section Complete!</h2>
+
+          {score?.band_estimate && (
+            <div className="my-4">
+              <p className="text-4xl font-black" style={{ color: '#141c52' }}>{score.band_estimate}</p>
+              <p className="text-sm text-gray-400 mt-1">Estimated score</p>
+            </div>
+          )}
+          {score && !score.band_estimate && (
+            <p className="text-4xl font-black my-4" style={{ color: '#141c52' }}>
+              {score.overall ?? '—'}<span className="text-lg font-normal text-gray-400">/10</span>
+            </p>
+          )}
+
+          {score && (
+            <div className="flex justify-center gap-6 text-sm text-gray-500 mt-2">
+              <span>Answered: {score.answered ?? questions.length}</span>
+              {score.scored !== undefined && score.scored > 0 && (
+                <span>Auto-scored: {score.scored}</span>
+              )}
+              {score.overall !== undefined && (
+                <span>Avg: {score.overall}/10</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Review accordion — MC and fill_blank only */}
+        {reviewable.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <button
+              onClick={() => setShowReview((v) => !v)}
+              className="w-full flex items-center justify-between px-6 py-4 text-sm font-semibold"
+              style={{ color: '#141c52' }}
+            >
+              <span>Review Answers ({reviewable.length} questions)</span>
+              <span>{showReview ? '▲' : '▼'}</span>
+            </button>
+            {showReview && (
+              <div className="border-t border-gray-100 divide-y divide-gray-50">
+                {review.map((item, i) => {
+                  if (item.correct_answer === null) return null;
+                  const correct = item.is_correct;
+                  return (
+                    <div key={item.question_id} className="px-6 py-4">
+                      <p className="text-xs text-gray-400 mb-1">Q{i + 1} · {item.question_type.replace(/_/g, ' ')}</p>
+                      <p className="text-sm text-gray-700 mb-2 line-clamp-3">{item.prompt}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className={`rounded-lg px-3 py-2 text-xs ${correct ? 'bg-green-50' : 'bg-red-50'}`}>
+                          <p className="text-gray-400 mb-0.5">Your answer</p>
+                          <p className={`font-medium ${correct ? 'text-green-700' : 'text-red-700'}`}>
+                            {item.user_answer || '(no answer)'}
+                          </p>
+                        </div>
+                        {!correct && (
+                          <div className="rounded-lg px-3 py-2 text-xs bg-green-50">
+                            <p className="text-gray-400 mb-0.5">Correct answer</p>
+                            <p className="font-medium text-green-700">{item.correct_answer}</p>
+                          </div>
+                        )}
+                        {correct && (
+                          <div className="rounded-lg px-3 py-2 text-xs bg-green-50 flex items-center justify-center">
+                            <span className="text-green-600 font-bold">✓ Correct!</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tips card for spoken/written responses */}
+        {review.some((r) => r.question_type === 'free_speech' || r.question_type === 'essay_prompt') && (
+          <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-5">
+            <p className="text-sm font-semibold mb-2" style={{ color: '#141c52' }}>AI Scoring</p>
+            <p className="text-xs text-gray-600">Your spoken and written responses are queued for AI analysis. Full band scores and detailed feedback will appear in your profile once processing is complete (usually within a few minutes).</p>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex flex-col gap-3">
+          <button onClick={onBack}
+            className="py-3 rounded-xl text-sm font-bold"
+            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+            Back to Test Prep Hub →
+          </button>
+          <button onClick={onRetry}
+            className="py-3 rounded-xl text-sm font-medium border border-gray-200 text-gray-600">
+            Retry This Section
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────── Main page
 export default function ExamSessionPage() {
   const { exam, section } = useParams<{ exam: string; section: string }>();
   const router = useRouter();
 
-  const { data: questions = [], isLoading } = useQuery<Question[]>({
+  const { data: sessionData, isLoading } = useQuery<{ section: SectionInfo; questions: Question[] }>({
     queryKey: ['testprep-questions', exam, section],
-    queryFn: () => api.get(`/testprep/exams/${exam}/sections/${section}/questions/`).then((r) => r.data),
+    queryFn: () =>
+      api.get(`/testprep/exams/${exam}/sections/${section}/questions/`).then((r) => r.data),
   });
 
+  const questions = sessionData?.questions ?? [];
+  const sectionInfo = sessionData?.section ?? null;
+
   const startMutation = useMutation({
-    mutationFn: () => api.post('/testprep/attempts/start/', { exam_slug: exam, section_slug: section }).then((r) => r.data),
+    mutationFn: () =>
+      api.post('/testprep/attempts/start/', { exam_slug: exam, section_slug: section }).then((r) => r.data),
   });
 
   const answerMutation = useMutation({
@@ -211,7 +450,7 @@ export default function ExamSessionPage() {
   const [currentQ, setCurrentQ] = useState(0);
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const [finalData, setFinalData] = useState<{ predicted_score?: { overall?: number; answered?: number } } | null>(null);
+  const [finalData, setFinalData] = useState<FinalData | null>(null);
 
   const handleStart = async () => {
     const res = await startMutation.mutateAsync();
@@ -236,6 +475,15 @@ export default function ExamSessionPage() {
     }
   }, [currentQ, questions.length, attemptId, completeMutation]);
 
+  const handleRetry = () => {
+    setStarted(false);
+    setCompleted(false);
+    setCurrentQ(0);
+    setAttemptId(null);
+    setFinalData(null);
+  };
+
+  // ── Loading
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -244,52 +492,67 @@ export default function ExamSessionPage() {
     );
   }
 
-  if (completed) {
-    const score = finalData?.predicted_score;
+  // ── Completed
+  if (completed && finalData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 p-8 text-center">
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }}>
-            <svg className="w-8 h-8" style={{ color: '#141c52' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>Section Complete!</h2>
-          {score && (
-            <p className="text-4xl font-black my-4" style={{ color: '#141c52' }}>
-              {score.overall ?? '—'}<span className="text-lg font-normal text-gray-400"> pts avg</span>
-            </p>
-          )}
-          <p className="text-gray-500 text-sm mb-6">Answered {score?.answered ?? questions.length} of {questions.length} questions.</p>
-          <div className="flex flex-col gap-3">
-            <button onClick={() => router.push('/practice/test-prep')}
-              className="py-3 rounded-xl text-sm font-bold"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
-              Back to Test Prep Hub →
-            </button>
-            <button onClick={() => { setStarted(false); setCompleted(false); setCurrentQ(0); setAttemptId(null); }}
-              className="py-3 rounded-xl text-sm font-medium border border-gray-200 text-gray-600">
-              Retry This Section
-            </button>
-          </div>
-        </div>
-      </div>
+      <ResultsScreen
+        finalData={finalData}
+        questions={questions}
+        onRetry={handleRetry}
+        onBack={() => router.push('/practice/test-prep')}
+      />
     );
   }
 
+  // ── Not started — intro screen
   if (!started) {
+    const sectionType = sectionInfo
+      ? (['speaking', 'writing', 'listening', 'reading'].find((t) => sectionInfo.name.toLowerCase().includes(t)) ?? 'general')
+      : 'general';
+    const icon = SECTION_ICONS[sectionType] ?? '📋';
+
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 p-8 text-center">
-          <span className="text-4xl mb-4 block">🎙️</span>
-          <h2 className="text-xl font-bold mb-2" style={{ color: '#141c52' }}>Ready to Begin?</h2>
-          <p className="text-gray-500 text-sm mb-2">{questions.length} questions · {section.replace(/-/g, ' ')}</p>
-          <p className="text-xs text-gray-400 mb-6">Find a quiet place, speak clearly, and answer each question fully.</p>
-          <button onClick={handleStart} disabled={startMutation.isPending}
+        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 p-8">
+          <div className="text-center mb-6">
+            <span className="text-5xl block mb-3">{icon}</span>
+            <h2 className="text-xl font-bold mb-1" style={{ color: '#141c52' }}>
+              {sectionInfo?.name ?? section.replace(/-/g, ' ')}
+            </h2>
+            <p className="text-sm text-gray-500">{exam.toUpperCase().replace(/-/g, ' ')}</p>
+          </div>
+
+          {/* Stats row */}
+          <div className="flex justify-center gap-6 mb-6 text-center">
+            <div>
+              <p className="text-xl font-bold" style={{ color: '#141c52' }}>{questions.length}</p>
+              <p className="text-xs text-gray-400">Questions</p>
+            </div>
+            {sectionInfo && sectionInfo.duration_seconds > 0 && (
+              <div>
+                <p className="text-xl font-bold" style={{ color: '#141c52' }}>
+                  {Math.round(sectionInfo.duration_seconds / 60)} min
+                </p>
+                <p className="text-xs text-gray-400">Time Limit</p>
+              </div>
+            )}
+          </div>
+
+          {/* Instructions */}
+          {sectionInfo?.instructions && (
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Instructions</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{sectionInfo.instructions}</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleStart}
+            disabled={startMutation.isPending || questions.length === 0}
             className="w-full py-3 rounded-xl text-sm font-bold disabled:opacity-50"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
-            {startMutation.isPending ? 'Starting…' : 'Start Session →'}
+            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+          >
+            {startMutation.isPending ? 'Starting…' : questions.length === 0 ? 'No questions available' : 'Start Session →'}
           </button>
         </div>
       </div>
@@ -298,24 +561,42 @@ export default function ExamSessionPage() {
 
   const q = questions[currentQ];
 
+  // ── Active session
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Minimal exam header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
         <p className="text-sm font-bold" style={{ color: '#141c52' }}>
-          {exam.toUpperCase().replace(/-/g, ' ')} · {section.replace(/-/g, ' ')}
+          {exam.toUpperCase().replace(/-/g, ' ')} · {sectionInfo?.name ?? section.replace(/-/g, ' ')}
         </p>
-        <div className="flex items-center gap-2">
-          <div className="h-2 bg-gray-100 rounded-full w-32 overflow-hidden">
-            <div className="h-full rounded-full transition-all"
-              style={{ width: `${((currentQ) / questions.length) * 100}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }} />
+        <div className="flex items-center gap-4">
+          {/* Section-level countdown timer */}
+          {sectionInfo && sectionInfo.duration_seconds > 0 && (
+            <ExamTimer
+              compact
+              seconds={sectionInfo.duration_seconds}
+              onExpire={handleNext}
+            />
+          )}
+          {/* Progress bar */}
+          <div className="flex items-center gap-2">
+            <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${(currentQ / questions.length) * 100}%`,
+                  background: 'linear-gradient(to right,#FADB43,#fe9940)',
+                }}
+              />
+            </div>
+            <p className="text-xs text-gray-400">{currentQ + 1}/{questions.length}</p>
           </div>
-          <p className="text-xs text-gray-400">{currentQ + 1}/{questions.length}</p>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         <QuestionView
+          key={currentQ}
           question={q}
           index={currentQ}
           total={questions.length}

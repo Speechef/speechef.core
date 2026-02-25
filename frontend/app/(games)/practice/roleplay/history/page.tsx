@@ -42,6 +42,7 @@ function ScorePill({ score }: { score: number }) {
 
 export default function RolePlayHistoryPage() {
   const [activeMode, setActiveMode] = useState('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'score_desc' | 'score_asc'>('newest');
 
   const { data: sessions = [], isLoading } = useQuery<RolePlaySession[]>({
     queryKey: ['roleplay-sessions-all'],
@@ -51,6 +52,12 @@ export default function RolePlayHistoryPage() {
   const filtered = activeMode === 'all'
     ? sessions
     : sessions.filter((s) => s.mode === activeMode);
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'score_desc') return (b.score ?? -1) - (a.score ?? -1);
+    if (sortBy === 'score_asc')  return (a.score ?? 101) - (b.score ?? 101);
+    return new Date(b.started_at).getTime() - new Date(a.started_at).getTime();
+  });
 
   const finished = filtered.filter((s) => s.status === 'finished' && s.score != null);
   const avgScore = finished.length > 0
@@ -80,8 +87,8 @@ export default function RolePlayHistoryPage() {
           )}
         </div>
 
-        {/* Mode filter tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* Mode filter tabs + sort */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           {MODES.map((m) => (
             <button
               key={m.id}
@@ -95,6 +102,15 @@ export default function RolePlayHistoryPage() {
               {m.label}
             </button>
           ))}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="ml-auto text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600"
+          >
+            <option value="newest">Newest First</option>
+            <option value="score_desc">Highest Score</option>
+            <option value="score_asc">Lowest Score</option>
+          </select>
         </div>
 
         {/* Summary bar */}
@@ -134,7 +150,7 @@ export default function RolePlayHistoryPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {filtered.map((s) => {
+            {sorted.map((s) => {
               const meta = MODE_META[s.mode];
               return (
                 <Link

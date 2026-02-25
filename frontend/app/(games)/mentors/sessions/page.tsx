@@ -69,8 +69,15 @@ function RatingModal({ sessionId, onClose }: { sessionId: number; onClose: () =>
   );
 }
 
+const SESSION_TABS = [
+  { id: 'all',      label: 'All' },
+  { id: 'upcoming', label: 'Upcoming' },
+  { id: 'past',     label: 'Past' },
+];
+
 export default function MySessionsPage() {
   const [ratingSession, setRatingSession] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'past'>('all');
 
   const { data: sessions = [], isLoading } = useQuery<MentorSession[]>({
     queryKey: ['mentor-sessions'],
@@ -80,6 +87,9 @@ export default function MySessionsPage() {
   const upcoming = sessions.filter((s) => ['pending_payment', 'confirmed'].includes(s.status));
   const past = sessions.filter((s) => ['completed', 'cancelled', 'no_show'].includes(s.status));
 
+  const showUpcoming = activeTab === 'all' || activeTab === 'upcoming';
+  const showPast = activeTab === 'all' || activeTab === 'past';
+
   return (
     <>
       {ratingSession !== null && (
@@ -88,7 +98,7 @@ export default function MySessionsPage() {
 
       <div className="min-h-screen bg-gray-50 py-10 px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-5">
             <div>
               <h1 className="text-3xl font-bold" style={{ color: '#141c52' }}>My Sessions</h1>
               <p className="text-gray-500 text-sm mt-1">Track your upcoming and past mentor sessions.</p>
@@ -99,6 +109,32 @@ export default function MySessionsPage() {
               Find Mentors →
             </Link>
           </div>
+
+          {/* Tab filter */}
+          {!isLoading && sessions.length > 0 && (
+            <div className="flex gap-2 mb-7">
+              {SESSION_TABS.map((t) => {
+                const count = t.id === 'all' ? sessions.length : t.id === 'upcoming' ? upcoming.length : past.length;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id as typeof activeTab)}
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+                    style={activeTab === t.id
+                      ? { backgroundColor: '#141c52', color: '#fff' }
+                      : { backgroundColor: '#e5e7eb', color: '#374151' }}
+                  >
+                    {t.label}
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                      activeTab === t.id ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-600'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {isLoading ? (
             <div className="space-y-4">
@@ -117,7 +153,7 @@ export default function MySessionsPage() {
           ) : (
             <div className="space-y-8">
               {/* Upcoming */}
-              {upcoming.length > 0 && (
+              {showUpcoming && upcoming.length > 0 && (
                 <div>
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">Upcoming</h2>
                   <div className="space-y-3">
@@ -152,7 +188,7 @@ export default function MySessionsPage() {
               )}
 
               {/* Past */}
-              {past.length > 0 && (
+              {showPast && past.length > 0 && (
                 <div>
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">Past Sessions</h2>
                   <div className="space-y-3">

@@ -35,6 +35,7 @@ export default function LearnPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [showBookmarks, setShowBookmarks] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'az'>('newest');
   const search = useDebounce(searchInput, 300);
   const { isLoggedIn } = useAuthStore();
   const router = useRouter();
@@ -108,7 +109,23 @@ export default function LearnPage() {
 
         <div className="flex gap-6">
           {/* ── Posts ── */}
-          <div className="flex-1 space-y-4">
+          <div className="flex-1">
+            {/* Sort row */}
+            {!isLoading && posts.length > 0 && (
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-gray-400">{posts.length} article{posts.length !== 1 ? 's' : ''}</p>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="az">Title A–Z</option>
+                </select>
+              </div>
+            )}
+            <div className="space-y-4">
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
@@ -134,7 +151,11 @@ export default function LearnPage() {
                 )}
               </div>
             ) : (
-              posts.map((post) => {
+              [...posts].sort((a, b) => {
+                if (sortBy === 'oldest') return new Date(a.created_on).getTime() - new Date(b.created_on).getTime();
+                if (sortBy === 'az')     return a.title.localeCompare(b.title);
+                return new Date(b.created_on).getTime() - new Date(a.created_on).getTime();
+              }).map((post) => {
                 const isNew = !post.is_completed &&
                   (Date.now() - new Date(post.created_on).getTime()) < 7 * 24 * 60 * 60 * 1000;
                 return (
@@ -198,6 +219,7 @@ export default function LearnPage() {
               );
               })
             )}
+            </div>
           </div>
 
           {/* ── Sidebar ── */}

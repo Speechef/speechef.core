@@ -92,6 +92,7 @@ export default function JobsPage() {
   const [filterType, setFilterType] = useState<string>('');
   const [search, setSearch] = useState('');
   const [forYou, setForYou] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'salary_desc' | 'score_asc'>('newest');
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: ['jobs', filterRemote, filterType],
@@ -133,7 +134,12 @@ export default function JobsPage() {
   const qualifyingJobs = searchedJobs.filter(
     (j) => !j.min_speechef_score || (latestScore !== null && latestScore !== undefined && latestScore >= j.min_speechef_score)
   );
-  const displayedJobs = forYou ? qualifyingJobs : searchedJobs;
+  const filteredJobs = forYou ? qualifyingJobs : searchedJobs;
+  const displayedJobs = [...filteredJobs].sort((a, b) => {
+    if (sortBy === 'salary_desc') return (b.job_rate ?? 0) - (a.job_rate ?? 0);
+    if (sortBy === 'score_asc')   return (a.min_speechef_score ?? 0) - (b.min_speechef_score ?? 0);
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
   const canForYou = isLoggedIn && latestScore !== null && latestScore !== undefined;
 
   return (
@@ -236,6 +242,15 @@ export default function JobsPage() {
             <option value="part_time">Part Time</option>
             <option value="contract">Contract</option>
             <option value="freelance">Freelance</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600"
+          >
+            <option value="newest">Newest First</option>
+            <option value="salary_desc">Highest Salary</option>
+            <option value="score_asc">Score: Low to High</option>
           </select>
           <div className="ml-auto">
             <Link
