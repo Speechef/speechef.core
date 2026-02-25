@@ -1,0 +1,176 @@
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils import timezone
+from datetime import timedelta
+from .models import Expert, ExpertReview, ReviewMessage
+from .serializers import ExpertSerializer, ExpertReviewSerializer, ReviewMessageSerializer
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticatedOrReadOnly])
+def expert_list(request):
+    """List all active experts. Filter by specialty or language via query params."""
+    experts = Expert.objects.filter(is_active=True)
+    specialty = request.query_params.get("specialty")
+    language = request.query_params.get("language")
+    if specialty:
+        experts = [e for e in experts if specialty in (e.specialties or [])]
+    elif language:
+        experts = [e for e in experts if language in (e.languages or [])]
+    return Response(ExpertSerializer(experts, many=True).data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticatedOrReadOnly])
+def expert_detail(request, pk):
+    """Get a single expert profile."""
+    try:
+        expert = Expert.objects.get(pk=pk, is_active=True)
+    except Expert.DoesNotExist:
+        return Response({"detail": "Expert not found."}, status=status.HTTP_404_NOT_FOUND)
+    return Response(ExpertSerializer(expert).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def review_submit(request):
+    """Submit a new expert review request."""
+    review_type = request.data.get("review_type", "general")
+    expert_id = request.data.get("expert_id")
+
+    valid_types = [t[0] for t in ExpertReview.REVIEW_TYPE_CHOICES]
+    if review_type not in valid_types:
+        return Response({"detail": f"review_type must be one of {valid_types}."}, status=status.HTTP_400_BAD_REQUEST)
+
+    expert = None
+    if expert_id:
+        try:
+            expert = Expert.objects.get(pk=expert_id, is_active=True)
+        except Expert.DoesNotExist:
+            return Response({"detail": "Expert not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    review = ExpertReview.objects.create(
+        user=request.user,
+        expert=expert,
+        review_type=review_type,
+        video_key=request.data.get("video_key", ""),
+        deadline_at=timezone.now() + timedelta(hours=48),
+        status="submitted",
+    )
+
+    if not expert:
+        _auto_assign(review)
+
+    try:
+        from users.badges import award_badge
+        award_badge(request.user, 'first_review')
+    except Exception:
+        pass
+
+    return Response({"review_id": review.id, "status": review.status}, status=status.HTTP_201_CREATED)
+
+
+def _auto_assign(review):
+    """Assign the expert with fewest open reviews."""
+    from django.db.models import Count, Q
+    best = (
+        Expert.objects.filter(is_active=True)
+        .annotate(open_count=Count("reviews", filter=Q(reviews__status__in=["submitted", "assigned", "in_review"])))
+        .order_by("open_count")
+        .first()
+    )
+    if best:
+        review.expert = best
+        review.status = "assigned"
+        review.save(update_fields=["expert", "status"])
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def review_status(request, pk):
+    """Get status of a review owned by the requesting user."""
+    try:
+        review = ExpertReview.objects.get(pk=pk, user=request.user)
+    except ExpertReview.DoesNotExist:
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+    return Response({
+        "id": review.id,
+        "status": review.status,
+        "review_type": review.review_type,
+        "submitted_at": review.submitted_at,
+        "deadline_at": review.deadline_at,
+        "delivered_at": review.delivered_at,
+        "expert": ExpertSerializer(review.expert).data if review.expert else None,
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def review_feedback(request, pk):
+    """Get delivered feedback for a review."""
+    try:
+        review = ExpertReview.objects.get(pk=pk, user=request.user)
+    except ExpertReview.DoesNotExist:
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+    if review.status != "delivered":
+        return Response({"detail": "Feedback not yet available."}, status=status.HTTP_403_FORBIDDEN)
+    return Response({
+        "feedback_notes": review.feedback_notes,
+        "feedback_video_key": review.feedback_video_key,
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def review_rate(request, pk):
+    """Rate a delivered review (1-5)."""
+    try:
+        review = ExpertReview.objects.get(pk=pk, user=request.user)
+    except ExpertReview.DoesNotExist:
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+    rating = request.data.get("rating")
+    if not rating or not (1 <= int(rating) <= 5):
+        return Response({"detail": "rating must be 1-5."}, status=status.HTTP_400_BAD_REQUEST)
+    review.feedback_rating = int(rating)
+    review.save(update_fields=["feedback_rating"])
+    if review.expert:
+        _update_expert_rating(review.expert)
+    return Response({"saved": True})
+
+
+def _update_expert_rating(expert):
+    from django.db.models import Avg
+    avg = ExpertReview.objects.filter(expert=expert, feedback_rating__isnull=False).aggregate(avg=Avg("feedback_rating"))["avg"]
+    if avg:
+        expert.rating_avg = round(avg, 2)
+        expert.save(update_fields=["rating_avg"])
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_reviews(request):
+    """List all reviews submitted by the current user."""
+    reviews = ExpertReview.objects.filter(user=request.user).order_by("-submitted_at")
+    return Response(ExpertReviewSerializer(reviews, many=True).data)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def review_messages(request, pk):
+    """GET thread messages / POST a new message for a review."""
+    try:
+        review = ExpertReview.objects.get(pk=pk, user=request.user)
+    except ExpertReview.DoesNotExist:
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        messages = review.messages.all()
+        return Response(ReviewMessageSerializer(messages, many=True).data)
+
+    body = request.data.get("body", "").strip()
+    if not body:
+        return Response({"detail": "Message body is required."}, status=status.HTTP_400_BAD_REQUEST)
+    msg = ReviewMessage.objects.create(review=review, sender=request.user, body=body)
+    return Response(ReviewMessageSerializer(msg).data, status=status.HTTP_201_CREATED)
