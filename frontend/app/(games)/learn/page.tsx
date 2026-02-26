@@ -745,7 +745,7 @@ function CourseBanner({
               </span>
             )}
             <span className="text-xs text-gray-400 ml-auto">
-              {chapterCount > 0 && `${chapterCount} chapters · `}{totalPosts} lessons
+              {chapterCount > 0 && `${chapterCount} chapter${chapterCount !== 1 ? 's' : ''} · `}{totalPosts} lesson{totalPosts !== 1 ? 's' : ''}
             </span>
           </div>
 

@@ -5,9 +5,9 @@ export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  const { sessionId } = params;
+  const { sessionId } = await params;
 
   // Fetch result from backend (server-side, no auth needed for public OG images)
   // In production this would use a signed token or public endpoint
