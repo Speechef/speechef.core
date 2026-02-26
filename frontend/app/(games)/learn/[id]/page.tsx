@@ -48,13 +48,15 @@ const COURSES: CourseInfo[] = [
   { id: 'writing',       name: 'Professional Writing',  description: 'Craft clear, compelling emails and documents',               emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
 ];
 
-const CHAPTER_NAMES: Record<number, string> = {
-  1: 'The Basics',
-  2: 'Nouns & Articles',
-  3: 'Pronouns & Adjectives',
-  4: 'Tenses',
-  5: 'Sentence Structure',
-  6: 'Advanced Grammar',
+const CHAPTER_NAMES: Record<string, Record<number, string>> = {
+  'Grammar':          { 1: 'The Basics', 2: 'Nouns & Articles', 3: 'Pronouns & Adjectives', 4: 'Tenses', 5: 'Sentence Structure', 6: 'Advanced Grammar' },
+  'Pronunciation':    { 1: 'Sound Foundations', 2: 'Specific Challenges', 3: 'Advanced Features' },
+  'Fluency':          { 1: 'Building Flow', 2: 'Mastering Pace' },
+  'Vocabulary':       { 1: 'Core Vocabulary', 2: 'Advanced Usage' },
+  'Communication':    { 1: 'Verbal Foundations', 2: 'Active Communication', 3: 'Non-Verbal Presence' },
+  'Listening':        { 1: 'Foundations' },
+  'Interview Skills': { 1: 'Interview Essentials' },
+  'Writing':          { 1: 'Professional Writing' },
 };
 
 const AVATAR_COLORS = [
@@ -736,7 +738,7 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
                   className="text-xs font-medium px-2.5 py-1 rounded-full"
                   style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', border: `1px solid ${catMeta?.border ?? '#e5e7eb'}` }}
                 >
-                  Ch {chapter} · {CHAPTER_NAMES[chapter] ?? `Chapter ${chapter}`}
+                  Ch {chapter} · {CHAPTER_NAMES[activeCourse?.category ?? '']?.[chapter] ?? `Chapter ${chapter}`}
                 </span>
               )}
               {difficulty && <DifficultyBadge difficulty={difficulty} />}
@@ -1257,7 +1259,7 @@ function CourseNavigator({
                       className="text-[11px] font-semibold"
                       style={{ color: courseMeta?.text ?? '#141c52', opacity: 0.65 }}
                     >
-                      {CHAPTER_NAMES[chNum] ?? `Chapter ${chNum}`}
+                      {CHAPTER_NAMES[course.category]?.[chNum] ?? `Chapter ${chNum}`}
                     </span>
                   </div>
                 )}

@@ -104,13 +104,15 @@ const COURSES: CourseInfo[] = [
 
 // ─── Chapter names ────────────────────────────────────────────────────────────
 
-const CHAPTER_NAMES: Record<number, string> = {
-  1: 'The Basics',
-  2: 'Nouns & Articles',
-  3: 'Pronouns & Adjectives',
-  4: 'Tenses',
-  5: 'Sentence Structure',
-  6: 'Advanced Grammar',
+const CHAPTER_NAMES: Record<string, Record<number, string>> = {
+  'Grammar':          { 1: 'The Basics', 2: 'Nouns & Articles', 3: 'Pronouns & Adjectives', 4: 'Tenses', 5: 'Sentence Structure', 6: 'Advanced Grammar' },
+  'Pronunciation':    { 1: 'Sound Foundations', 2: 'Specific Challenges', 3: 'Advanced Features' },
+  'Fluency':          { 1: 'Building Flow', 2: 'Mastering Pace' },
+  'Vocabulary':       { 1: 'Core Vocabulary', 2: 'Advanced Usage' },
+  'Communication':    { 1: 'Verbal Foundations', 2: 'Active Communication', 3: 'Non-Verbal Presence' },
+  'Listening':        { 1: 'Foundations' },
+  'Interview Skills': { 1: 'Interview Essentials' },
+  'Writing':          { 1: 'Professional Writing' },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -590,6 +592,7 @@ export default function LearnPage() {
           <ChapterGroupedGrid
             posts={sortedPosts}
             catMeta={CATEGORY_META[activeCourse.category]}
+            courseCategory={activeCourse.category}
             search={search}
             onBookmark={handleBookmark}
             onCategoryClick={(name) => { setSearchInput(''); pushParams(name, false, sortBy, ''); }}
@@ -1035,12 +1038,14 @@ function ArticleCard({
 function ChapterGroupedGrid({
   posts,
   catMeta,
+  courseCategory,
   search,
   onBookmark,
   onCategoryClick,
 }: {
   posts: Post[];
   catMeta: { bg: string; text: string; border: string; emoji: string } | undefined;
+  courseCategory: string;
   search: string;
   onBookmark: (e: React.MouseEvent, id: number) => void;
   onCategoryClick: (name: string) => void;
@@ -1076,7 +1081,7 @@ function ChapterGroupedGrid({
                 </span>
                 <span className="w-px h-3.5 opacity-20" style={{ backgroundColor: catMeta?.text ?? '#141c52' }} />
                 <span className="text-sm font-bold" style={{ color: catMeta?.text ?? '#141c52' }}>
-                  {CHAPTER_NAMES[chNum] ?? `Chapter ${chNum}`}
+                  {CHAPTER_NAMES[courseCategory]?.[chNum] ?? `Chapter ${chNum}`}
                 </span>
                 <span className="text-xs opacity-50" style={{ color: catMeta?.text ?? '#141c52' }}>
                   {items.length} lesson{items.length !== 1 ? 's' : ''}
