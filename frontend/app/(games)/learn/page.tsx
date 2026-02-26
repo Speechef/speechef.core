@@ -102,6 +102,17 @@ const COURSES: CourseInfo[] = [
   },
 ];
 
+// ─── Chapter names ────────────────────────────────────────────────────────────
+
+const CHAPTER_NAMES: Record<number, string> = {
+  1: 'The Basics',
+  2: 'Nouns & Articles',
+  3: 'Pronouns & Adjectives',
+  4: 'Tenses',
+  5: 'Sentence Structure',
+  6: 'Advanced Grammar',
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function parsePostMeta(body: string): { chapter: number | null; difficulty: 'Easy' | 'Medium' | 'Hard' | null; cleanBody: string } {
@@ -218,6 +229,9 @@ export default function LearnPage() {
   // ─── Derived state ──────────────────────────────────────────────────────────
 
   const sortedPosts = [...posts].sort((a, b) => {
+    // In course mode lessons must always appear chronologically (oldest → newest)
+    // so lesson numbers match the intended chapter order.
+    if (activeCourse) return new Date(a.created_on).getTime() - new Date(b.created_on).getTime();
     if (sortBy === 'oldest') return new Date(a.created_on).getTime() - new Date(b.created_on).getTime();
     if (sortBy === 'az') return a.title.localeCompare(b.title);
     return new Date(b.created_on).getTime() - new Date(a.created_on).getTime();
@@ -492,22 +506,28 @@ export default function LearnPage() {
         {!isLoading && posts.length > 0 && (
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-gray-400">
-              {posts.length} article{posts.length !== 1 ? 's' : ''}
+              {posts.length} {activeCourse ? 'lesson' : 'article'}{posts.length !== 1 ? 's' : ''}
               {activeCategory && (
                 <span>
                   {' '}in <strong className="text-[#141c52]">{activeCategory}</strong>
                 </span>
               )}
             </p>
-            <select
-              value={sortBy}
-              onChange={(e) => pushParams(activeCategory, showBookmarks, e.target.value, searchInput)}
-              className="text-xs border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-500 focus:outline-none focus:border-indigo-300"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="az">A – Z</option>
-            </select>
+            {activeCourse ? (
+              <span className="flex items-center gap-1.5 text-xs text-gray-400 px-3 py-1.5 bg-white rounded-xl border border-gray-200">
+                <span>📋</span> In lesson order
+              </span>
+            ) : (
+              <select
+                value={sortBy}
+                onChange={(e) => pushParams(activeCategory, showBookmarks, e.target.value, searchInput)}
+                className="text-xs border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-500 focus:outline-none focus:border-indigo-300"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="az">A – Z</option>
+              </select>
+            )}
           </div>
         )}
 
@@ -543,15 +563,24 @@ export default function LearnPage() {
               <p className="font-semibold text-gray-600">No posts in this category yet.</p>
             )}
           </div>
+        ) : activeCourse ? (
+          // ── COURSE MODE: chapter-grouped grid ──────────────────────────────
+          <ChapterGroupedGrid
+            posts={sortedPosts}
+            catMeta={CATEGORY_META[activeCourse.category]}
+            search={search}
+            onBookmark={handleBookmark}
+            onCategoryClick={(name) => { setSearchInput(''); pushParams(name, false, sortBy, ''); }}
+          />
         ) : (
+          // ── STANDARD MODE: flat 2-col grid ──────────────────────────────────
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
-            {sortedPosts.map((post, idx) => {
+            {sortedPosts.map((post) => {
               const isNew =
                 !post.is_completed &&
                 Date.now() - new Date(post.created_on).getTime() < 14 * 24 * 60 * 60 * 1000;
               const primaryCat = post.categories[0];
               const catMeta = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
-              const lessonNum = activeCourse ? idx + 1 : null;
 
               return (
                 <ArticleCard
@@ -559,7 +588,7 @@ export default function LearnPage() {
                   post={post}
                   catMeta={catMeta}
                   isNew={isNew}
-                  lessonNum={lessonNum}
+                  lessonNum={null}
                   search={search}
                   onBookmark={handleBookmark}
                   onCategoryClick={(name) => { setSearchInput(''); pushParams(name, false, sortBy, ''); }}
@@ -970,6 +999,110 @@ function ArticleCard({
         </div>
       </div>
     </Link>
+  );
+}
+
+// ─── ChapterGroupedGrid ───────────────────────────────────────────────────────
+
+function ChapterGroupedGrid({
+  posts,
+  catMeta,
+  search,
+  onBookmark,
+  onCategoryClick,
+}: {
+  posts: Post[];
+  catMeta: { bg: string; text: string; border: string; emoji: string } | undefined;
+  search: string;
+  onBookmark: (e: React.MouseEvent, id: number) => void;
+  onCategoryClick: (name: string) => void;
+}) {
+  // Parse chapter for each post and group them
+  const postsWithMeta = posts.map((p, idx) => ({
+    post: p,
+    lessonNum: idx + 1,
+    ...parsePostMeta(p.body ?? ''),
+  }));
+
+  const chapterMap = new Map<number, typeof postsWithMeta>();
+  for (const pm of postsWithMeta) {
+    const ch = pm.chapter ?? 0;
+    if (!chapterMap.has(ch)) chapterMap.set(ch, []);
+    chapterMap.get(ch)!.push(pm);
+  }
+  const sortedChapters = Array.from(chapterMap.entries()).sort(([a], [b]) => a - b);
+
+  return (
+    <div className="pb-12 space-y-8">
+      {sortedChapters.map(([chNum, items]) => (
+        <div key={chNum}>
+          {/* Chapter divider header */}
+          {chNum > 0 && (
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl"
+                style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', border: `1.5px solid ${catMeta?.border ?? '#e5e7eb'}` }}
+              >
+                <span className="text-xs font-black uppercase tracking-widest opacity-50" style={{ color: catMeta?.text ?? '#141c52' }}>
+                  Ch {chNum}
+                </span>
+                <span className="w-px h-3.5 opacity-20" style={{ backgroundColor: catMeta?.text ?? '#141c52' }} />
+                <span className="text-sm font-bold" style={{ color: catMeta?.text ?? '#141c52' }}>
+                  {CHAPTER_NAMES[chNum] ?? `Chapter ${chNum}`}
+                </span>
+                <span className="text-xs opacity-50" style={{ color: catMeta?.text ?? '#141c52' }}>
+                  {items.length} lesson{items.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="flex-1 h-px" style={{ backgroundColor: catMeta?.border ?? '#e5e7eb' }} />
+              {/* Difficulty distribution pills */}
+              {(['Easy', 'Medium', 'Hard'] as const).map((d) => {
+                const count = items.filter((i) => i.difficulty === d).length;
+                if (!count) return null;
+                const dMap = {
+                  Easy:   { bg: '#dcfce7', text: '#166534' },
+                  Medium: { bg: '#fef9c3', text: '#92400e' },
+                  Hard:   { bg: '#fee2e2', text: '#991b1b' },
+                };
+                const dm = dMap[d];
+                return (
+                  <span
+                    key={d}
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                    style={{ backgroundColor: dm.bg, color: dm.text }}
+                  >
+                    {count} {d}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {items.map(({ post, lessonNum }) => {
+              const isNew =
+                !post.is_completed &&
+                Date.now() - new Date(post.created_on).getTime() < 14 * 24 * 60 * 60 * 1000;
+              const primaryCat = post.categories[0];
+              const cardMeta = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
+
+              return (
+                <ArticleCard
+                  key={post.id}
+                  post={post}
+                  catMeta={cardMeta}
+                  isNew={isNew}
+                  lessonNum={lessonNum}
+                  search={search}
+                  onBookmark={onBookmark}
+                  onCategoryClick={onCategoryClick}
+                />
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
