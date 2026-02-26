@@ -206,7 +206,7 @@ export default function LearnPage() {
     },
   });
 
-  const { data: allPosts = [] } = useQuery<Post[]>({
+  const { data: allPosts = [], isLoading: allPostsLoading } = useQuery<Post[]>({
     queryKey: ['learn-posts-all'],
     queryFn: () => api.get('/learn/posts/').then((r) => r.data),
   });
@@ -227,6 +227,10 @@ export default function LearnPage() {
   }
 
   // ─── Derived state ──────────────────────────────────────────────────────────
+
+  // activeCourse must be declared before sortedPosts because the sort callback
+  // reads it synchronously — accessing a const before its declaration is TDZ.
+  const activeCourse = COURSES.find((c) => c.category === activeCategory);
 
   const sortedPosts = [...posts].sort((a, b) => {
     // In course mode lessons must always appear chronologically (oldest → newest)
@@ -249,8 +253,6 @@ export default function LearnPage() {
   const completionPct =
     allPosts.length > 0 ? Math.round((completedCount / allPosts.length) * 100) : 0;
 
-  const activeCourse = COURSES.find((c) => c.category === activeCategory);
-
   function catPostCount(catName: string) {
     return allPosts.filter((p) => p.categories.some((c) => c.name === catName)).length;
   }
@@ -258,6 +260,15 @@ export default function LearnPage() {
     return allPosts.filter(
       (p) => p.is_completed && p.categories.some((c) => c.name === catName),
     ).length;
+  }
+  function catChapterCount(catName: string) {
+    const chapters = new Set(
+      allPosts
+        .filter((p) => p.categories.some((c) => c.name === catName) && p.body)
+        .map((p) => parsePostMeta(p.body).chapter)
+        .filter((ch): ch is number => ch !== null),
+    );
+    return chapters.size;
   }
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -326,6 +337,7 @@ export default function LearnPage() {
               const meta = CATEGORY_META[course.category];
               const total = catPostCount(course.category);
               const done = catCompletedCount(course.category);
+              const chapters = catChapterCount(course.category);
               const pct = total > 0 && isLoggedIn ? Math.round((done / total) * 100) : 0;
               const isActive = activeCategory === course.category;
 
@@ -390,7 +402,9 @@ export default function LearnPage() {
                       {/* Lesson count + progress */}
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-400">{total} lesson{total !== 1 ? 's' : ''}</span>
+                          <span className="text-gray-400">
+                            {chapters > 0 && <>{chapters} ch · </>}{total} lesson{total !== 1 ? 's' : ''}
+                          </span>
                           {isLoggedIn && total > 0 && (
                             <span className="font-semibold" style={{ color: meta?.text ?? '#141c52' }}>
                               {pct}%
@@ -433,6 +447,7 @@ export default function LearnPage() {
             {searchInput && (
               <button
                 onClick={() => { setSearchInput(''); pushParams(activeCategory, showBookmarks, sortBy, ''); }}
+                aria-label="Clear search"
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
               >
                 ✕
@@ -488,11 +503,12 @@ export default function LearnPage() {
         </div>
 
         {/* ── COURSE MODE BANNER ────────────────────────────────────────────── */}
-        {activeCourse && !search && (
+        {activeCourse && !search && !allPostsLoading && (
           <CourseBanner
             course={activeCourse}
             totalPosts={catPostCount(activeCourse.category)}
             completedPosts={catCompletedCount(activeCourse.category)}
+            chapterCount={catChapterCount(activeCourse.category)}
             isLoggedIn={isLoggedIn}
           />
         )}
@@ -513,7 +529,7 @@ export default function LearnPage() {
                 </span>
               )}
             </p>
-            {activeCourse ? (
+            {activeCourse && !search ? (
               <span className="flex items-center gap-1.5 text-xs text-gray-400 px-3 py-1.5 bg-white rounded-xl border border-gray-200">
                 <span>📋</span> In lesson order
               </span>
@@ -521,6 +537,7 @@ export default function LearnPage() {
               <select
                 value={sortBy}
                 onChange={(e) => pushParams(activeCategory, showBookmarks, e.target.value, searchInput)}
+                aria-label="Sort articles"
                 className="text-xs border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-500 focus:outline-none focus:border-indigo-300"
               >
                 <option value="newest">Newest first</option>
@@ -558,6 +575,11 @@ export default function LearnPage() {
                 >
                   Clear search
                 </button>
+              </>
+            ) : showBookmarks ? (
+              <>
+                <p className="font-semibold text-gray-600 text-base">No saved articles yet.</p>
+                <p className="text-sm mt-1 text-gray-400">Bookmark articles while reading to find them here.</p>
               </>
             ) : (
               <p className="font-semibold text-gray-600">No posts in this category yet.</p>
@@ -665,11 +687,13 @@ function CourseBanner({
   course,
   totalPosts,
   completedPosts,
+  chapterCount,
   isLoggedIn,
 }: {
   course: CourseInfo;
   totalPosts: number;
   completedPosts: number;
+  chapterCount: number;
   isLoggedIn: boolean;
 }) {
   const meta = CATEGORY_META[course.category];
@@ -717,7 +741,9 @@ function CourseBanner({
                 ★ Featured Course
               </span>
             )}
-            <span className="text-xs text-gray-400 ml-auto">{totalPosts} lessons</span>
+            <span className="text-xs text-gray-400 ml-auto">
+              {chapterCount > 0 && `${chapterCount} chapters · `}{totalPosts} lessons
+            </span>
           </div>
 
           <h2
@@ -764,6 +790,7 @@ function FeaturedHero({
   const primaryCat = post.categories[0];
   const catMeta = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
   const excerpt = post.body ? getExcerpt(post.body, 180) : '';
+  const { difficulty } = post.body ? parsePostMeta(post.body) : { difficulty: null };
 
   return (
     <Link href={`/learn/${post.id}`} className="block group mb-6">
@@ -808,6 +835,7 @@ function FeaturedHero({
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {difficulty && <DifficultyBadge difficulty={difficulty} />}
               {post.body && (
                 <span
                   className="text-xs font-medium"

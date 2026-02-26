@@ -70,7 +70,8 @@ function slugify(text: string): string {
 }
 
 function readTime(body: string): string {
-  return `${Math.max(1, Math.ceil(body.split(/\s+/).filter(Boolean).length / 200))} min read`;
+  const { cleanBody } = parsePostMeta(body);
+  return `${Math.max(1, Math.ceil(cleanBody.split(/\s+/).filter(Boolean).length / 200))} min read`;
 }
 
 function extractTOC(body: string): { id: string; text: string }[] {
@@ -758,11 +759,15 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
               {isLoggedIn ? (
                 <button
                   onClick={() => {
-                    completeMutation.mutate();
-                    if (!nextLesson && !post.is_completed) {
-                      setJustCompleted(true);
-                      setTimeout(() => setJustCompleted(false), 3000);
-                    }
+                    const isFinalLesson = !nextLesson && !post.is_completed;
+                    completeMutation.mutate(undefined, {
+                      onSuccess: () => {
+                        if (isFinalLesson) {
+                          setJustCompleted(true);
+                          setTimeout(() => setJustCompleted(false), 3000);
+                        }
+                      },
+                    });
                   }}
                   disabled={completeMutation.isPending}
                   className={`ml-auto text-xs font-bold px-4 py-1.5 rounded-full transition-all disabled:opacity-60 ${
@@ -776,10 +781,10 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
               ) : (
                 <span
                   className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full ${
-                    post.completed ? 'bg-green-100 text-green-700' : 'bg-white text-gray-400 border border-gray-200'
+                    post.is_completed ? 'bg-green-100 text-green-700' : 'bg-white text-gray-400 border border-gray-200'
                   }`}
                 >
-                  {post.completed ? '✓ Completed' : 'Pending'}
+                  {post.is_completed ? '✓ Completed' : 'Pending'}
                 </span>
               )}
             </div>
@@ -816,6 +821,20 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
         >
           {renderBody(cleanBody, catMeta)}
         </div>
+
+        {/* ── COURSE COMPLETION BANNER ──────────────────────────────────── */}
+        {activeCourse && !nextLesson && post.is_completed && (
+          <CourseCompletionBanner
+            course={activeCourse}
+            courseMeta={courseMeta}
+            totalLessons={coursePosts.length}
+            totalReadTime={coursePosts.reduce(
+              (s, p) => s + Math.max(1, Math.ceil(parsePostMeta(p.body ?? '').cleanBody.split(/\s+/).filter(Boolean).length / 200)),
+              0,
+            )}
+            chapterCount={new Set(coursePosts.map((p) => parsePostMeta(p.body ?? '').chapter).filter((c): c is number => c !== null)).size}
+          />
+        )}
 
         {/* ── RELATED ARTICLES ──────────────────────────────────────────── */}
         {related.length > 0 && (
@@ -854,8 +873,8 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
           </section>
         )}
 
-        {/* ── GLOBAL PREV / NEXT ────────────────────────────────────────── */}
-        {(prevGlobal || nextGlobal) && (
+        {/* ── GLOBAL PREV / NEXT (hidden in course mode — CourseNavigator handles that) ── */}
+        {!activeCourse && (prevGlobal || nextGlobal) && (
           <div className="flex gap-3 my-8">
             {prevGlobal ? (
               <Link
@@ -943,7 +962,8 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
                 onChange={(e) => setCommentBody(e.target.value)}
                 rows={3}
                 placeholder="Share your thoughts…"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                disabled={submitting}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all disabled:opacity-60 disabled:bg-gray-50"
               />
               {formError && <p className="text-red-500 text-xs mt-1.5">{formError}</p>}
               <button
@@ -970,6 +990,103 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
   );
 }
 
+// ─── CourseCompletionBanner ───────────────────────────────────────────────────
+
+function CourseCompletionBanner({
+  course,
+  courseMeta,
+  totalLessons,
+  totalReadTime,
+  chapterCount,
+}: {
+  course: CourseInfo;
+  courseMeta: CatMeta | undefined;
+  totalLessons: number;
+  totalReadTime: number;
+  chapterCount: number;
+}) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden mb-8 relative pop-in"
+      style={{
+        background: courseMeta
+          ? `linear-gradient(135deg, ${courseMeta.bg} 0%, #ffffff 60%)`
+          : 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 60%)',
+        border: `2px solid ${courseMeta?.border ?? '#bbf7d0'}`,
+      }}
+    >
+      {/* Decorative blobs */}
+      <div
+        className="absolute -right-10 -top-10 w-40 h-40 rounded-full opacity-[0.07] pointer-events-none"
+        style={{ backgroundColor: courseMeta?.text ?? '#166534' }}
+      />
+      <div
+        className="absolute left-10 -bottom-8 w-28 h-28 rounded-full opacity-[0.05] pointer-events-none"
+        style={{ backgroundColor: courseMeta?.text ?? '#166534' }}
+      />
+
+      <div className="relative z-10 px-6 py-6">
+        {/* Trophy row */}
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0"
+            style={{ backgroundColor: courseMeta?.border ?? '#bbf7d0' }}
+          >
+            🏆
+          </div>
+          <div>
+            <p
+              className="text-xs font-bold uppercase tracking-wider mb-0.5"
+              style={{ color: courseMeta?.text ?? '#166534', opacity: 0.6 }}
+            >
+              Course Complete
+            </p>
+            <h3
+              className="text-xl font-bold leading-tight"
+              style={{ color: courseMeta?.text ?? '#141c52' }}
+            >
+              You finished {course.name}!
+            </h3>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex gap-3 flex-wrap mb-5">
+          {[
+            { icon: '📖', value: totalLessons, label: totalLessons === 1 ? 'lesson' : 'lessons' },
+            ...(chapterCount > 0 ? [{ icon: '🗂️', value: chapterCount, label: chapterCount === 1 ? 'chapter' : 'chapters' }] : []),
+            { icon: '⏱️', value: `~${totalReadTime}`, label: 'min read' },
+          ].map(({ icon, value, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+              style={{ backgroundColor: '#fff', border: `1px solid ${courseMeta?.border ?? '#bbf7d0'}` }}
+            >
+              <span>{icon}</span>
+              <span className="font-bold" style={{ color: courseMeta?.text ?? '#141c52' }}>{value}</span>
+              <span className="text-gray-400">{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/learn"
+            className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-full transition-opacity hover:opacity-85"
+            style={{ backgroundColor: courseMeta?.text ?? '#141c52', color: '#fff' }}
+          >
+            Browse more courses →
+          </Link>
+          <p className="text-xs text-gray-400">
+            Great work! Keep the momentum going.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── CourseNavigator ─────────────────────────────────────────────────────────
 
 function CourseNavigator({
@@ -989,7 +1106,7 @@ function CourseNavigator({
 }) {
   const [expanded, setExpanded] = useState(false);
   const totalReadTime = coursePosts.reduce(
-    (sum, p) => sum + Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).filter(Boolean).length / 200)),
+    (sum, p) => sum + Math.max(1, Math.ceil(parsePostMeta(p.body ?? '').cleanBody.split(/\s+/).filter(Boolean).length / 200)),
     0,
   );
 
@@ -1047,6 +1164,10 @@ function CourseNavigator({
         <div className="flex gap-1 mb-3.5 flex-wrap">
           {coursePosts.map((p, idx) => {
             const isCurrent = String(p.id) === currentId;
+            const { chapter: dotChapter } = parsePostMeta(p.body ?? '');
+            const dotTitle = dotChapter
+              ? `Ch ${dotChapter} · Lesson ${idx + 1}: ${p.title}`
+              : `Lesson ${idx + 1}: ${p.title}`;
             return (
               <Link
                 key={p.id}
@@ -1060,7 +1181,7 @@ function CourseNavigator({
                     ? courseMeta?.text ?? '#141c52'
                     : courseMeta?.border ?? '#e5e7eb',
                 }}
-                title={`Lesson ${idx + 1}: ${p.title}`}
+                title={dotTitle}
               />
             );
           })}
@@ -1141,7 +1262,7 @@ function CourseNavigator({
                   </div>
                 )}
                 <ol className="space-y-0.5">
-                  {items.map(({ p, idx, difficulty }) => {
+                  {items.map(({ p, idx, difficulty, cleanBody: lessonCleanBody }) => {
                     const isCurrent = String(p.id) === currentId;
                     return (
                       <li key={p.id}>
@@ -1172,8 +1293,8 @@ function CourseNavigator({
                             {p.title}
                           </span>
                           {difficulty && <DifficultyBadge difficulty={difficulty} size="xs" />}
-                          {p.body && (
-                            <span className="text-xs text-gray-400 shrink-0">{readTime(p.body)}</span>
+                          {lessonCleanBody && (
+                            <span className="text-xs text-gray-400 shrink-0">{readTime(lessonCleanBody)}</span>
                           )}
                         </Link>
                       </li>
@@ -1254,6 +1375,7 @@ function TableOfContents({
             <li key={item.id}>
               <a
                 href={`#${item.id}`}
+                aria-label={`Jump to section: ${item.text}`}
                 className="flex items-center gap-3 text-sm transition-all rounded-xl px-2 py-1.5 -mx-2 hover:bg-white/60"
                 style={{ color: isActive ? catMeta?.text ?? '#141c52' : '#9ca3af' }}
               >
