@@ -1,7 +1,7 @@
 # Speechef OpenSpec — Feature Proposal Tracker
 
 > Tracks all feature proposals, bug fixes, and improvements using the OpenSpec workflow.
-> Last updated: 2026-02-26 (Phase 39 — vocabulary blitz history link, test prep URL state, practice hub history links, learn hub URL state)
+> Last updated: 2026-02-26 (Phase 40 — learn hub + detail visual redesign, grammar course content, course mode, bug fixes & accessibility)
 
 ---
 
@@ -12,7 +12,7 @@
 | Done      | 0     | — |
 | Unblocked | 0     | — |
 | Blocked   | 0     | — |
-| Archived  | 160   | B1.1, B1.2, B1.3, I1.1, I1.2, I1.3, I1.4, I1.5, I1.6, I1.7, I1.8, I1.9, I2.1, G1.1, G1.2, G2.1, G2.2, U1.1, U1.2, A1.1, A1.2, A1.3, L1.1, L1.2, F1.1, F1.2, F1.3, F1.4, F1.5, LP1.1, LP1.2, LP1.3, LP1.4, LP1.5, LP1.6, ER1.1, ER1.2, ER1.3, ER1.4, J2.1, J2.2, MM1.1, MM1.2, MM1.3, TP1.1, TP1.2, TP1.3, AI1.1, AI1.2, AI1.3, AI1.4, UG1.1, RP1.1, RP1.2, J2.3, G3.1, G3.2, N1.1, AC1.1, INT1.1, G3.3, L2.1, MY1.1, DB1.1, L2.2, G3.4, G4.1, L3.1, PR1.1, RP1.3, AN1.1, SC1.1, G5.1, ST1.1, J3.1, RP2.1, PR1.2, WL1.1, RP3.1, G7.1, G8.1, L4.1, RP4.1, J5.1, DB2.1, L5.1, M2.1, RP5.1, AN2.1, PR3.1, J6.1, SC2.1, LB2.1, DB3.1, J7.1, RP8.1, G10.1, WL2.1, N3.1, RS1.1, RP9.1, MS2.1, JB2.1, LB4.1, AN4.1, PR5.1, LN1.1, MD1.1, RP10.1, PF1.1, TP-BE1, TP-BE2, TP-BE3, TP-FE1, TP-FE2, TP-FE3, MN1.1, PH2.1, DB5.1, AN5.1, SET1.1, FT1.1, EP1.1, PW1.1, LN3.1, TP-FE6, AN6.1, DB8.1, FP1.1, LD2.1, LB1.1, JB3.1, PH3.1, MN2.1, JB4.1, RG1.1, LN4.1, RP11.1, ST2.1, DB9.1, SET3.1, PR6.1, RP12.1, AN7.1, JB5.1 |
+| Archived  | 165   | B1.1, B1.2, B1.3, I1.1, I1.2, I1.3, I1.4, I1.5, I1.6, I1.7, I1.8, I1.9, I2.1, G1.1, G1.2, G2.1, G2.2, U1.1, U1.2, A1.1, A1.2, A1.3, L1.1, L1.2, F1.1, F1.2, F1.3, F1.4, F1.5, LP1.1, LP1.2, LP1.3, LP1.4, LP1.5, LP1.6, ER1.1, ER1.2, ER1.3, ER1.4, J2.1, J2.2, MM1.1, MM1.2, MM1.3, TP1.1, TP1.2, TP1.3, AI1.1, AI1.2, AI1.3, AI1.4, UG1.1, RP1.1, RP1.2, J2.3, G3.1, G3.2, N1.1, AC1.1, INT1.1, G3.3, L2.1, MY1.1, DB1.1, L2.2, G3.4, G4.1, L3.1, PR1.1, RP1.3, AN1.1, SC1.1, G5.1, ST1.1, J3.1, RP2.1, PR1.2, WL1.1, RP3.1, G7.1, G8.1, L4.1, RP4.1, J5.1, DB2.1, L5.1, M2.1, RP5.1, AN2.1, PR3.1, J6.1, SC2.1, LB2.1, DB3.1, J7.1, RP8.1, G10.1, WL2.1, N3.1, RS1.1, RP9.1, MS2.1, JB2.1, LB4.1, AN4.1, PR5.1, LN1.1, MD1.1, RP10.1, PF1.1, TP-BE1, TP-BE2, TP-BE3, TP-FE1, TP-FE2, TP-FE3, MN1.1, PH2.1, DB5.1, AN5.1, SET1.1, FT1.1, EP1.1, PW1.1, LN3.1, TP-FE6, AN6.1, DB8.1, FP1.1, LD2.1, LB1.1, JB3.1, PH3.1, MN2.1, JB4.1, RG1.1, LN4.1, RP11.1, ST2.1, DB9.1, SET3.1, PR6.1, RP12.1, AN7.1, JB5.1, L6.1, L7.1, L8.1, L9.1, L10.1 |
 
 ---
 
@@ -120,6 +120,13 @@ DB1.1 (dashboard game stats)      ✅ → no dependencies
 L2.2  (learn hub bookmarks)       ✅ → no dependencies
 G3.4  (pronunciation challenge)   ✅ → no dependencies
 
+── PHASE 40: Learn Visual Redesign + Grammar Course + Course Mode ────────────
+L6.1 (learn hub visual redesign)        ✅ → no dependencies
+L7.1 (learn detail redesign)            ✅ → L6.1 ✅
+L8.1 (grammar course seed data)         ✅ → no dependencies
+L8.1 ──► L9.1 ✅ (course mode: CourseBanner, ChapterGroupedGrid, CourseNavigator)
+L9.1 ──► L10.1 ✅ (learn bug fixes & accessibility)
+
 ── INFRASTRUCTURE ───────────────────────────────────────────────────────────
 I1.8 (Celery media pipeline)   → needed by AI1.1
 I1.9 (OpenAI Whisper API)      → needed by AI1.1
@@ -190,10 +197,20 @@ I1.9 (OpenAI Whisper API)      → needed by AI1.1
 
 ### 🗄️ Archived — Learn
 
-| ID   | Title                    | Status   |
-|------|--------------------------|----------|
-| L1.1 | Fix post.completed field | Archived |
-| L1.2 | Add Comment Posting      | Archived |
+| ID    | Title                                         | Status   |
+|-------|-----------------------------------------------|----------|
+| L1.1  | Fix post.completed field                      | Archived |
+| L1.2  | Add Comment Posting                           | Archived |
+| L2.1  | Learn hub search                              | Archived |
+| L2.2  | Learn hub bookmarks                           | Archived |
+| L3.1  | Per-user learn post completion tracking       | Archived |
+| L4.1  | Related articles on learn detail page         | Archived |
+| L5.1  | Learn hub "New" badge for recent posts        | Archived |
+| L6.1  | Learn hub visual redesign                     | Archived |
+| L7.1  | Learn detail page redesign                    | Archived |
+| L8.1  | Grammar course seed data & metadata convention | Archived |
+| L9.1  | Course mode & grammar learning path           | Archived |
+| L10.1 | Learn pages bug fixes & accessibility         | Archived |
 
 ---
 
@@ -483,3 +500,15 @@ I1.9 (OpenAI Whisper API)      → needed by AI1.1
 | TP2.1  | Test Prep section filter persisted in URL (?section=speaking)      | Archived | —          |
 | WGS1.1 | Practice hub game cards: "View history →" link when stats exist    | Archived | —          |
 | LN6.1  | Learn hub: all filters (category, sort, bookmarks, search) in URL  | Archived | —          |
+
+---
+
+### 🗄️ Archived — Phase 40: Learn Visual Redesign & Grammar Course
+
+| ID    | Title                                          | Status   | Blocked By     |
+|-------|------------------------------------------------|----------|----------------|
+| L6.1  | Learn hub visual redesign                      | Archived | —              |
+| L7.1  | Learn detail page redesign                     | Archived | L6.1 ✅        |
+| L8.1  | Grammar course seed data & metadata convention | Archived | —              |
+| L9.1  | Course mode & grammar learning path            | Archived | L8.1 ✅        |
+| L10.1 | Learn pages bug fixes & accessibility          | Archived | L9.1 ✅        |
