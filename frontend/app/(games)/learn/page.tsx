@@ -237,18 +237,18 @@ export default function LearnPage() {
       {/* ── PAGE HEADER BANNER ────────────────────────────────────────────── */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #fef9c3 100%)',
+          background: 'linear-gradient(160deg, #eef2ff 0%, #f8f9fb 60%)',
           borderBottom: '1px solid #e8eaf0',
         }}
       >
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-2xl">📚</span>
-                <h1 className="text-3xl font-bold text-[#141c52]">Learn</h1>
+                <h1 className="text-[1.75rem] font-bold text-[#141c52] tracking-tight">Learn</h1>
               </div>
-              <p className="text-sm text-gray-500 max-w-md">
+              <p className="text-[14px] text-gray-500 leading-relaxed max-w-md">
                 Structured courses and articles to sharpen your English — from grammar foundations to fluency.
               </p>
             </div>
@@ -347,12 +347,12 @@ export default function LearnPage() {
                         {course.level}
                       </span>
                       <p
-                        className="text-sm font-bold leading-tight mb-1 group-hover:underline"
+                        className="text-[13.5px] font-bold leading-tight tracking-tight mb-1 group-hover:underline"
                         style={{ color: meta?.text ?? '#141c52' }}
                       >
                         {course.name}
                       </p>
-                      <p className="text-xs text-gray-400 leading-snug mb-2.5 line-clamp-2">
+                      <p className="text-[12px] text-gray-400 leading-[1.55] mb-2.5 line-clamp-2">
                         {course.description}
                       </p>
 
@@ -783,10 +783,10 @@ function FeaturedHero({
 
         {/* White content area */}
         <div className="bg-white px-6 py-5">
-          <h2 className="text-2xl font-bold text-[#141c52] group-hover:underline leading-snug mb-2">
+          <h2 className="text-[1.4rem] font-bold text-[#141c52] group-hover:underline leading-snug tracking-tight mb-2.5">
             {post.title}
           </h2>
-          <p className="text-sm text-gray-500 leading-relaxed mb-4">{excerpt}</p>
+          <p className="text-[15px] text-gray-500 leading-[1.75] mb-4">{excerpt}</p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-gray-400">
               {new Date(post.created_on).toLocaleDateString('en-US', {
@@ -835,21 +835,31 @@ function ArticleCard({
   return (
     <Link href={`/learn/${post.id}`} className="block group">
       <div
-        className="rounded-2xl overflow-hidden h-full flex flex-col transition-all duration-200 group-hover:shadow-lg"
+        className="rounded-2xl overflow-hidden h-full flex flex-col transition-all duration-200"
         style={{
           boxShadow: '0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.04)',
           transform: 'translateY(0)',
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = `0 6px 20px rgba(0,0,0,0.08), 0 0 0 1.5px ${catMeta?.border ?? '#e5e7eb'}`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.04)';
+        }}
       >
         {/* Coloured header band */}
         <div
           className="px-4 pt-3 pb-3 flex items-center gap-2 relative overflow-hidden"
-          style={{ backgroundColor: catMeta?.bg ?? '#f9fafb' }}
+          style={{
+            background: catMeta
+              ? `linear-gradient(180deg, ${catMeta.bg} 0%, ${catMeta.bg}cc 100%)`
+              : '#f9fafb',
+          }}
         >
           <div
-            className="absolute -right-4 -top-4 w-16 h-16 rounded-full opacity-15"
+            className="absolute -right-4 -top-4 w-16 h-16 rounded-full opacity-10"
             style={{ backgroundColor: catMeta?.text ?? '#141c52' }}
           />
 
@@ -902,18 +912,18 @@ function ArticleCard({
 
         {/* White content */}
         <div className="bg-white px-4 py-4 flex flex-col flex-1">
-          <h2 className="text-sm font-bold text-[#141c52] group-hover:underline leading-snug mb-2">
+          <h2 className="text-[15px] font-bold text-[#141c52] group-hover:underline leading-snug tracking-tight mb-2">
             {search ? highlightMatch(post.title, search) : post.title}
           </h2>
 
           {excerpt && (
-            <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 mb-3">
+            <p className="text-[13px] text-gray-500 leading-[1.65] line-clamp-2 mb-3">
               {excerpt}
             </p>
           )}
 
           {/* Footer */}
-          <div className="flex items-center gap-2 mt-auto pt-2 border-t border-gray-50">
+          <div className="flex items-center gap-2 mt-auto pt-2.5 border-t border-gray-100">
             <span className="text-xs text-gray-400">
               {new Date(post.created_on).toLocaleDateString('en-US', {
                 month: 'short',

@@ -116,7 +116,7 @@ function renderLines(lines: string[], catMeta: CatMeta | undefined): React.React
     if (line.startsWith('### ')) {
       const text = line.replace(/^### /, '');
       els.push(
-        <h4 key={`h3-${i}`} className="flex items-center gap-2 text-base font-bold text-[#141c52] mt-5 mb-2">
+        <h4 key={`h3-${i}`} className="flex items-center gap-2 text-[15px] font-bold text-[#141c52] mt-7 mb-2.5 tracking-[-0.01em]">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catMeta?.text ?? '#141c52' }} />
           {text}
         </h4>,
@@ -172,16 +172,16 @@ function renderLines(lines: string[], catMeta: CatMeta | undefined): React.React
         i++;
       }
       els.push(
-        <ul key={`ul-${i}`} className="space-y-2.5 mb-5 mt-1">
+        <ul key={`ul-${i}`} className="space-y-3 mb-6 mt-1.5">
           {bullets.map((b, bi) => (
-            <li key={bi} className="flex items-start gap-3">
+            <li key={bi} className="flex items-start gap-3.5">
               <span
-                className="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shrink-0 mt-0.5"
-                style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', border: `1px solid ${catMeta?.border ?? '#e5e7eb'}` }}
+                className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 mt-[3px]"
+                style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', border: `1.5px solid ${catMeta?.border ?? '#e5e7eb'}` }}
               >
                 ✓
               </span>
-              <span className="text-[15px] text-gray-700 leading-relaxed">{b}</span>
+              <span className="text-[15.5px] text-gray-600 leading-[1.78]">{b}</span>
             </li>
           ))}
         </ul>,
@@ -190,7 +190,7 @@ function renderLines(lines: string[], catMeta: CatMeta | undefined): React.React
     // Regular paragraph
     } else {
       els.push(
-        <p key={`p-${i}`} className="text-[15px] text-gray-700 leading-relaxed mb-4">{line}</p>,
+        <p key={`p-${i}`} className="text-base text-gray-600 leading-[1.85] mb-5 tracking-[0.003em]">{line}</p>,
       );
       i++;
     }
@@ -295,17 +295,17 @@ function renderBody(body: string, catMeta: CatMeta | undefined): React.ReactNode
         return (
           <div
             key={`section-${si}`}
-            className="body-anim scroll-mt-8 mt-10 mb-2"
+            className="body-anim scroll-mt-8 mt-12 mb-2"
             id={section.headingId ?? undefined}
           >
             <div className="flex items-center gap-3 mb-2">
               <div
-                className="w-1 h-7 rounded-full shrink-0"
+                className="w-1 h-6 rounded-full shrink-0"
                 style={{ backgroundColor: catMeta?.text ?? '#141c52' }}
               />
-              <h3 className="text-[1.15rem] font-bold text-[#141c52] leading-snug">{section.heading}</h3>
+              <h3 className="text-[1.1rem] font-bold text-[#141c52] leading-snug tracking-[-0.015em]">{section.heading}</h3>
             </div>
-            <div className="h-px mb-4 ml-4" style={{ backgroundColor: catMeta?.border ?? '#e5e7eb' }} />
+            <div className="h-px mb-5 ml-4" style={{ backgroundColor: catMeta?.border ?? '#e5e7eb' }} />
             {content}
           </div>
         );
@@ -772,7 +772,14 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
         {toc.length >= 2 && <TableOfContents toc={toc} catMeta={catMeta} />}
 
         {/* ── BODY ──────────────────────────────────────────────────────── */}
-        <div ref={bodyRef} className="mb-10">
+        <div
+          ref={bodyRef}
+          className="mb-10 rounded-2xl px-6 sm:px-8 pt-6 pb-8"
+          style={{
+            backgroundColor: '#fff',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)',
+          }}
+        >
           {renderBody(post.body, catMeta)}
         </div>
 
@@ -1146,15 +1153,15 @@ function TableOfContents({
         <span className="text-base">{catMeta?.emoji ?? '📋'}</span>
         <h3 className="text-sm font-bold" style={{ color: catMeta?.text ?? '#141c52' }}>In this article</h3>
       </div>
-      <ol className="space-y-2">
+      <ol className="space-y-1">
         {toc.map((item, idx) => {
           const isActive = activeId === item.id;
           return (
             <li key={item.id}>
               <a
                 href={`#${item.id}`}
-                className="flex items-center gap-3 text-sm transition-all"
-                style={{ color: isActive ? catMeta?.text ?? '#141c52' : '#6b7280' }}
+                className="flex items-center gap-3 text-sm transition-all rounded-xl px-2 py-1.5 -mx-2 hover:bg-white/60"
+                style={{ color: isActive ? catMeta?.text ?? '#141c52' : '#9ca3af' }}
               >
                 <span
                   className="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shrink-0 transition-all"
@@ -1166,7 +1173,10 @@ function TableOfContents({
                 >
                   {idx + 1}
                 </span>
-                <span className={isActive ? 'font-semibold' : ''}>{item.text}</span>
+                <span className={`transition-all ${isActive ? 'font-semibold' : 'font-normal'}`}>{item.text}</span>
+                {isActive && (
+                  <span className="ml-auto text-xs" style={{ color: catMeta?.text ?? '#141c52' }}>↑</span>
+                )}
               </a>
             </li>
           );
