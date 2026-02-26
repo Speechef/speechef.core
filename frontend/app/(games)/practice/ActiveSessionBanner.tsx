@@ -41,7 +41,10 @@ export default function ActiveSessionBanner() {
       style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}
     >
       <div>
-        <p className="text-xs font-semibold text-white/60 mb-0.5">Unfinished Session</p>
+        <p className="text-xs font-semibold text-white/60 mb-0.5 flex items-center gap-1.5">
+          <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          Unfinished Session
+        </p>
         <p className="text-sm font-bold">
           🎭 {modeLabel}{latest.topic ? ` — ${latest.topic}` : ''}
         </p>

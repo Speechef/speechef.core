@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -48,19 +49,24 @@ export default function PracticeStatsBanner() {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3 mb-2">
+    <div className="flex flex-wrap items-center gap-2 mt-3">
       {stats.map(({ label, value, emoji }) => (
-        <div
+        <span
           key={label}
-          className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3"
+          className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-full border border-gray-100 shadow-sm text-xs font-semibold"
+          style={{ color: '#141c52' }}
         >
-          <span className="text-2xl">{emoji}</span>
-          <div>
-            <p className="text-xl font-extrabold leading-none" style={{ color: '#141c52' }}>{value}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-          </div>
-        </div>
+          <span>{emoji}</span>
+          <span className="font-extrabold">{value}</span>
+          <span className="text-gray-400 font-normal">{label}</span>
+        </span>
       ))}
+      <Link
+        href="/practice/history"
+        className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-gray-100 shadow-sm text-xs text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        History →
+      </Link>
     </div>
   );
 }
