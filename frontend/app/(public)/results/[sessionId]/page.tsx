@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import PublicResults from './PublicResults';
 
 interface Props {
-  params: { sessionId: string };
+  params: Promise<{ sessionId: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { sessionId } = params;
+  const { sessionId } = await params;
   const ogImage = `/api/og/scorecard/${sessionId}`;
   return {
     title: 'Communication Score — Speechef',
@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function ResultsPage({ params }: Props) {
-  return <PublicResults sessionId={params.sessionId} />;
+export default async function ResultsPage({ params }: Props) {
+  const { sessionId } = await params;
+  return <PublicResults sessionId={sessionId} />;
 }
