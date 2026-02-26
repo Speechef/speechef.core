@@ -182,5 +182,8 @@ SIMPLE_JWT = {
 }
 
 
+# Frontend base URL — used for password reset links, etc.
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
 # OpenAI (used by analysis app)
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')

@@ -12,7 +12,7 @@ interface Category { id: number; name: string; }
 interface Comment  { id: number; author: string; body: string; created_on: string; }
 interface Post {
   id: number; title: string; body: string; created_on: string;
-  categories: Category[]; completed: boolean; is_completed: boolean; comments: Comment[];
+  categories: Category[]; is_completed: boolean; comments: Comment[];
 }
 interface CourseInfo {
   id: string; name: string; description: string;

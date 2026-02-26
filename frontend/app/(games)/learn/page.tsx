@@ -20,7 +20,6 @@ interface Post {
   body: string;
   created_on: string;
   categories: Category[];
-  completed: boolean;
   is_bookmarked: boolean;
   is_completed: boolean;
 }
