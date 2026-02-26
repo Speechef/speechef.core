@@ -48,6 +48,15 @@ const COURSES: CourseInfo[] = [
   { id: 'writing',       name: 'Professional Writing',  description: 'Craft clear, compelling emails and documents',               emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
 ];
 
+const CHAPTER_NAMES: Record<number, string> = {
+  1: 'The Basics',
+  2: 'Nouns & Articles',
+  3: 'Pronouns & Adjectives',
+  4: 'Tenses',
+  5: 'Sentence Structure',
+  6: 'Advanced Grammar',
+};
+
 const AVATAR_COLORS = [
   { bg: '#dbeafe', text: '#1e40af' }, { bg: '#fce7f3', text: '#9d174d' },
   { bg: '#d1fae5', text: '#065f46' }, { bg: '#fef3c7', text: '#78350f' },
@@ -75,6 +84,21 @@ function authorAvatarColor(name: string) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % AVATAR_COLORS.length;
   return AVATAR_COLORS[Math.abs(h)];
+}
+
+function parsePostMeta(body: string): { chapter: number | null; difficulty: 'Easy' | 'Medium' | 'Hard' | null; cleanBody: string } {
+  const lines = body.split('\n');
+  let chapter: number | null = null;
+  let difficulty: 'Easy' | 'Medium' | 'Hard' | null = null;
+  let startIdx = 0;
+  for (let i = 0; i < Math.min(lines.length, 5); i++) {
+    const chMatch = lines[i].match(/^Chapter:\s*(\d+)$/);
+    const dfMatch = lines[i].match(/^Difficulty:\s*(Easy|Medium|Hard)$/);
+    if (chMatch) { chapter = parseInt(chMatch[1], 10); startIdx = Math.max(startIdx, i + 1); }
+    if (dfMatch) { difficulty = dfMatch[1] as 'Easy' | 'Medium' | 'Hard'; startIdx = Math.max(startIdx, i + 1); }
+  }
+  while (startIdx < lines.length && !lines[startIdx].trim()) startIdx++;
+  return { chapter, difficulty, cleanBody: lines.slice(startIdx).join('\n') };
 }
 
 function getSectionType(heading: string): SectionType {
@@ -575,7 +599,8 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
   // ── Derived data ───────────────────────────────────────────────────────────
   const primaryCat   = post.categories[0];
   const catMeta      = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
-  const toc          = extractTOC(post.body);
+  const { chapter, difficulty, cleanBody } = parsePostMeta(post.body);
+  const toc          = extractTOC(cleanBody);
   const postCatNames = post.categories.map((c) => c.name);
   const activeCourse = COURSES.find((c) => postCatNames.includes(c.category));
   const courseMeta   = activeCourse ? CATEGORY_META[activeCourse.category] : undefined;
@@ -705,6 +730,15 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
                   {activeCourse.emoji} Lesson {courseIdx + 1} of {coursePosts.length}
                 </span>
               )}
+              {chapter && (
+                <span
+                  className="text-xs font-medium px-2.5 py-1 rounded-full"
+                  style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', border: `1px solid ${catMeta?.border ?? '#e5e7eb'}` }}
+                >
+                  Ch {chapter} · {CHAPTER_NAMES[chapter] ?? `Chapter ${chapter}`}
+                </span>
+              )}
+              {difficulty && <DifficultyBadge difficulty={difficulty} />}
             </div>
 
             {/* Title */}
@@ -718,7 +752,7 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
               </span>
               <span className="text-gray-300">·</span>
               <span className="flex items-center gap-1 text-xs text-gray-500">
-                <span>⏱️</span>{readTime(post.body)}
+                <span>⏱️</span>{readTime(cleanBody)}
               </span>
 
               {isLoggedIn ? (
@@ -780,7 +814,7 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
             boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)',
           }}
         >
-          {renderBody(post.body, catMeta)}
+          {renderBody(cleanBody, catMeta)}
         </div>
 
         {/* ── RELATED ARTICLES ──────────────────────────────────────────── */}
@@ -955,7 +989,7 @@ function CourseNavigator({
 }) {
   const [expanded, setExpanded] = useState(false);
   const totalReadTime = coursePosts.reduce(
-    (sum, p) => sum + Math.max(1, Math.ceil(p.body.split(/\s+/).filter(Boolean).length / 200)),
+    (sum, p) => sum + Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).filter(Boolean).length / 200)),
     0,
   );
 
@@ -1071,54 +1105,114 @@ function CourseNavigator({
         </button>
       </div>
 
-      {/* Expandable lesson list */}
+      {/* Expandable lesson list — grouped by chapter */}
       {expanded && (
         <div
           className="px-5 pb-4 pt-3 border-t"
           style={{ borderColor: courseMeta?.border ?? '#e5e7eb' }}
         >
-          <ol className="space-y-1">
-            {coursePosts.map((p, idx) => {
-              const isCurrent = String(p.id) === currentId;
-              return (
-                <li key={p.id}>
-                  <Link
-                    href={`/learn/${p.id}`}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all hover:bg-gray-50"
-                    style={isCurrent ? { backgroundColor: courseMeta?.bg ?? '#f9fafb' } : {}}
-                  >
+          {(() => {
+            const postsWithMeta = coursePosts.map((p, idx) => ({
+              p, idx, ...parsePostMeta(p.body ?? ''),
+            }));
+            const chapterMap = new Map<number, typeof postsWithMeta>();
+            for (const pm of postsWithMeta) {
+              const ch = pm.chapter ?? 0;
+              if (!chapterMap.has(ch)) chapterMap.set(ch, []);
+              chapterMap.get(ch)!.push(pm);
+            }
+            const sortedChapters = Array.from(chapterMap.entries()).sort(([a], [b]) => a - b);
+            return sortedChapters.map(([chNum, items]) => (
+              <div key={chNum} className="mb-3">
+                {chNum > 0 && (
+                  <div className="flex items-center gap-2 mb-1.5 px-3 py-0.5">
                     <span
-                      className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0"
-                      style={
-                        p.is_completed
-                          ? { backgroundColor: '#dcfce7', color: '#166534' }
-                          : isCurrent
-                          ? { backgroundColor: courseMeta?.text ?? '#141c52', color: '#fff' }
-                          : { backgroundColor: '#f3f4f6', color: '#9ca3af' }
-                      }
+                      className="text-[10px] font-black uppercase tracking-wider"
+                      style={{ color: courseMeta?.text ?? '#141c52', opacity: 0.45 }}
                     >
-                      {p.is_completed ? '✓' : idx + 1}
+                      Ch {chNum}
                     </span>
                     <span
-                      className="flex-1 text-sm line-clamp-1"
-                      style={{
-                        color: isCurrent ? courseMeta?.text ?? '#141c52' : '#374151',
-                        fontWeight: isCurrent ? 600 : 400,
-                      }}
+                      className="text-[11px] font-semibold"
+                      style={{ color: courseMeta?.text ?? '#141c52', opacity: 0.65 }}
                     >
-                      {p.title}
+                      {CHAPTER_NAMES[chNum] ?? `Chapter ${chNum}`}
                     </span>
-                    {p.body && (
-                      <span className="text-xs text-gray-400 shrink-0">{readTime(p.body)}</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
+                  </div>
+                )}
+                <ol className="space-y-0.5">
+                  {items.map(({ p, idx, difficulty }) => {
+                    const isCurrent = String(p.id) === currentId;
+                    return (
+                      <li key={p.id}>
+                        <Link
+                          href={`/learn/${p.id}`}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all hover:bg-gray-50"
+                          style={isCurrent ? { backgroundColor: courseMeta?.bg ?? '#f9fafb' } : {}}
+                        >
+                          <span
+                            className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0"
+                            style={
+                              p.is_completed
+                                ? { backgroundColor: '#dcfce7', color: '#166534' }
+                                : isCurrent
+                                ? { backgroundColor: courseMeta?.text ?? '#141c52', color: '#fff' }
+                                : { backgroundColor: '#f3f4f6', color: '#9ca3af' }
+                            }
+                          >
+                            {p.is_completed ? '✓' : idx + 1}
+                          </span>
+                          <span
+                            className="flex-1 text-sm line-clamp-1"
+                            style={{
+                              color: isCurrent ? courseMeta?.text ?? '#141c52' : '#374151',
+                              fontWeight: isCurrent ? 600 : 400,
+                            }}
+                          >
+                            {p.title}
+                          </span>
+                          {difficulty && <DifficultyBadge difficulty={difficulty} size="xs" />}
+                          {p.body && (
+                            <span className="text-xs text-gray-400 shrink-0">{readTime(p.body)}</span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            ));
+          })()}
         </div>
       )}
     </div>
+  );
+}
+
+// ─── DifficultyBadge ─────────────────────────────────────────────────────────
+
+function DifficultyBadge({
+  difficulty,
+  size = 'sm',
+}: {
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  size?: 'xs' | 'sm';
+}) {
+  const map = {
+    Easy:   { bg: '#dcfce7', text: '#166534', border: '#bbf7d0', icon: '🟢' },
+    Medium: { bg: '#fef9c3', text: '#92400e', border: '#fde68a', icon: '🟡' },
+    Hard:   { bg: '#fee2e2', text: '#991b1b', border: '#fecaca', icon: '🔴' },
+  };
+  const m = map[difficulty];
+  return (
+    <span
+      className={`font-semibold rounded-full inline-flex items-center gap-1 whitespace-nowrap ${
+        size === 'xs' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5'
+      }`}
+      style={{ backgroundColor: m.bg, color: m.text, border: `1px solid ${m.border}` }}
+    >
+      {m.icon} {difficulty}
+    </span>
   );
 }
 

@@ -104,8 +104,24 @@ const COURSES: CourseInfo[] = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+function parsePostMeta(body: string): { chapter: number | null; difficulty: 'Easy' | 'Medium' | 'Hard' | null; cleanBody: string } {
+  const lines = body.split('\n');
+  let chapter: number | null = null;
+  let difficulty: 'Easy' | 'Medium' | 'Hard' | null = null;
+  let startIdx = 0;
+  for (let i = 0; i < Math.min(lines.length, 5); i++) {
+    const chMatch = lines[i].match(/^Chapter:\s*(\d+)$/);
+    const dfMatch = lines[i].match(/^Difficulty:\s*(Easy|Medium|Hard)$/);
+    if (chMatch) { chapter = parseInt(chMatch[1], 10); startIdx = Math.max(startIdx, i + 1); }
+    if (dfMatch) { difficulty = dfMatch[1] as 'Easy' | 'Medium' | 'Hard'; startIdx = Math.max(startIdx, i + 1); }
+  }
+  while (startIdx < lines.length && !lines[startIdx].trim()) startIdx++;
+  return { chapter, difficulty, cleanBody: lines.slice(startIdx).join('\n') };
+}
+
 function getExcerpt(body: string, maxLen = 110): string {
-  const clean = body
+  const { cleanBody } = parsePostMeta(body);
+  const clean = cleanBody
     .replace(/^##.*$/gm, '')
     .replace(/^- /gm, '')
     .replace(/\n+/g, ' ')
@@ -114,7 +130,8 @@ function getExcerpt(body: string, maxLen = 110): string {
 }
 
 function readTime(body: string): string {
-  const words = body.split(/\s+/).filter(Boolean).length;
+  const { cleanBody } = parsePostMeta(body);
+  const words = cleanBody.split(/\s+/).filter(Boolean).length;
   return `${Math.max(1, Math.ceil(words / 200))} min`;
 }
 
@@ -831,6 +848,7 @@ function ArticleCard({
   onCategoryClick: (name: string) => void;
 }) {
   const excerpt = post.body ? getExcerpt(post.body, 100) : '';
+  const { difficulty } = post.body ? parsePostMeta(post.body) : { difficulty: null };
 
   return (
     <Link href={`/learn/${post.id}`} className="block group">
@@ -899,6 +917,7 @@ function ArticleCard({
                 New
               </span>
             )}
+            {difficulty && <DifficultyBadge difficulty={difficulty} size="xs" />}
             {post.body && (
               <span
                 className="text-xs font-medium"
@@ -951,6 +970,33 @@ function ArticleCard({
         </div>
       </div>
     </Link>
+  );
+}
+
+// ─── DifficultyBadge ─────────────────────────────────────────────────────────
+
+function DifficultyBadge({
+  difficulty,
+  size = 'sm',
+}: {
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  size?: 'xs' | 'sm';
+}) {
+  const map = {
+    Easy:   { bg: '#dcfce7', text: '#166534', border: '#bbf7d0', icon: '🟢' },
+    Medium: { bg: '#fef9c3', text: '#92400e', border: '#fde68a', icon: '🟡' },
+    Hard:   { bg: '#fee2e2', text: '#991b1b', border: '#fecaca', icon: '🔴' },
+  };
+  const m = map[difficulty];
+  return (
+    <span
+      className={`font-semibold rounded-full inline-flex items-center gap-1 whitespace-nowrap ${
+        size === 'xs' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5'
+      }`}
+      style={{ backgroundColor: m.bg, color: m.text, border: `1px solid ${m.border}` }}
+    >
+      {m.icon} {difficulty}
+    </span>
   );
 }
 
