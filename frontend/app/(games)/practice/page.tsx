@@ -1,50 +1,8 @@
 import Link from 'next/link';
 import ActiveSessionBanner from './ActiveSessionBanner';
-
-const wordGames = [
-  {
-    href: '/practice/vocabulary-blitz',
-    title: 'Vocabulary Blitz',
-    description: 'Answer as many word questions as possible in 60 seconds. Fast-paced and addictive.',
-    emoji: '⚡',
-    badge: 'New',
-  },
-  {
-    href: '/practice/guess-the-word',
-    title: 'Guess the Word',
-    description: 'Improve your vocabulary by selecting the correct meaning for a random word.',
-    emoji: '🧠',
-    badge: null,
-  },
-  {
-    href: '/practice/memory-match',
-    title: 'Memory Match',
-    description: 'Flip cards to match words with their meanings. Fewer attempts = higher score.',
-    emoji: '🃏',
-    badge: null,
-  },
-  {
-    href: '/practice/word-scramble',
-    title: 'Word Scramble',
-    description: 'Unscramble the letters to reveal the hidden word.',
-    emoji: '🔤',
-    badge: null,
-  },
-  {
-    href: '/practice/sentence-builder',
-    title: 'Sentence Builder',
-    description: 'Use vocabulary words correctly in sentences — graded by AI.',
-    emoji: '✍️',
-    badge: null,
-  },
-  {
-    href: '/practice/pronunciation-challenge',
-    title: 'Pronunciation Challenge',
-    description: 'Read phrases aloud and get AI feedback on your pronunciation accuracy.',
-    emoji: '🎙️',
-    badge: 'New',
-  },
-];
+import PracticeStatsBanner from './PracticeStatsBanner';
+import WordGamesSection from './WordGamesSection';
+import TestPrepChips from './TestPrepChips';
 
 const rolePlayModes = [
   {
@@ -73,14 +31,6 @@ const rolePlayModes = [
   },
 ];
 
-const testPrepExams = [
-  { href: '/practice/test-prep/ielts', label: 'IELTS', color: '#dbeafe' },
-  { href: '/practice/test-prep/toefl', label: 'TOEFL', color: '#fce7f3' },
-  { href: '/practice/test-prep/pte', label: 'PTE', color: '#dcfce7' },
-  { href: '/practice/test-prep/oet', label: 'OET', color: '#fef3c7' },
-  { href: '/practice/test-prep/celpip', label: 'CELPIP', color: '#ede9fe' },
-  { href: '/practice/test-prep/dele', label: 'DELE', color: '#ffedd5' },
-];
 
 export default function PracticePage() {
   return (
@@ -88,6 +38,7 @@ export default function PracticePage() {
       <div className="max-w-5xl mx-auto space-y-14">
 
         <ActiveSessionBanner />
+        <PracticeStatsBanner />
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -149,22 +100,7 @@ export default function PracticePage() {
               Leaderboard →
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {wordGames.map((game) => (
-              <Link key={game.href} href={game.href}
-                className="block bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow relative">
-                {game.badge && (
-                  <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
-                    {game.badge}
-                  </span>
-                )}
-                <div className="text-3xl mb-3">{game.emoji}</div>
-                <h3 className="font-bold text-sm mb-1.5" style={{ color: '#141c52' }}>{game.title}</h3>
-                <p className="text-gray-500 text-xs leading-relaxed">{game.description}</p>
-              </Link>
-            ))}
-          </div>
+          <WordGamesSection />
         </section>
 
         {/* ── Test Prep ── */}
@@ -180,21 +116,7 @@ export default function PracticePage() {
               All exams →
             </Link>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-            {testPrepExams.map((exam) => (
-              <Link key={exam.href} href={exam.href}
-                className="flex items-center justify-center py-4 rounded-xl font-bold text-sm hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: exam.color, color: '#141c52' }}>
-                {exam.label}
-              </Link>
-            ))}
-          </div>
-          <div className="mt-3 text-center">
-            <Link href="/practice/test-prep"
-              className="text-sm text-gray-400 hover:text-gray-600">
-              + More exams (PTE, OET, CELPIP, DALF, JLPT…)
-            </Link>
-          </div>
+          <TestPrepChips />
         </section>
 
       </div>

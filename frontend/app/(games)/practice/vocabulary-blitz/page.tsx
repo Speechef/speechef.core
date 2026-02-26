@@ -207,6 +207,12 @@ export default function VocabularyBlitzPage() {
               More Games
             </Link>
           </div>
+          <Link
+            href="/practice/history?game=blitz"
+            className="block text-center text-sm text-gray-400 hover:underline mt-4"
+          >
+            View session history →
+          </Link>
         </div>
       </div>
     );

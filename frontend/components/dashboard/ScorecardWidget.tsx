@@ -77,16 +77,16 @@ export default function ScorecardWidget() {
 
   if (isLoading) {
     return (
-      <div className="bg-[#e8f4fa] rounded-lg p-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <h6 className="font-semibold text-[#141c52] mb-3">Communication Score</h6>
-        <div className="h-24 bg-white/50 rounded-lg animate-pulse" />
+        <div className="h-24 bg-gray-100 rounded-xl animate-pulse" />
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="bg-[#e8f4fa] rounded-lg p-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <h6 className="font-semibold text-[#141c52] mb-3">Communication Score</h6>
         <p className="text-sm text-gray-500 mb-3 text-center py-1">No analysis yet. Upload a recording to get your score.</p>
         <Link href="/analyze"
@@ -103,7 +103,7 @@ export default function ScorecardWidget() {
     : '';
 
   return (
-    <div className="bg-[#e8f4fa] rounded-lg p-5">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <div className="flex items-center justify-between mb-3">
         <h6 className="font-semibold text-[#141c52]">Communication Score</h6>
         {analyzedAt && <p className="text-xs text-gray-400">{analyzedAt}</p>}

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth';
@@ -24,8 +24,15 @@ const GAME_FILTERS = [
 ];
 
 export default function LeaderboardPage() {
-  const [game, setGame] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const game = searchParams.get('game') ?? '';
   const { isLoggedIn } = useAuthStore();
+
+  function setGame(value: string) {
+    const url = value ? `/practice/leaderboard?game=${value}` : '/practice/leaderboard';
+    router.push(url);
+  }
 
   const { data: entries = [], isLoading } = useQuery<LeaderboardEntry[]>({
     queryKey: ['leaderboard', game],
@@ -40,6 +47,13 @@ export default function LeaderboardPage() {
   });
 
   const currentUsername = profile?.username;
+
+  const myEntry = currentUsername
+    ? entries.find((e) => e.user__username === currentUsername)
+    : null;
+  const myRank = currentUsername
+    ? entries.findIndex((e) => e.user__username === currentUsername) + 1
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -69,6 +83,36 @@ export default function LeaderboardPage() {
             </button>
           ))}
         </div>
+
+        {/* Personal rank banner */}
+        {myEntry && myRank > 0 && (
+          <div
+            className="rounded-xl px-5 py-4 mb-4 flex items-center justify-between gap-4"
+            style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-black">#{myRank}</p>
+                <p className="text-xs text-white/60">Your Rank</p>
+              </div>
+              <div className="w-px h-10 bg-white/20" />
+              <div className="text-center">
+                <p className="text-2xl font-black">{myEntry.total_score}</p>
+                <p className="text-xs text-white/60">Total Score</p>
+              </div>
+              <div className="w-px h-10 bg-white/20" />
+              <div className="text-center">
+                <p className="text-2xl font-black">{myEntry.games_played}</p>
+                <p className="text-xs text-white/60">Games</p>
+              </div>
+            </div>
+            <Link href="/practice/history"
+              className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+              My History →
+            </Link>
+          </div>
+        )}
 
         <div className="bg-white rounded-2xl shadow overflow-hidden">
           {isLoading ? (

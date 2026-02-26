@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
@@ -80,10 +81,34 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
 
 export default function MentorsPage() {
   const { isLoggedIn } = useAuthStore();
-  const [specialty, setSpecialty] = useState('');
-  const [language, setLanguage] = useState('');
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'rating' | 'price_asc' | 'price_desc'>('rating');
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+
+  const specialty = searchParams.get('specialty') ?? '';
+  const language  = searchParams.get('language') ?? '';
+  const sortBy    = (searchParams.get('sort') ?? 'rating') as 'rating' | 'price_asc' | 'price_desc';
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
+
+  function pushParams(overrides: Record<string, string>) {
+    const p = new URLSearchParams({
+      ...(specialty  ? { specialty }  : {}),
+      ...(language   ? { language }   : {}),
+      ...(sortBy !== 'rating' ? { sort: sortBy } : {}),
+      ...(search     ? { search }     : {}),
+      ...overrides,
+    });
+    // remove empty values
+    for (const [k, v] of [...p.entries()]) { if (!v) p.delete(k); }
+    router.push(`/mentors${p.size ? `?${p}` : ''}`);
+  }
+
+  function setSpecialty(v: string) { pushParams({ specialty: v }); }
+  function setLanguage(v: string)  { pushParams({ language: v }); }
+  function setSortBy(v: string)    { pushParams({ sort: v === 'rating' ? '' : v }); }
+  function clearAll() {
+    setSearch('');
+    router.push('/mentors');
+  }
 
   const { data: mentors = [], isLoading } = useQuery<Mentor[]>({
     queryKey: ['mentors', specialty, language],
@@ -132,24 +157,26 @@ export default function MentorsPage() {
         )}
 
         {/* Search */}
-        <div className="relative mb-4">
+        <form onSubmit={(e) => { e.preventDefault(); pushParams({ search }); }} className="relative mb-4">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">🔍</span>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onBlur={() => pushParams({ search })}
             placeholder="Search by name, specialty, or keyword…"
             className="w-full border border-gray-200 rounded-xl pl-10 pr-10 py-2.5 text-sm bg-white focus:outline-none focus:border-indigo-400 transition-colors"
           />
           {search && (
             <button
-              onClick={() => setSearch('')}
+              type="button"
+              onClick={() => { setSearch(''); pushParams({ search: '' }); }}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
             >
               ✕
             </button>
           )}
-        </div>
+        </form>
 
         {/* Filters + Sort */}
         <div className="flex flex-wrap gap-3 mb-6">
@@ -170,7 +197,7 @@ export default function MentorsPage() {
             <option value="price_desc">Price: High → Low</option>
           </select>
           {(specialty || language || search) && (
-            <button onClick={() => { setSpecialty(''); setLanguage(''); setSearch(''); }}
+            <button onClick={clearAll}
               className="text-sm text-gray-400 hover:text-gray-600 px-2">
               Clear all ✕
             </button>

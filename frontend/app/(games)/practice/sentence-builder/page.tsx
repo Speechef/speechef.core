@@ -220,6 +220,12 @@ export default function SentenceBuilderPage() {
               More Games
             </Link>
           </div>
+          <Link
+            href="/practice/history?game=sentence"
+            className="block text-center text-sm text-gray-400 hover:underline mt-3"
+          >
+            View session history →
+          </Link>
         </div>
       </div>
     );

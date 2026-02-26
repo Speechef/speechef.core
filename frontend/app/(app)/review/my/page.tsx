@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -31,11 +32,25 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   delivered: { label: 'Delivered', color: '#166534', bg: '#dcfce7' },
 };
 
+const STATUS_TABS = [
+  { value: '',           label: 'All' },
+  { value: 'submitted',  label: 'Submitted' },
+  { value: 'assigned',   label: 'Assigned' },
+  { value: 'in_review',  label: 'In Review' },
+  { value: 'delivered',  label: 'Delivered' },
+];
+
 export default function MyReviewsPage() {
+  const [filterStatus, setFilterStatus] = useState('');
+
   const { data: reviews = [], isLoading } = useQuery<Review[]>({
     queryKey: ['my-reviews'],
     queryFn: () => api.get('/review/my/').then((r) => r.data),
   });
+
+  const displayed = filterStatus
+    ? reviews.filter((r) => r.status === filterStatus)
+    : reviews;
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -52,6 +67,34 @@ export default function MyReviewsPage() {
           </Link>
         </div>
 
+        {/* Status filter tabs */}
+        {!isLoading && reviews.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {STATUS_TABS.map((t) => {
+              const count = t.value
+                ? reviews.filter((r) => r.status === t.value).length
+                : reviews.length;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => setFilterStatus(t.value)}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+                  style={filterStatus === t.value
+                    ? { backgroundColor: '#141c52', color: '#fff' }
+                    : { backgroundColor: '#e5e7eb', color: '#374151' }}
+                >
+                  {t.label}
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                    filterStatus === t.value ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => <div key={i} className="h-24 bg-white rounded-2xl animate-pulse border border-gray-100" />)}
@@ -67,9 +110,21 @@ export default function MyReviewsPage() {
               Submit for Expert Review →
             </Link>
           </div>
+        ) : displayed.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <p className="text-4xl mb-3">📭</p>
+            <p className="font-semibold text-gray-600">No {STATUS_TABS.find((t) => t.value === filterStatus)?.label.toLowerCase()} reviews</p>
+            <p className="text-sm mt-1">Nothing matches this filter.</p>
+            <button
+              onClick={() => setFilterStatus('')}
+              className="mt-4 text-sm font-semibold text-indigo-600 hover:underline"
+            >
+              View all reviews
+            </button>
+          </div>
         ) : (
           <div className="space-y-3">
-            {reviews.map((r) => {
+            {displayed.map((r) => {
               const cfg = STATUS_CONFIG[r.status];
               return (
                 <Link key={r.id} href={`/review/${r.id}`}

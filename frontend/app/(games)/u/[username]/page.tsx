@@ -20,8 +20,8 @@ interface UserBadge {
 
 interface PublicProfile {
   username: string;
-  current_streak: number;
-  longest_streak: number;
+  current_streak: number | null;
+  longest_streak: number | null;
   latest_score: number | null;
   badges: UserBadge[];
 }
@@ -106,14 +106,18 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
 
           {/* Stats row */}
           <div className="flex items-center justify-center gap-8 mt-5">
-            <div>
-              <p className="text-2xl font-extrabold" style={{ color: '#141c52' }}>{profile.current_streak}</p>
-              <p className="text-xs text-gray-400">Day Streak</p>
-            </div>
-            <div>
-              <p className="text-2xl font-extrabold" style={{ color: '#141c52' }}>{profile.longest_streak}</p>
-              <p className="text-xs text-gray-400">Best Streak</p>
-            </div>
+            {profile.current_streak !== null && (
+              <div>
+                <p className="text-2xl font-extrabold" style={{ color: '#141c52' }}>{profile.current_streak}</p>
+                <p className="text-xs text-gray-400">Day Streak</p>
+              </div>
+            )}
+            {profile.longest_streak !== null && (
+              <div>
+                <p className="text-2xl font-extrabold" style={{ color: '#141c52' }}>{profile.longest_streak}</p>
+                <p className="text-xs text-gray-400">Best Streak</p>
+              </div>
+            )}
             <div>
               <p className="text-2xl font-extrabold" style={{ color: '#141c52' }}>{profile.badges.length}</p>
               <p className="text-xs text-gray-400">Badges</p>

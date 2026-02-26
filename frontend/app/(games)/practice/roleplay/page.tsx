@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -52,12 +53,16 @@ const MODE_SCORE_COLOR = (score: number) => {
 };
 
 export default function RolePlayHubPage() {
+  const [modeFilter, setModeFilter] = useState('');
+
   const { data: sessions = [] } = useQuery<RolePlaySession[]>({
     queryKey: ['roleplay-sessions'],
     queryFn: () => api.get('/roleplay/my/').then((r) => r.data).catch(() => []),
   });
 
-  const recentSessions = sessions.slice(0, 5);
+  const activeSession = sessions.find((s) => s.status === 'active');
+  const filteredForRecent = modeFilter ? sessions.filter((s) => s.mode === modeFilter) : sessions;
+  const recentSessions = filteredForRecent.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -75,6 +80,32 @@ export default function RolePlayHubPage() {
             History →
           </Link>
         </div>
+
+        {/* Active session resume banner */}
+        {activeSession && (() => {
+          const meta = MODES.find((m) => m.id === activeSession.mode);
+          return (
+            <div
+              className="rounded-xl px-5 py-4 flex items-center justify-between gap-4 mb-8"
+              style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}
+            >
+              <div>
+                <p className="text-xs font-semibold text-white/60 mb-0.5">Unfinished Session</p>
+                <p className="text-sm font-bold">
+                  {meta?.emoji ?? '🗣️'} {meta?.title ?? activeSession.mode}
+                  {activeSession.topic ? ` — ${activeSession.topic}` : ''}
+                </p>
+              </div>
+              <Link
+                href={`/practice/roleplay/${activeSession.mode}`}
+                className="shrink-0 text-sm font-bold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
+                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              >
+                Resume →
+              </Link>
+            </div>
+          );
+        })()}
 
         {/* Mode Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
@@ -153,9 +184,32 @@ export default function RolePlayHubPage() {
         })()}
 
         {/* Recent Sessions */}
-        {recentSessions.length > 0 && (
+        {sessions.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="font-bold text-lg mb-4" style={{ color: '#141c52' }}>Recent Sessions</h2>
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+              <h2 className="font-bold text-lg" style={{ color: '#141c52' }}>Recent Sessions</h2>
+              <div className="flex flex-wrap gap-1.5">
+                {[{ id: '', emoji: '🗣️', title: 'All' }, ...MODES].map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setModeFilter(m.id)}
+                    className="text-xs px-2.5 py-1 rounded-full font-medium transition-colors"
+                    style={
+                      modeFilter === m.id
+                        ? { backgroundColor: '#141c52', color: '#fff' }
+                        : { backgroundColor: '#e5e7eb', color: '#374151' }
+                    }
+                  >
+                    {m.emoji} {m.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {recentSessions.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">
+                No {modeFilter ? MODES.find((m) => m.id === modeFilter)?.title : ''} sessions yet.
+              </p>
+            ) : (
             <div className="space-y-3">
               {recentSessions.map((s) => {
                 const modeMeta = MODES.find((m) => m.id === s.mode);
@@ -187,6 +241,7 @@ export default function RolePlayHubPage() {
                 );
               })}
             </div>
+            )}
           </div>
         )}
       </div>

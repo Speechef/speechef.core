@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { uploadAnalysis, getAnalysisResult } from '@/lib/api/analysis';
+import api from '@/lib/api';
 import { useAnalysisStatus } from '@/hooks/useAnalysisStatus';
 import ShareButton from '@/components/analyze/ShareButton';
 import type { AnalysisResult, FillerWord, GrammarError } from '@/types/analysis';
@@ -43,12 +46,32 @@ function ScoreArc({ score, label, color }: { score: number; label: string; color
 
 // ─── Transcript Tab ───────────────────────────────────────────────────────────
 function TranscriptTab({ result }: { result: AnalysisResult }) {
+  const [copied, setCopied] = useState(false);
   const fillerSet = new Set(result.fillerWords.map((f: FillerWord) => f.word.toLowerCase()));
   const words = result.transcript.split(/\s+/);
+
+  function copyTranscript() {
+    navigator.clipboard.writeText(result.transcript).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Full Transcript</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Full Transcript</h3>
+          <button
+            onClick={copyTranscript}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors"
+            style={copied
+              ? { backgroundColor: '#dcfce7', color: '#166534', borderColor: '#bbf7d0' }
+              : { backgroundColor: 'white', color: '#141c52', borderColor: '#e5e7eb' }}
+          >
+            {copied ? '✓ Copied!' : 'Copy Transcript'}
+          </button>
+        </div>
         <p className="text-gray-700 leading-relaxed text-sm">
           {words.map((w, i) => {
             const clean = w.toLowerCase().replace(/[^a-z]/g, '');
@@ -211,6 +234,7 @@ function CompareTab({ result }: { result: AnalysisResult }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AnalyzePage() {
+  const searchParams = useSearchParams();
   const [pageState, setPageState] = useState<PageState>('idle');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -219,6 +243,18 @@ export default function AnalyzePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('transcript');
   const inputRef = useRef<HTMLInputElement>(null);
+  // Capture the ?session= param once on mount (avoids stale-closure issues)
+  const initialSessionRef = useRef(searchParams.get('session'));
+
+  // Fetch prior sessions to compute score delta (shared cache with dashboard)
+  const { data: prevSessions = [] } = useQuery<Array<{
+    id: string; status: string; created_at: string;
+    result?: { overall_score: number };
+  }>>({
+    queryKey: ['analysis-sessions-widget'],
+    queryFn: () => api.get('/analysis/sessions/').then((r) => r.data).catch(() => []),
+    retry: false,
+  });
 
   const { status: pollingStatus } = useAnalysisStatus(
     pageState === 'processing' ? sessionId : null
@@ -235,6 +271,16 @@ export default function AnalyzePage() {
       setPageState('error');
     }
   }, []);
+
+  // If opened via /analyze?session=id (from history "View →"), load that session
+  useEffect(() => {
+    const sid = initialSessionRef.current;
+    if (sid) {
+      setSessionId(sid);
+      setPageState('processing');
+      fetchResult(sid);
+    }
+  }, [fetchResult]);
 
   // Watch polling status
   const prevStatus = useRef<string | null>(null);
@@ -264,19 +310,12 @@ export default function AnalyzePage() {
     setUploadPct(0);
     setErrorMsg('');
 
-    // Fake upload progress for demo
-    const interval = setInterval(() => {
-      setUploadPct((p) => Math.min(p + 12, 90));
-    }, 200);
-
     try {
-      const res = await uploadAnalysis(file, fileType);
-      clearInterval(interval);
+      const res = await uploadAnalysis(file, fileType, setUploadPct);
       setUploadPct(100);
       setSessionId(res.sessionId);
       setPageState('processing');
     } catch {
-      clearInterval(interval);
       setErrorMsg('Upload failed. Check your connection and try again.');
       setPageState('error');
     }
@@ -387,7 +426,13 @@ export default function AnalyzePage() {
         )}
 
         {/* Results */}
-        {pageState === 'done' && result && (
+        {pageState === 'done' && result && (() => {
+          const prevDone = prevSessions
+            .filter((s) => s.status === 'done' && s.result && s.id !== sessionId)
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          const prevScore = prevDone[0]?.result?.overall_score ?? null;
+          const scoreDelta = prevScore !== null ? result.overallScore - prevScore : null;
+          return (
           <div>
             {/* Overall score banner */}
             <div className="rounded-2xl p-6 mb-6 flex items-center justify-between"
@@ -395,7 +440,20 @@ export default function AnalyzePage() {
               <div>
                 <p className="text-white/70 text-sm mb-1">Overall Communication Score</p>
                 <p className="text-5xl font-black text-white">{result.overallScore}<span className="text-xl font-normal text-white/50"> / 100</span></p>
-                <p className="text-white/60 text-xs mt-1 capitalize">Tone: {result.tone || 'Neutral'}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-white/60 text-xs capitalize">Tone: {result.tone || 'Neutral'}</p>
+                  {scoreDelta !== null && (
+                    <span
+                      className="text-xs font-bold px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: scoreDelta >= 0 ? '#dcfce7' : '#fee2e2',
+                        color: scoreDelta >= 0 ? '#166534' : '#991b1b',
+                      }}
+                    >
+                      {scoreDelta >= 0 ? '▲' : '▼'} {Math.abs(scoreDelta)} pts vs last
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex flex-col items-end gap-2">
                 {sessionId && <ShareButton sessionId={sessionId} score={result.overallScore} />}
@@ -431,7 +489,8 @@ export default function AnalyzePage() {
             {activeTab === 'plan' && <PlanTab result={result} />}
             {activeTab === 'compare' && <CompareTab result={result} />}
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

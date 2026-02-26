@@ -8,6 +8,8 @@ class Profile(models.Model):
     current_streak = models.IntegerField(default=0)
     longest_streak = models.IntegerField(default=0)
     last_played_date = models.DateField(null=True, blank=True)
+    notification_prefs = models.JSONField(default=dict, blank=True)
+    privacy_prefs = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return f'{self.user.username} Profile'

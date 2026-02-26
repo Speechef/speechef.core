@@ -160,6 +160,12 @@ export default function GuessTheWordPage() {
           >
             ← Back to Games
           </Link>
+          <Link
+            href="/practice/history?game=guess"
+            className="block text-sm text-gray-400 hover:underline mt-2"
+          >
+            View session history →
+          </Link>
         </div>
       </div>
     );
