@@ -5,6 +5,15 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  applied:     { bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe' },
+  shortlisted: { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
+  rejected:    { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
+  withdrawn:   { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' },
+};
+
 interface Application {
   id: number;
   job_title: string;
@@ -81,6 +90,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
+  const sc = STATUS_COLORS[app.status] ?? STATUS_COLORS.withdrawn;
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
@@ -93,20 +104,24 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           ← My Applications
         </Link>
 
-        {/* Header card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{app.company}</p>
-              <h1 className="text-2xl font-bold truncate" style={{ color: '#141c52' }}>{app.job_title}</h1>
+        {/* Header card — status-colored band */}
+        <div className="rounded-2xl border overflow-hidden mb-4" style={{ borderColor: sc.border }}>
+          <div className="relative overflow-hidden px-6 py-5" style={{ background: sc.bg }}>
+            <div className="absolute top-[-16px] right-[-16px] w-20 h-20 rounded-full"
+              style={{ background: sc.text, opacity: 0.1 }} />
+            <div className="relative flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: sc.text }}>{app.company}</p>
+                <h1 className="text-2xl font-bold truncate" style={{ color: BRAND.primary }}>{app.job_title}</h1>
+              </div>
+              <span
+                className={`text-sm font-semibold px-3 py-1.5 rounded-full shrink-0 ${
+                  STATUS_STYLES[app.status] ?? 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {STATUS_ICONS[app.status]} {STATUS_LABELS[app.status] ?? app.status}
+              </span>
             </div>
-            <span
-              className={`text-sm font-semibold px-3 py-1.5 rounded-full shrink-0 ${
-                STATUS_STYLES[app.status] ?? 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {STATUS_ICONS[app.status]} {STATUS_LABELS[app.status] ?? app.status}
-            </span>
           </div>
         </div>
 
@@ -131,7 +146,10 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
 
         {/* Status timeline */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h2 className="text-sm font-bold mb-4" style={{ color: '#141c52' }}>Application Status</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: sc.bg, color: sc.text }}>📬</span>
+            <h2 className="font-bold text-sm uppercase tracking-wide" style={{ color: BRAND.primary }}>Application Status</h2>
+          </div>
           <div className="space-y-3">
             {(['applied', 'shortlisted'] as const).map((step) => {
               const reached =

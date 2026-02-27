@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const PAGE_COLOR = { bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe' };
+
 interface JobForm {
   title: string;
   company: string;
@@ -37,7 +40,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 const inputClass =
-  'w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 bg-white';
+  'w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-gray-400 bg-white';
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -88,20 +91,35 @@ export default function PostJobPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/jobs" className="text-sm text-gray-400 hover:text-gray-600 mb-2 block">← Back to Jobs</Link>
-          <h1 className="text-2xl font-bold" style={{ color: '#141c52' }}>Post a Job</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Reach candidates with verified Speechef communication scores.
-          </p>
+        {/* Header — colored band */}
+        <div className="rounded-2xl border overflow-hidden mb-8" style={{ borderColor: PAGE_COLOR.border }}>
+          <div className="relative overflow-hidden px-7 py-6" style={{ background: PAGE_COLOR.bg }}>
+            <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+              style={{ background: PAGE_COLOR.text, opacity: 0.1 }} />
+            <div className="relative">
+              <Link href="/jobs" className="text-xs font-medium mb-3 block hover:underline"
+                style={{ color: PAGE_COLOR.text, opacity: 0.8 }}>← Back to Jobs</Link>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">💼</span>
+                <div>
+                  <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>Post a Job</h1>
+                  <p className="text-sm mt-0.5" style={{ color: PAGE_COLOR.text }}>
+                    Reach candidates with verified Speechef communication scores.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 p-8 space-y-6">
 
           {/* Basic Info */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Job Details</p>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: PAGE_COLOR.bg, color: PAGE_COLOR.text }}>📋</span>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND.primary }}>Job Details</p>
+            </div>
             <div className="space-y-4">
               <Field label="Job Title *">
                 <input
@@ -138,7 +156,10 @@ export default function PostJobPage() {
 
           {/* Location & Type */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Location & Type</p>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#d1fae5', color: '#065f46' }}>📍</span>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND.primary }}>Location & Type</p>
+            </div>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -182,7 +203,10 @@ export default function PostJobPage() {
 
           {/* Compensation & Requirements */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Compensation & Requirements</p>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#fef3c7', color: '#78350f' }}>💰</span>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND.primary }}>Compensation & Requirements</p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Annual Salary (USD)" hint="Optional">
                 <input
@@ -210,7 +234,10 @@ export default function PostJobPage() {
 
           {/* Links */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Links</p>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#ede9fe', color: '#6d28d9' }}>🔗</span>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND.primary }}>Links</p>
+            </div>
             <div className="space-y-4">
               <Field label="Application URL" hint="Where should candidates apply?">
                 <input
@@ -235,7 +262,7 @@ export default function PostJobPage() {
 
           {/* Score requirement callout */}
           {form.min_speechef_score && (
-            <div className="rounded-xl p-4 text-sm" style={{ backgroundColor: '#f0f4ff', color: '#141c52' }}>
+            <div className="rounded-xl p-4 text-sm" style={{ backgroundColor: '#f0f4ff', color: BRAND.primary }}>
               <p className="font-semibold">Score requirement set: ≥ {form.min_speechef_score}</p>
               <p className="text-xs mt-0.5 text-gray-500">
                 Candidates with a Speechef score of {form.min_speechef_score}+ will see a green match badge on your listing.
@@ -255,7 +282,7 @@ export default function PostJobPage() {
             type="submit"
             disabled={postMutation.isPending || !form.title || !form.company || !form.description}
             className="w-full py-3 rounded-full text-sm font-bold disabled:opacity-40 transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+            style={{ background: BRAND.gradient, color: BRAND.primary }}
           >
             {postMutation.isPending ? 'Posting…' : 'Post Job →'}
           </button>

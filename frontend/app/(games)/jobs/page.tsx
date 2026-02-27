@@ -7,6 +7,16 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const EMPLOYMENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  full_time: { bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe' },
+  part_time: { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
+  contract:  { bg: '#fef3c7', text: '#78350f', border: '#fde68a' },
+  freelance: { bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe' },
+};
+const DEFAULT_JOB_COLOR = { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' };
+
 interface Job {
   id: number;
   title: string;
@@ -52,36 +62,44 @@ function ScoreMatchBadge({ required, userScore }: { required: number | null; use
 }
 
 function JobCard({ job, userScore }: { job: Job; userScore: number | null }) {
+  const ec = EMPLOYMENT_COLORS[job.employment_type] ?? DEFAULT_JOB_COLOR;
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className="block bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-shadow"
+      className="block rounded-xl border overflow-hidden hover:shadow-md transition-shadow"
+      style={{ borderColor: ec.border }}
     >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
-          style={{ backgroundColor: '#141c52' }}
-        >
-          {job.company?.[0] ?? '?'}
-        </div>
-        <div className="flex flex-wrap gap-1.5 ml-auto">
+      {/* Colored header band */}
+      <div className="relative overflow-hidden px-5 py-4" style={{ background: ec.bg }}>
+        <div className="absolute top-[-16px] right-[-16px] w-16 h-16 rounded-full"
+          style={{ background: ec.text, opacity: 0.1 }} />
+        <div className="relative flex items-start gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+            style={{ backgroundColor: BRAND.primary }}
+          >
+            {job.company?.[0] ?? '?'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm truncate" style={{ color: BRAND.primary }}>{job.title}</p>
+            <p className="text-xs" style={{ color: ec.text }}>{job.company}</p>
+          </div>
           {job.is_featured && (
-            <span
-              className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-            >
+            <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}>
               Featured
             </span>
           )}
-          <ScoreMatchBadge required={job.min_speechef_score} userScore={userScore} />
         </div>
       </div>
-      <p className="font-bold text-sm mb-0.5" style={{ color: '#141c52' }}>{job.title}</p>
-      <p className="text-gray-500 text-xs mb-2">{job.company}</p>
-      <div className="flex flex-wrap gap-2 text-xs text-gray-400">
-        <span>{job.remote ? '🌍 Remote' : `📍 ${job.location}`}</span>
-        {job.employment_type && <span>· {EMPLOYMENT_LABELS[job.employment_type] ?? job.employment_type}</span>}
-        {job.job_rate && <span>· ${job.job_rate.toLocaleString()}/yr</span>}
+      {/* White body */}
+      <div className="bg-white px-5 py-3">
+        <div className="flex flex-wrap gap-2 text-xs text-gray-400 mb-2">
+          <span>{job.remote ? '🌍 Remote' : `📍 ${job.location}`}</span>
+          {job.employment_type && <span>· {EMPLOYMENT_LABELS[job.employment_type] ?? job.employment_type}</span>}
+          {job.job_rate && <span>· ${job.job_rate.toLocaleString()}/yr</span>}
+        </div>
+        <ScoreMatchBadge required={job.min_speechef_score} userScore={userScore} />
       </div>
     </Link>
   );
@@ -169,8 +187,9 @@ export default function JobsPage() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#141c52' }}>Jobs Board</h1>
-          <p className="text-gray-500">Companies that value communication skills. Apply with your Speechef score.</p>
+          <p className="text-sm font-semibold uppercase tracking-wide mb-1" style={{ color: '#fe9940' }}>Careers</p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: BRAND.primary }}>Jobs Board</h1>
+          <p className="text-gray-500 text-sm">Companies that value communication skills. Apply with your Speechef score.</p>
         </div>
 
         {/* Score banner */}
@@ -205,15 +224,15 @@ export default function JobsPage() {
           <div className="flex gap-2 mb-4">
             <button
               onClick={() => setForYou(false)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-              style={!forYou ? { backgroundColor: '#141c52', color: '#fff' } : { backgroundColor: '#e5e7eb', color: '#374151' }}
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors border"
+              style={!forYou ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary } : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }}
             >
               All Jobs
             </button>
             <button
               onClick={() => setForYou(true)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5"
-              style={forYou ? { backgroundColor: '#141c52', color: '#fff' } : { backgroundColor: '#e5e7eb', color: '#374151' }}
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors border flex items-center gap-1.5"
+              style={forYou ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary } : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }}
             >
               ✓ For You
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${forYou ? 'bg-white/20' : 'bg-green-100 text-green-700'}`}>

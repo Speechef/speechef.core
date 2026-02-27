@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
 interface Application {
   id: number;
   job_title: string;
@@ -59,18 +61,11 @@ export default function MyApplicationsPage() {
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold" style={{ color: '#141c52' }}>My Applications</h1>
-            <p className="text-gray-500 mt-1">Track the status of your job applications.</p>
-          </div>
-          <Link
-            href="/jobs"
-            className="text-sm font-medium hover:underline"
-            style={{ color: '#141c52' }}
-          >
-            ← Browse Jobs
-          </Link>
+        <div className="mb-8">
+          <Link href="/jobs" className="text-sm text-gray-400 hover:text-gray-600 mb-2 block">← Browse Jobs</Link>
+          <p className="text-sm font-semibold uppercase tracking-wide mb-1" style={{ color: '#fe9940' }}>My Profile</p>
+          <h1 className="text-3xl font-bold" style={{ color: BRAND.primary }}>My Applications</h1>
+          <p className="text-gray-500 text-sm mt-1">Track the status of your job applications.</p>
         </div>
 
         {/* Status filter tabs */}
@@ -85,11 +80,11 @@ export default function MyApplicationsPage() {
                 <button
                   key={tab.key}
                   onClick={() => setFilterStatus(tab.key)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border"
                   style={
                     isActive
-                      ? { backgroundColor: '#141c52', color: '#fff' }
-                      : { backgroundColor: '#e5e7eb', color: '#374151' }
+                      ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
+                      : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
                   }
                 >
                   {tab.label}

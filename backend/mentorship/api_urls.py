@@ -3,6 +3,7 @@ from . import api_views
 
 urlpatterns = [
     path("", api_views.mentor_list, name="mentor-list"),
+    path("dashboard/", api_views.mentor_dashboard, name="mentor-dashboard"),
     path("<int:pk>/", api_views.mentor_detail, name="mentor-detail"),
     path("<int:pk>/availability/", api_views.mentor_availability, name="mentor-availability"),
     path("<int:pk>/book/", api_views.mentor_book, name="mentor-book"),

@@ -2,11 +2,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Avg
+from django.db.models import Avg, Sum, Count
+from django.utils import timezone
 from .models import MentorProfile, MentorAvailability, MentorSession
 from .serializers import (
     MentorListSerializer, MentorDetailSerializer,
     MentorSessionSerializer, MentorAvailabilitySerializer,
+    MentorDashboardSessionSerializer, RecentStudentSerializer,
 )
 
 
@@ -120,3 +122,74 @@ def session_homework(request, pk):
     session.homework = request.data.get("homework", "")
     session.save(update_fields=["homework"])
     return Response({"saved": True})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def mentor_dashboard(request):
+    """Aggregated dashboard data for an active mentor."""
+    try:
+        mentor = MentorProfile.objects.get(user=request.user, is_active=True)
+    except MentorProfile.DoesNotExist:
+        return Response({"detail": "No active mentor profile found."}, status=status.HTTP_404_NOT_FOUND)
+
+    now = timezone.now()
+    today = now.date()
+
+    # Upcoming confirmed sessions (future), ascending
+    upcoming = (
+        MentorSession.objects
+        .filter(mentor=mentor, status="confirmed", scheduled_at__gt=now)
+        .select_related("student")
+        .order_by("scheduled_at")
+    )
+
+    # Today's confirmed sessions
+    today_sessions = (
+        MentorSession.objects
+        .filter(mentor=mentor, status="confirmed", scheduled_at__date=today)
+        .select_related("student")
+        .order_by("scheduled_at")
+    )
+
+    # Stats
+    completed = MentorSession.objects.filter(mentor=mentor, status="completed")
+    total_sessions = completed.count()
+
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    monthly_earnings = completed.filter(scheduled_at__gte=month_start).aggregate(
+        total=Sum("price")
+    )["total"] or 0
+
+    # Recent students — last 5 unique students by most recent session
+    seen = set()
+    recent_students = []
+    for s in MentorSession.objects.filter(mentor=mentor).select_related("student").order_by("-scheduled_at"):
+        sid = s.student_id
+        if sid in seen:
+            continue
+        seen.add(sid)
+        u = s.student
+        name = f"{u.first_name} {u.last_name}".strip() or u.username
+        count = MentorSession.objects.filter(mentor=mentor, student=u).count()
+        recent_students.append({
+            "student_id": sid,
+            "student_name": name,
+            "student_initial": name[0].upper(),
+            "last_session_at": s.scheduled_at,
+            "session_count": count,
+        })
+        if len(recent_students) == 5:
+            break
+
+    return Response({
+        "upcoming_sessions": MentorDashboardSessionSerializer(upcoming, many=True).data,
+        "today_sessions": MentorDashboardSessionSerializer(today_sessions, many=True).data,
+        "stats": {
+            "total_sessions": total_sessions,
+            "rating_avg": float(mentor.rating_avg),
+            "monthly_earnings": float(monthly_earnings),
+            "pending_payout": None,  # Stripe Connect not yet live
+        },
+        "recent_students": RecentStudentSerializer(recent_students, many=True).data,
+    })

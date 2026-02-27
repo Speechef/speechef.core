@@ -75,6 +75,49 @@ npm run dev
 
 ---
 
+## One-Command Start
+
+```bash
+./dev.sh
+```
+
+Starts the full stack (Postgres, Redis, Django, Celery, Next.js) via Docker. Access:
+
+| Service | URL |
+|---------|-----|
+| Next.js | http://localhost:3000 |
+| Django  | http://localhost:8000 |
+| Admin   | http://localhost:8000/admin |
+
+---
+
+## Hot Reload / Live UI Changes
+
+On macOS, Docker runs inside a Colima VM which breaks file-watching by default — Next.js HMR won't detect your edits even though `npm run dev` is running.
+
+### Option A — Run Next.js natively (recommended)
+
+Keep Docker for the backend services only, run the frontend directly on your Mac for instant HMR:
+
+**Terminal 1** — backend:
+```bash
+docker compose up db redis web celery celery-beat
+```
+
+**Terminal 2** — frontend:
+```bash
+cd frontend
+npm run dev
+```
+
+### Option B — Stay fully in Docker
+
+`docker-compose.yml` already has `WATCHPACK_POLLING=true` set on the frontend service, which enables polling-based file watching through the VM boundary. File changes are picked up within ~1–2 seconds. Just use `./dev.sh` as normal.
+
+> Django's `runserver` already hot-reloads Python changes in both options — the bind mount (`./backend:/app`) handles that.
+
+---
+
 ## Working with OpenSpec
 
 Every piece of work maps to an OpenSpec proposal. This keeps work intentional and tracked.
