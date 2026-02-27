@@ -143,6 +143,17 @@ def reset_password(request):
     return Response({'ok': True})
 
 
+# ── Account deletion (ACC1.1) ─────────────────────────────────────────────────
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    """Permanently delete the authenticated user's account and all associated data."""
+    user = request.user
+    user.delete()
+    return Response({'deleted': True}, status=status.HTTP_200_OK)
+
+
 # ── Notifications ─────────────────────────────────────────────────────────────
 
 @api_view(['GET'])

@@ -17,6 +17,7 @@ interface DashboardSession {
   duration_minutes: number;
   status: string;
   meeting_url: string | null;
+  recording_key: string | null;
   homework: string | null;
   student_rating: number | null;
   student_review: string | null;
@@ -46,6 +47,7 @@ interface DashboardData {
   recent_completed: DashboardSession[];
   stats: Stats;
   recent_students: RecentStudent[];
+  top_badge: { badge_type: string; name: string; emoji: string } | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -191,6 +193,40 @@ function StatsBar({ stats }: { stats: Stats }) {
   );
 }
 
+// ── Recording button (MM11.1) ──────────────────────────────────────────────
+
+function RecordingButton({ sessionId }: { sessionId: number }) {
+  const [loading, setLoading] = useState(false);
+  const [expired, setExpired] = useState(false);
+
+  async function handleWatch() {
+    setLoading(true);
+    try {
+      const r = await api.get(`/mentors/sessions/${sessionId}/recording/`);
+      window.open(r.data.url, '_blank');
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'response' in e && (e as { response?: { status?: number } }).response?.status === 410) {
+        setExpired(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (expired) return <span className="text-xs text-gray-400 italic">Recording expired</span>;
+
+  return (
+    <button
+      onClick={handleWatch}
+      disabled={loading}
+      className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors hover:bg-gray-50 disabled:opacity-40"
+      style={{ borderColor: '#141c52', color: '#141c52' }}
+    >
+      {loading ? 'Loading…' : '▶ Watch Recording'}
+    </button>
+  );
+}
+
 // ── Homework tab ───────────────────────────────────────────────────────────
 
 function HomeworkRow({ session }: { session: DashboardSession }) {
@@ -226,13 +262,16 @@ function HomeworkRow({ session }: { session: DashboardSession }) {
         placeholder="Type homework or notes for this student…"
         className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:border-indigo-400 mb-2"
       />
-      <button
-        onClick={() => save.mutate()}
-        disabled={save.isPending || hw === (session.homework ?? '')}
-        className="text-xs font-bold px-4 py-1.5 rounded-full disabled:opacity-40 transition-opacity hover:opacity-90"
-        style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}>
-        {saved ? 'Saved ✓' : save.isPending ? 'Saving…' : 'Save'}
-      </button>
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          onClick={() => save.mutate()}
+          disabled={save.isPending || hw === (session.homework ?? '')}
+          className="text-xs font-bold px-4 py-1.5 rounded-full disabled:opacity-40 transition-opacity hover:opacity-90"
+          style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}>
+          {saved ? 'Saved ✓' : save.isPending ? 'Saving…' : 'Save'}
+        </button>
+        {session.recording_key && <RecordingButton sessionId={session.id} />}
+      </div>
     </div>
   );
 }
@@ -418,6 +457,27 @@ function QuickActions() {
   );
 }
 
+// ── Mentor Badge Banner (MM9.2) ────────────────────────────────────────────
+
+function MentorBadgeBanner({ badge }: { badge: { badge_type: string; name: string; emoji: string } }) {
+  return (
+    <div
+      className="rounded-2xl p-4 mb-6 flex items-center gap-4"
+      style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }}
+    >
+      <span className="text-3xl">{badge.emoji}</span>
+      <div>
+        <p className="font-bold text-sm" style={{ color: '#141c52' }}>
+          Congratulations — you&apos;ve earned the {badge.name} badge!
+        </p>
+        <p className="text-xs" style={{ color: '#141c52', opacity: 0.75 }}>
+          Your rating and session count qualify you as a top mentor. Keep it up!
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Skeleton ───────────────────────────────────────────────────────────────
 
 function Skeleton() {
@@ -502,6 +562,9 @@ export default function MentorDashboardPage() {
           <>
             {/* Stats bar */}
             <StatsBar stats={data.stats} />
+
+            {/* Badge banner (MM9.2) */}
+            {data.top_badge && <MentorBadgeBanner badge={data.top_badge} />}
 
             {/* Tab bar */}
             <div className="flex gap-2 mb-6 flex-wrap">

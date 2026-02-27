@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ interface Mentor {
   hourly_rate: number;
   rating_avg: number;
   review_count: number;
-  is_active: boolean;
+  top_badge: { badge_type: string; name: string; emoji: string } | null;
 }
 
 interface RecommendedMentor extends Mentor {
@@ -26,7 +26,7 @@ interface RecommendedMentor extends Mentor {
 const SPECIALTY_OPTIONS = ['IELTS', 'TOEFL', 'Business English', 'Public Speaking', 'Accent Reduction', 'Interview Prep'];
 const LANGUAGE_OPTIONS = ['English', 'Hindi', 'Mandarin', 'Arabic', 'Spanish', 'French'];
 
-function StarRating({ rating }: { rating: number }) {
+function StarRating({ rating, reviewCount }: { rating: number; reviewCount?: number }) {
   return (
     <div className="flex items-center gap-1">
       {Array.from({ length: 5 }).map((_, i) => (
@@ -36,6 +36,9 @@ function StarRating({ rating }: { rating: number }) {
         </svg>
       ))}
       <span className="text-xs text-gray-500 ml-1">{rating?.toFixed(1) ?? '—'}</span>
+      {reviewCount != null && reviewCount > 0 && (
+        <span className="text-xs text-gray-400">({reviewCount})</span>
+      )}
     </div>
   );
 }
@@ -49,8 +52,19 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
           {mentor.name?.[0] ?? 'M'}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-base leading-tight" style={{ color: '#141c52' }}>{mentor.name}</h3>
-          <StarRating rating={mentor.rating_avg} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-bold text-base leading-tight" style={{ color: '#141c52' }}>{mentor.name}</h3>
+            {mentor.top_badge && (
+              <span
+                className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
+                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+                title={mentor.top_badge.name}
+              >
+                {mentor.top_badge.emoji} {mentor.top_badge.name}
+              </span>
+            )}
+          </div>
+          <StarRating rating={mentor.rating_avg} reviewCount={mentor.review_count} />
         </div>
         <p className="text-lg font-bold flex-shrink-0" style={{ color: '#141c52' }}>
           ${mentor.hourly_rate}<span className="text-xs font-normal text-gray-400">/hr</span>
@@ -134,7 +148,7 @@ function RecommendedSection() {
   );
 }
 
-export default function MentorsPage() {
+function MentorsContent() {
   const { isLoggedIn } = useAuthStore();
   const router       = useRouter();
   const searchParams = useSearchParams();
@@ -291,5 +305,13 @@ export default function MentorsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MentorsPage() {
+  return (
+    <Suspense>
+      <MentorsContent />
+    </Suspense>
   );
 }

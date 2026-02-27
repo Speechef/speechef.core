@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -158,7 +158,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 
-export default function LearnPage() {
+function LearnContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isLoggedIn } = useAuthStore();
@@ -1176,5 +1176,13 @@ function highlightMatch(text: string, query: string): React.ReactNode {
       <mark className="bg-yellow-200 rounded-sm px-0.5">{text.slice(idx, idx + query.length)}</mark>
       {text.slice(idx + query.length)}
     </>
+  );
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense>
+      <LearnContent />
+    </Suspense>
   );
 }

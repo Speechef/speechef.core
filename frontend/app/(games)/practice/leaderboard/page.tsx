@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -25,7 +26,7 @@ const GAME_FILTERS = [
   { label: 'Pronunciation', value: 'pronunciation' },
 ];
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const game = searchParams.get('game') ?? '';
@@ -185,5 +186,13 @@ export default function LeaderboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense>
+      <LeaderboardContent />
+    </Suspense>
   );
 }

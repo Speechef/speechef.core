@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -233,7 +233,7 @@ function CompareTab({ result }: { result: AnalysisResult }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export default function AnalyzePage() {
+function AnalyzeContent() {
   const searchParams = useSearchParams();
   const [pageState, setPageState] = useState<PageState>('idle');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -428,7 +428,7 @@ export default function AnalyzePage() {
         {/* Results */}
         {pageState === 'done' && result && (() => {
           const prevDone = prevSessions
-            .filter((s) => s.status === 'done' && s.result && s.id !== sessionId)
+            .filter((s) => s.status === 'done' && s.result && String(s.id) !== sessionId)
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           const prevScore = prevDone[0]?.result?.overall_score ?? null;
           const scoreDelta = prevScore !== null ? result.overallScore - prevScore : null;
@@ -493,5 +493,13 @@ export default function AnalyzePage() {
         })()}
       </div>
     </div>
+  );
+}
+
+export default function AnalyzePage() {
+  return (
+    <Suspense>
+      <AnalyzeContent />
+    </Suspense>
   );
 }

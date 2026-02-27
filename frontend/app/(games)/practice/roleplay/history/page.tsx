@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -49,7 +50,7 @@ function ScorePill({ score }: { score: number }) {
 const VALID_SORTS = ['newest', 'score_desc', 'score_asc'] as const;
 type SortBy = typeof VALID_SORTS[number];
 
-export default function RolePlayHistoryPage() {
+function RolePlayHistoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeMode = searchParams.get('mode') ?? 'all';
@@ -206,5 +207,13 @@ export default function RolePlayHistoryPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function RolePlayHistoryPage() {
+  return (
+    <Suspense>
+      <RolePlayHistoryContent />
+    </Suspense>
   );
 }

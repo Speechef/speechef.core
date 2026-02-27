@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 
 type Tab = 'account' | 'notifications' | 'privacy' | 'danger';
 
@@ -402,9 +403,19 @@ function PrivacyTab() {
 
 // ── Danger zone tab ───────────────────────────────────────────────────────────
 function DangerTab() {
+  const router = useRouter();
+  const { logout } = useAuthStore();
   const [confirming, setConfirming] = useState(false);
   const [inputVal, setInputVal]     = useState('');
   const expected = 'DELETE MY ACCOUNT';
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete('/auth/account/'),
+    onSuccess: () => {
+      logout();
+      router.replace('/');
+    },
+  });
 
   return (
     <div>
@@ -418,6 +429,11 @@ function DangerTab() {
               Permanently delete your Speechef account, all analyses, game history, and profile data.
               This action cannot be reversed.
             </p>
+            {deleteMutation.isError && (
+              <p className="text-xs text-red-700 font-semibold mb-3">
+                Deletion failed. Please try again or contact support.
+              </p>
+            )}
             {!confirming ? (
               <button
                 onClick={() => setConfirming(true)}
@@ -439,16 +455,11 @@ function DangerTab() {
                 />
                 <div className="flex gap-2">
                   <button
-                    disabled={inputVal !== expected}
+                    disabled={inputVal !== expected || deleteMutation.isPending}
                     className="text-sm font-semibold px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    onClick={() => {
-                      // TODO: call delete account endpoint when available
-                      alert('Account deletion is not yet available. Please contact support.');
-                      setConfirming(false);
-                      setInputVal('');
-                    }}
+                    onClick={() => deleteMutation.mutate()}
                   >
-                    Permanently delete
+                    {deleteMutation.isPending ? 'Deleting…' : 'Permanently delete'}
                   </button>
                   <button
                     onClick={() => { setConfirming(false); setInputVal(''); }}
@@ -469,7 +480,7 @@ function DangerTab() {
 const VALID_TABS: Tab[] = ['account', 'notifications', 'privacy', 'danger'];
 
 // ── Main page ─────────────────────────────────────────────────────────────────
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as Tab | null;
@@ -541,5 +552,13 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense>
+      <SettingsContent />
+    </Suspense>
   );
 }

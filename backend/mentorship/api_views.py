@@ -21,7 +21,7 @@ from .serializers import (
     MentorSessionSerializer, MentorAvailabilitySerializer,
     MentorDashboardSessionSerializer, RecentStudentSerializer,
     MentorUnavailabilitySerializer, UserBundleSerializer,
-    MentorStudentNoteSerializer,
+    MentorStudentNoteSerializer, MentorProfileEditSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -189,7 +189,7 @@ def mentor_book(request, pk):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def my_sessions(request):
-    sessions = MentorSession.objects.filter(student=request.user).order_by("-scheduled_at")[:20]
+    sessions = MentorSession.objects.filter(student=request.user).order_by("-scheduled_at")
     return Response(MentorSessionSerializer(sessions, many=True).data)
 
 
@@ -212,6 +212,39 @@ def rate_session(request, pk):
         session.mentor.rating_avg = round(avg, 2)
         session.mentor.save(update_fields=["rating_avg"])
     return Response({"saved": True})
+
+
+# ── Reschedule (MM6.2) ────────────────────────────────────────────────────
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def reschedule_session(request, pk):
+    """Student reschedules a confirmed session up to once for free."""
+    try:
+        session = MentorSession.objects.select_related("mentor", "student").get(pk=pk, student=request.user)
+    except MentorSession.DoesNotExist:
+        return Response({"detail": "Session not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if session.status != "confirmed":
+        return Response({"detail": "Only confirmed sessions can be rescheduled."}, status=status.HTTP_400_BAD_REQUEST)
+
+    now = timezone.now()
+    hours_until = (session.scheduled_at - now).total_seconds() / 3600
+    if hours_until < 24:
+        return Response({"detail": "Rescheduling is not allowed within 24 hours of the session."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if session.rescheduled_count >= 1:
+        return Response({"detail": "Please contact your mentor to reschedule again."}, status=status.HTTP_400_BAD_REQUEST)
+
+    new_scheduled_at = request.data.get("new_scheduled_at")
+    if not new_scheduled_at:
+        return Response({"detail": "new_scheduled_at is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    session.scheduled_at = new_scheduled_at
+    session.rescheduled_count += 1
+    session.meeting_url = "https://speechef.daily.co/session-rescheduled-placeholder"
+    session.save(update_fields=["scheduled_at", "rescheduled_count", "meeting_url"])
+    return Response({"rescheduled": True, "new_scheduled_at": session.scheduled_at, "meeting_url": session.meeting_url})
 
 
 # ── Cancellation (MM6.1) ───────────────────────────────────────────────────
@@ -368,6 +401,10 @@ def mentor_dashboard(request):
         .order_by("-scheduled_at")[:10]
     )
 
+    # MM9.2 — top mentor badge
+    from .serializers import _get_top_badge
+    top_badge = _get_top_badge(mentor)
+
     return Response({
         "upcoming_sessions": MentorDashboardSessionSerializer(upcoming, many=True).data,
         "today_sessions": MentorDashboardSessionSerializer(today_sessions, many=True).data,
@@ -380,6 +417,7 @@ def mentor_dashboard(request):
             "pending_payout": None,
         },
         "recent_students": RecentStudentSerializer(recent_students, many=True).data,
+        "top_badge": top_badge,
     })
 
 
@@ -449,6 +487,26 @@ def mentor_earnings(request):
         "monthly_breakdown": monthly_breakdown,
         "sessions": session_rows,
     })
+
+
+# ── Mentor profile self (MM12.1) ──────────────────────────────────────────
+
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated])
+def mentor_profile_self(request):
+    """Mentor reads or partially updates their own profile."""
+    mentor = _get_active_mentor(request.user)
+    if not mentor:
+        return Response({"detail": "No active mentor profile found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        return Response(MentorProfileEditSerializer(mentor).data)
+
+    serializer = MentorProfileEditSerializer(mentor, data=request.data, partial=True)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.data)
 
 
 # ── Availability overrides (MM7.1) ────────────────────────────────────────
@@ -681,6 +739,25 @@ def session_recording(request, pk):
     # In production: generate pre-signed R2 URL via boto3
     # For now: return a stub URL
     return Response({"url": f"/stub-recording/{session.recording_key}"})
+
+
+# ── Mentor intro video (MM14.1) ───────────────────────────────────────────
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticatedOrReadOnly])
+def mentor_intro_video(request, pk):
+    """Return a playable URL for the mentor's intro video. MM14.1"""
+    try:
+        mentor = MentorProfile.objects.get(pk=pk, is_active=True)
+    except MentorProfile.DoesNotExist:
+        return Response({"detail": "Mentor not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if not mentor.intro_video_key:
+        return Response({"detail": "No intro video available."}, status=status.HTTP_404_NOT_FOUND)
+
+    # In production: generate pre-signed R2 URL via boto3
+    # For now: return a stub URL
+    return Response({"url": f"/stub-intro-video/{mentor.intro_video_key}"})
 
 
 # ── Student progress for mentor (MM10.1) ──────────────────────────────────

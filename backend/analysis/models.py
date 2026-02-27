@@ -13,11 +13,23 @@ class AnalysisSession(models.Model):
         ('audio', 'Audio'),
         ('video', 'Video'),
     ]
+    SOURCE_CHOICES = [
+        ('upload', 'Upload'),
+        ('mentor_session', 'Mentor Session'),
+    ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='analysis_sessions')
     file_key = models.CharField(max_length=500)
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    # MM3.3 — source tracking for mentor session recordings
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='upload')
+    mentor_session = models.ForeignKey(
+        'mentorship.MentorSession',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='analysis_sessions',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     error = models.TextField(null=True, blank=True)

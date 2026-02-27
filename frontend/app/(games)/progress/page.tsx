@@ -67,9 +67,10 @@ interface GameSession {
 }
 
 interface ProfileData {
-  user: { id: number; username: string; email: string };
-  current_streak: number;
-  longest_streak: number;
+  id: number;
+  username: string;
+  email: string;
+  profile: { image: string | null; current_streak: number; longest_streak: number };
 }
 
 interface LearnPost {
@@ -306,9 +307,9 @@ export default function ProgressPage() {
                 </div>
               )}
               <div>
-                {profile?.user?.username && (
+                {profile?.username && (
                   <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-0.5">
-                    @{profile.user.username}
+                    @{profile.username}
                   </p>
                 )}
                 {latestScore != null ? (
@@ -330,9 +331,9 @@ export default function ProgressPage() {
                   <p className="text-white text-base font-bold">No score yet</p>
                 )}
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {profile?.current_streak != null && profile.current_streak > 0 && (
+                  {profile?.profile?.current_streak != null && profile.profile.current_streak > 0 && (
                     <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/10 text-white">
-                      🔥 {profile.current_streak} day streak
+                      🔥 {profile.profile.current_streak} day streak
                     </span>
                   )}
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/10 text-white">

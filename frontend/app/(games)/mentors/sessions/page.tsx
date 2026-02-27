@@ -13,24 +13,104 @@ interface MentorSession {
   price: string;
   status: 'pending_payment' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   meeting_url: string | null;
+  recording_key: string | null;
   homework: string | null;
   student_rating: number | null;
   student_review: string | null;
   mentor_reply: string | null;
   mentor_replied_at: string | null;
   cancelled_by: string | null;
+  cancelled_at: string | null;
   cancellation_reason: string | null;
   refund_amount: string | null;
+  rescheduled_count: number;
+  analysis_session_id: number | null;
 }
+
+interface AvailabilitySlot {
+  id: number;
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
+}
+
+const DAY_LABEL: Record<string, string> = {
+  mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday',
+  thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday',
+};
+const DAY_JS: Record<string, number> = {
+  sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+};
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending_payment: { label: 'Pending Payment', color: '#92400e', bg: '#fef3c7' },
-  confirmed: { label: 'Confirmed', color: '#1e40af', bg: '#dbeafe' },
-  completed: { label: 'Completed', color: '#166534', bg: '#dcfce7' },
-  cancelled: { label: 'Cancelled', color: '#991b1b', bg: '#fee2e2' },
-  no_show: { label: 'No Show', color: '#6b7280', bg: '#f3f4f6' },
+  confirmed:       { label: 'Confirmed',        color: '#1e40af', bg: '#dbeafe' },
+  completed:       { label: 'Completed',        color: '#166534', bg: '#dcfce7' },
+  cancelled:       { label: 'Cancelled',        color: '#991b1b', bg: '#fee2e2' },
+  no_show:         { label: 'No Show',          color: '#6b7280', bg: '#f3f4f6' },
 };
 
+// ── Recording Modal (MM3.2) ────────────────────────────────────────────────
+function RecordingModal({ sessionId, onClose }: { sessionId: number; onClose: () => void }) {
+  const { data, isLoading, isError, error } = useQuery<{ url: string }>({
+    queryKey: ['recording-url', sessionId],
+    queryFn: () => api.get(`/mentors/sessions/${sessionId}/recording/`).then((r) => r.data),
+    retry: false,
+  });
+
+  const isExpired = isError && (error as { response?: { status?: number } })?.response?.status === 410;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl overflow-hidden w-full max-w-3xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h2 className="font-bold text-base" style={{ color: '#141c52' }}>Session Recording</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+        </div>
+
+        <div className="p-5">
+          {isLoading && (
+            <div className="flex items-center justify-center h-48">
+              <div className="w-8 h-8 border-4 border-yellow-300 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+          {isExpired && (
+            <div className="text-center py-12">
+              <p className="text-3xl mb-3">📼</p>
+              <p className="font-semibold text-gray-600">Recording Expired</p>
+              <p className="text-sm text-gray-400 mt-1">Recordings are available for 30 days after your session.</p>
+            </div>
+          )}
+          {isError && !isExpired && (
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-sm">Could not load recording. Please try again.</p>
+            </div>
+          )}
+          {data?.url && (
+            <>
+              <video
+                src={data.url}
+                controls
+                className="w-full rounded-xl bg-black"
+                style={{ maxHeight: '60vh' }}
+              >
+                Your browser does not support the video tag.
+              </video>
+              <p className="text-xs text-gray-400 mt-3 text-center">
+                Recordings are available for 30 days after your session.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Rating Modal ────────────────────────────────────────────────────────────
 function RatingModal({ sessionId, onClose }: { sessionId: number; onClose: () => void }) {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
@@ -75,6 +155,7 @@ function RatingModal({ sessionId, onClose }: { sessionId: number; onClose: () =>
   );
 }
 
+// ── Cancel Modal ────────────────────────────────────────────────────────────
 function CancelModal({ session, onClose }: { session: MentorSession; onClose: () => void }) {
   const [reason, setReason] = useState('');
   const qc = useQueryClient();
@@ -125,6 +206,114 @@ function CancelModal({ session, onClose }: { session: MentorSession; onClose: ()
   );
 }
 
+// ── Reschedule Modal (MM6.2) ───────────────────────────────────────────────
+function RescheduleModal({ session, onClose }: { session: MentorSession; onClose: () => void }) {
+  const [selectedSlot, setSelectedSlot] = useState<{ day: string; time: string } | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const qc = useQueryClient();
+
+  const { data: availability } = useQuery<{ slots: AvailabilitySlot[] }>({
+    queryKey: ['mentor-availability', session.mentor.id],
+    queryFn: () => api.get(`/mentors/${session.mentor.id}/availability/`).then((r) => r.data),
+  });
+
+  const rescheduleMutation = useMutation({
+    mutationFn: () => {
+      const now = new Date();
+      const dayDiff = ((DAY_JS[selectedSlot!.day] - now.getDay()) + 7) % 7 || 7;
+      const date = new Date(now);
+      date.setDate(date.getDate() + dayDiff);
+      const [h, m] = selectedSlot!.time.split(':');
+      date.setHours(parseInt(h), parseInt(m), 0, 0);
+      return api.post(`/mentors/sessions/${session.id}/reschedule/`, {
+        new_scheduled_at: date.toISOString(),
+      }).then((r) => r.data);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mentor-sessions'] });
+      setConfirmed(true);
+    },
+  });
+
+  const oldDate = new Date(session.scheduled_at);
+
+  if (confirmed) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+        <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
+          <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
+            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }}>
+            <svg className="w-7 h-7" style={{ color: '#141c52' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-xl font-bold mb-2" style={{ color: '#141c52' }}>Session Rescheduled!</p>
+          <p className="text-gray-500 text-sm mb-5">Your session has been moved. Check your email for the updated meeting link.</p>
+          <button onClick={onClose} className="w-full py-3 rounded-xl text-sm font-bold"
+            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-bold text-lg" style={{ color: '#141c52' }}>Reschedule Session</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+        </div>
+
+        <div className="bg-blue-50 rounded-xl p-3 mb-5 text-sm text-blue-700">
+          Current: {oldDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}{' '}
+          at {oldDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+          <br />
+          <span className="text-xs text-blue-500">No additional charge. You can reschedule once per session.</span>
+        </div>
+
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Pick a New Slot</p>
+        {!availability ? (
+          <div className="h-20 bg-gray-50 rounded-xl animate-pulse mb-5" />
+        ) : availability.slots.length === 0 ? (
+          <p className="text-sm text-gray-400 mb-5">No availability slots found. Contact your mentor.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2 mb-5 max-h-36 overflow-y-auto">
+            {availability.slots.map((slot) => (
+              <button
+                key={slot.id}
+                onClick={() => setSelectedSlot({ day: slot.day_of_week, time: slot.start_time })}
+                className="text-xs px-3 py-1.5 rounded-full border transition-all"
+                style={{
+                  borderColor: selectedSlot?.day === slot.day_of_week && selectedSlot?.time === slot.start_time ? '#141c52' : '#e5e7eb',
+                  backgroundColor: selectedSlot?.day === slot.day_of_week && selectedSlot?.time === slot.start_time ? '#f0f2ff' : 'white',
+                  color: '#374151',
+                }}>
+                {DAY_LABEL[slot.day_of_week]} {slot.start_time}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {rescheduleMutation.isError && (
+          <p className="text-xs text-red-500 mb-3">
+            {(rescheduleMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'Something went wrong.'}
+          </p>
+        )}
+
+        <button
+          onClick={() => rescheduleMutation.mutate()}
+          disabled={!selectedSlot || rescheduleMutation.isPending}
+          className="w-full py-3 rounded-xl text-sm font-bold disabled:opacity-40 transition-opacity hover:opacity-90"
+          style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+          {rescheduleMutation.isPending ? 'Rescheduling…' : 'Confirm Reschedule'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const SESSION_TABS = [
   { id: 'all',      label: 'All' },
   { id: 'upcoming', label: 'Upcoming' },
@@ -134,6 +323,8 @@ const SESSION_TABS = [
 export default function MySessionsPage() {
   const [ratingSession, setRatingSession] = useState<number | null>(null);
   const [cancelSession, setCancelSession] = useState<MentorSession | null>(null);
+  const [rescheduleSession, setRescheduleSession] = useState<MentorSession | null>(null);
+  const [recordingSession, setRecordingSession] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'past'>('all');
 
   const { data: sessions = [], isLoading } = useQuery<MentorSession[]>({
@@ -154,6 +345,12 @@ export default function MySessionsPage() {
       )}
       {cancelSession !== null && (
         <CancelModal session={cancelSession} onClose={() => setCancelSession(null)} />
+      )}
+      {rescheduleSession !== null && (
+        <RescheduleModal session={rescheduleSession} onClose={() => setRescheduleSession(null)} />
+      )}
+      {recordingSession !== null && (
+        <RecordingModal sessionId={recordingSession} onClose={() => setRecordingSession(null)} />
       )}
 
       <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -219,13 +416,16 @@ export default function MySessionsPage() {
                   <div className="space-y-3">
                     {upcoming.map((s) => {
                       const cfg = STATUS_CONFIG[s.status];
+                      const sessionDate = new Date(s.scheduled_at);
+                      const hoursUntil = (sessionDate.getTime() - Date.now()) / 3600000;
+                      const canReschedule = s.status === 'confirmed' && hoursUntil >= 24 && s.rescheduled_count === 0;
                       return (
                         <div key={s.id} className="bg-white rounded-2xl border border-gray-100 p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="font-bold text-base" style={{ color: '#141c52' }}>{s.mentor.name}</p>
                               <p className="text-sm text-gray-500 mt-0.5">
-                                {new Date(s.scheduled_at).toLocaleString()} · {s.duration_minutes} min
+                                {sessionDate.toLocaleString()} · {s.duration_minutes} min
                               </p>
                             </div>
                             <span className="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0"
@@ -233,13 +433,23 @@ export default function MySessionsPage() {
                               {cfg.label}
                             </span>
                           </div>
-                          <div className="flex items-center gap-3 mt-3">
+                          <div className="flex items-center gap-3 mt-3 flex-wrap">
                             {s.meeting_url && s.status === 'confirmed' && (
                               <a href={s.meeting_url} target="_blank" rel="noopener noreferrer"
                                 className="text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
                                 style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
                                 Join Session →
                               </a>
+                            )}
+                            {canReschedule && (
+                              <button
+                                onClick={() => setRescheduleSession(s)}
+                                className="text-sm text-indigo-500 hover:text-indigo-700 transition-colors font-medium">
+                                Reschedule
+                              </button>
+                            )}
+                            {s.rescheduled_count > 0 && (
+                              <span className="text-xs text-gray-400">Rescheduled once</span>
                             )}
                             {s.status === 'confirmed' && (
                               <button
@@ -263,13 +473,16 @@ export default function MySessionsPage() {
                   <div className="space-y-3">
                     {past.map((s) => {
                       const cfg = STATUS_CONFIG[s.status];
+                      const sessionDate = new Date(s.scheduled_at);
+                      const daysSince = (Date.now() - sessionDate.getTime()) / 86400000;
+                      const recordingExpired = daysSince > 30;
                       return (
                         <div key={s.id} className="bg-white rounded-2xl border border-gray-100 p-5">
                           <div className="flex items-start justify-between gap-3 mb-3">
                             <div>
                               <p className="font-bold" style={{ color: '#141c52' }}>{s.mentor.name}</p>
                               <p className="text-sm text-gray-500">
-                                {new Date(s.scheduled_at).toLocaleDateString()} · {s.duration_minutes} min
+                                {sessionDate.toLocaleDateString()} · {s.duration_minutes} min
                               </p>
                             </div>
                             <span className="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0"
@@ -286,6 +499,7 @@ export default function MySessionsPage() {
                             <p className="text-xs text-green-600 mb-2">Refund: ${parseFloat(s.refund_amount).toFixed(2)}</p>
                           )}
 
+                          {/* Homework */}
                           {s.homework && (
                             <div className="bg-amber-50 rounded-xl p-3 mb-3">
                               <p className="text-xs font-semibold text-amber-700 mb-1">📚 Homework</p>
@@ -293,6 +507,36 @@ export default function MySessionsPage() {
                             </div>
                           )}
 
+                          {/* Recording (MM3.2) + Scorecard (MM3.3) */}
+                          {s.status === 'completed' && (
+                            <div className="flex items-center gap-3 flex-wrap mb-3">
+                              {s.recording_key && !recordingExpired && (
+                                <button
+                                  onClick={() => setRecordingSession(s.id)}
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors hover:bg-indigo-50"
+                                  style={{ borderColor: '#141c52', color: '#141c52' }}>
+                                  ▶ Watch Recording
+                                </button>
+                              )}
+                              {s.recording_key && recordingExpired && (
+                                <span className="text-xs text-gray-400">Recording expired</span>
+                              )}
+                              {s.analysis_session_id ? (
+                                <Link
+                                  href={`/analyze/${s.analysis_session_id}`}
+                                  className="text-xs font-semibold text-indigo-600 hover:underline">
+                                  View Scorecard →
+                                </Link>
+                              ) : s.recording_key && (
+                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                                  <span className="w-3 h-3 border-2 border-gray-300 border-t-transparent rounded-full animate-spin inline-block" />
+                                  Generating scorecard…
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Rating */}
                           {s.status === 'completed' && s.student_rating === null && (
                             <button onClick={() => setRatingSession(s.id)}
                               className="text-sm font-semibold text-indigo-600 hover:underline">

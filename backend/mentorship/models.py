@@ -119,6 +119,8 @@ class MentorSession(models.Model):
     # MM9.1 — mentor reply to review
     mentor_reply = models.TextField(blank=True)
     mentor_replied_at = models.DateTimeField(null=True, blank=True)
+    # MM6.2 — student rescheduling
+    rescheduled_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 
@@ -56,7 +56,7 @@ const FILTERS = [
   { label: 'Pronunciation', value: 'pronunciation' },
 ];
 
-export default function GameHistoryPage() {
+function GameHistoryContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const game         = searchParams.get('game') ?? '';
@@ -185,5 +185,13 @@ export default function GameHistoryPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function GameHistoryPage() {
+  return (
+    <Suspense>
+      <GameHistoryContent />
+    </Suspense>
   );
 }

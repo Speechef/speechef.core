@@ -9,39 +9,40 @@ const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   applied:     { bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe' },
+  viewed:      { bg: '#f3e8ff', text: '#7e22ce', border: '#e9d5ff' },
   shortlisted: { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
   rejected:    { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
-  withdrawn:   { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' },
 };
 
 interface Application {
   id: number;
   job_title: string;
   company: string;
-  status: 'applied' | 'shortlisted' | 'rejected' | 'withdrawn';
+  status: 'applied' | 'viewed' | 'shortlisted' | 'rejected';
   applied_at: string;
   speechef_score_at_apply: number | null;
+  cover_note: string;
 }
 
 const STATUS_STYLES: Record<string, string> = {
   applied:     'bg-blue-100 text-blue-700',
+  viewed:      'bg-purple-100 text-purple-700',
   shortlisted: 'bg-green-100 text-green-700',
   rejected:    'bg-red-100 text-red-600',
-  withdrawn:   'bg-gray-100 text-gray-500',
 };
 
 const STATUS_LABELS: Record<string, string> = {
   applied:     'Applied',
+  viewed:      'Viewed',
   shortlisted: 'Shortlisted',
   rejected:    'Rejected',
-  withdrawn:   'Withdrawn',
 };
 
 const STATUS_ICONS: Record<string, string> = {
   applied:     '📬',
+  viewed:      '👁',
   shortlisted: '⭐',
   rejected:    '✕',
-  withdrawn:   '↩',
 };
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -90,7 +91,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  const sc = STATUS_COLORS[app.status] ?? STATUS_COLORS.withdrawn;
+  const sc = STATUS_COLORS[app.status] ?? STATUS_COLORS.applied;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -180,19 +181,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
                 </div>
               );
             })}
-            {(app.status === 'rejected' || app.status === 'withdrawn') && (
+            {app.status === 'rejected' && (
               <div className="flex items-center gap-3">
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                  style={{
-                    backgroundColor: app.status === 'rejected' ? '#fee2e2' : '#f3f4f6',
-                    color: app.status === 'rejected' ? '#991b1b' : '#6b7280',
-                  }}
+                  style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
                 >
                   {STATUS_ICONS[app.status]}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold" style={app.status === 'rejected' ? { color: '#991b1b' } : { color: '#6b7280' }}>
+                  <p className="text-sm font-semibold" style={{ color: '#991b1b' }}>
                     {STATUS_LABELS[app.status]}
                   </p>
                   <p className="text-xs text-gray-400">Final status</p>
@@ -201,6 +199,14 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             )}
           </div>
         </div>
+
+        {/* Cover note */}
+        {app.cover_note && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 mt-4">
+            <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-3">Your Cover Note</p>
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{app.cover_note}</p>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3 mt-4">

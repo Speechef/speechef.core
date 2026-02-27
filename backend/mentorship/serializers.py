@@ -17,16 +17,43 @@ class MentorBundleSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "session_count", "price"]
 
 
+def _get_top_badge(mentor_profile):
+    """Return the highest top_mentor badge for a mentor, or None. MM9.2"""
+    try:
+        from users.models import UserBadge
+        badge_order = ['top_mentor_elite', 'top_mentor', 'top_mentor_rising']
+        ubs = UserBadge.objects.filter(
+            user=mentor_profile.user,
+            badge__badge_type__in=badge_order,
+        ).select_related('badge')
+        ub_by_type = {ub.badge.badge_type: ub.badge for ub in ubs}
+        for bt in badge_order:
+            if bt in ub_by_type:
+                b = ub_by_type[bt]
+                return {'badge_type': b.badge_type, 'name': b.name, 'emoji': b.emoji}
+    except Exception:
+        pass
+    return None
+
+
 class MentorListSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    top_badge = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
 
     class Meta:
         model = MentorProfile
-        fields = ["id", "name", "specialties", "languages", "hourly_rate", "rating_avg", "session_count"]
+        fields = ["id", "name", "bio", "specialties", "languages", "hourly_rate", "rating_avg", "session_count", "review_count", "top_badge"]
 
     def get_name(self, obj):
         u = obj.user
         return f"{u.first_name} {u.last_name}".strip() or u.username
+
+    def get_top_badge(self, obj):
+        return _get_top_badge(obj)
+
+    def get_review_count(self, obj):
+        return MentorSession.objects.filter(mentor=obj, student_rating__isnull=False).count()
 
 
 class MentorDetailSerializer(serializers.ModelSerializer):
@@ -34,14 +61,16 @@ class MentorDetailSerializer(serializers.ModelSerializer):
     availability = MentorAvailabilitySerializer(many=True, read_only=True)
     bundles = MentorBundleSerializer(many=True, read_only=True)
     intro_available = serializers.SerializerMethodField()
+    top_badge = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
 
     class Meta:
         model = MentorProfile
         fields = [
             "id", "name", "bio", "credentials", "specialties", "languages",
-            "hourly_rate", "rating_avg", "session_count", "timezone",
+            "hourly_rate", "rating_avg", "session_count", "review_count", "timezone",
             "intro_video_key", "availability", "bundles",
-            "offers_intro_call", "intro_available",
+            "offers_intro_call", "intro_available", "top_badge",
         ]
 
     def get_name(self, obj):
@@ -56,23 +85,39 @@ class MentorDetailSerializer(serializers.ModelSerializer):
             return False
         return not MentorSession.objects.filter(mentor=obj, student=request.user).exists()
 
+    def get_top_badge(self, obj):
+        return _get_top_badge(obj)
+
+    def get_review_count(self, obj):
+        return MentorSession.objects.filter(mentor=obj, student_rating__isnull=False).count()
+
 
 class MentorSessionSerializer(serializers.ModelSerializer):
-    mentor_name = serializers.SerializerMethodField()
+    mentor = serializers.SerializerMethodField()
+    analysis_session_id = serializers.SerializerMethodField()
 
     class Meta:
         model = MentorSession
         fields = [
-            "id", "mentor_name", "scheduled_at", "duration_minutes",
-            "status", "price", "meeting_url", "homework",
+            "id", "mentor", "scheduled_at", "duration_minutes",
+            "status", "price", "meeting_url", "recording_key", "homework",
             "student_rating", "student_review",
             "cancelled_by", "cancelled_at", "cancellation_reason", "refund_amount",
             "mentor_reply", "mentor_replied_at",
+            "rescheduled_count", "analysis_session_id",
         ]
 
-    def get_mentor_name(self, obj):
+    def get_mentor(self, obj):
         u = obj.mentor.user
-        return f"{u.first_name} {u.last_name}".strip() or u.username
+        name = f"{u.first_name} {u.last_name}".strip() or u.username
+        return {"id": obj.mentor.id, "name": name}
+
+    def get_analysis_session_id(self, obj):
+        """Return the ID of the linked AnalysisSession (MM3.3), if any."""
+        session = obj.analysis_sessions.filter(source='mentor_session').order_by('-created_at').first()
+        if session:
+            return session.id
+        return None
 
 
 class MentorDashboardSessionSerializer(serializers.ModelSerializer):
@@ -84,7 +129,7 @@ class MentorDashboardSessionSerializer(serializers.ModelSerializer):
         fields = [
             "id", "student_name", "student_initial",
             "scheduled_at", "duration_minutes", "status", "meeting_url",
-            "homework", "student_rating", "student_review",
+            "recording_key", "homework", "student_rating", "student_review",
             "mentor_reply", "mentor_replied_at",
         ]
 
@@ -133,3 +178,14 @@ class MentorStudentNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = MentorStudentNote
         fields = ["note", "updated_at"]
+
+
+class MentorProfileEditSerializer(serializers.ModelSerializer):
+    """Read / partial-update serializer for a mentor's own profile. MM12.1, MM14.1"""
+
+    class Meta:
+        model = MentorProfile
+        fields = [
+            "bio", "credentials", "specialties", "languages",
+            "hourly_rate", "timezone", "offers_intro_call", "intro_video_key",
+        ]

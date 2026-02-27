@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -11,34 +12,34 @@ interface Application {
   id: number;
   job_title: string;
   company: string;
-  status: 'applied' | 'shortlisted' | 'rejected' | 'withdrawn';
+  status: 'applied' | 'viewed' | 'shortlisted' | 'rejected';
   applied_at: string;
   speechef_score_at_apply: number | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  applied: 'bg-blue-100 text-blue-700',
+  applied:     'bg-blue-100 text-blue-700',
+  viewed:      'bg-purple-100 text-purple-700',
   shortlisted: 'bg-green-100 text-green-700',
-  rejected: 'bg-red-100 text-red-600',
-  withdrawn: 'bg-gray-100 text-gray-500',
+  rejected:    'bg-red-100 text-red-600',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  applied: 'Applied',
+  applied:     'Applied',
+  viewed:      'Viewed',
   shortlisted: 'Shortlisted',
-  rejected: 'Rejected',
-  withdrawn: 'Withdrawn',
+  rejected:    'Rejected',
 };
 
 const STATUS_TABS = [
   { key: '', label: 'All' },
   { key: 'applied', label: 'Applied' },
+  { key: 'viewed', label: 'Viewed' },
   { key: 'shortlisted', label: 'Shortlisted' },
   { key: 'rejected', label: 'Rejected' },
-  { key: 'withdrawn', label: 'Withdrawn' },
 ];
 
-export default function MyApplicationsPage() {
+function MyApplicationsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const filterStatus = searchParams.get('status') ?? '';
@@ -181,5 +182,13 @@ export default function MyApplicationsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MyApplicationsPage() {
+  return (
+    <Suspense>
+      <MyApplicationsContent />
+    </Suspense>
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -72,7 +73,7 @@ const SCORING_GUIDES = [
   { slug_key: 'celpip', label: 'CELPIP',  scale: 'Level 1–12', target: 'Level 7+' },
 ];
 
-export default function TestPrepHubPage() {
+function TestPrepHubContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sectionFilter = searchParams.get('section') ?? 'all';
@@ -290,5 +291,13 @@ function RecentAttempts() {
         </div>
       ))}
     </div>
+  );
+}
+
+export default function TestPrepHubPage() {
+  return (
+    <Suspense>
+      <TestPrepHubContent />
+    </Suspense>
   );
 }

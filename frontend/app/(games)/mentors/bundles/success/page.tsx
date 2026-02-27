@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 
-export default function BundleSuccessPage() {
+function BundleSuccessContent() {
   const { isLoggedIn } = useAuthStore();
   const router = useRouter();
   const params = useSearchParams();
@@ -68,5 +68,13 @@ export default function BundleSuccessPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function BundleSuccessPage() {
+  return (
+    <Suspense>
+      <BundleSuccessContent />
+    </Suspense>
   );
 }

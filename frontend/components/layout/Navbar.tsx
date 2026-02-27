@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/learn',     label: 'Learn' },
   { href: '/practice',  label: 'Practice' },
+  { href: '/progress',  label: 'Progress' },
   { href: '/jobs',      label: 'Jobs' },
   { href: '/mentors',   label: 'Mentors' },
 ];

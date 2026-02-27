@@ -1,7 +1,7 @@
 from django.urls import path
 from .api_views import (
     RegisterView, ProfileView, change_password,
-    user_settings,
+    user_settings, delete_account,
     forgot_password, reset_password,
     notification_list, notification_read, notification_read_all, notification_unread_count,
     badge_list, public_profile,
@@ -12,6 +12,7 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='auth-profile'),
     path('change-password/', change_password, name='change-password'),
     path('settings/', user_settings, name='user-settings'),
+    path('account/', delete_account, name='delete-account'),  # ACC1.1
     path('forgot-password/', forgot_password, name='forgot-password'),
     path('reset-password/', reset_password, name='reset-password'),
     # Notifications

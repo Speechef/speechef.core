@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -343,7 +343,7 @@ function CarouselSkeleton() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function JobsPage() {
+function JobsContent() {
   const { isLoggedIn } = useAuthStore();
   const router        = useRouter();
   const searchParams  = useSearchParams();
@@ -598,5 +598,13 @@ export default function JobsPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense>
+      <JobsContent />
+    </Suspense>
   );
 }

@@ -14,7 +14,8 @@ class AnalysisResultSerializer(serializers.ModelSerializer):
 
 class AnalysisSessionSerializer(serializers.ModelSerializer):
     result = AnalysisResultSerializer(read_only=True)
+    mentor_session_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = AnalysisSession
-        fields = ["id", "file_type", "status", "created_at", "completed_at", "error", "result"]
+        fields = ["id", "file_type", "status", "source", "mentor_session_id", "created_at", "completed_at", "error", "result"]
