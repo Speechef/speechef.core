@@ -5,6 +5,20 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const SCORE_COLOR = (s: number) =>
+  s >= 80 ? { color: '#166534', bg: '#dcfce7' }
+  : s >= 60 ? { color: '#92400e', bg: '#fef3c7' }
+  : { color: '#991b1b', bg: '#fee2e2' };
+
+const MODE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  job_interview: { bg: '#fef3c7', text: '#78350f', border: '#fde68a' },
+  presentation:  { bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe' },
+  debate:        { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
+  small_talk:    { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
+};
+
 interface RolePlaySession {
   id: number;
   mode: string;
@@ -46,12 +60,6 @@ const MODES = [
   },
 ];
 
-const MODE_SCORE_COLOR = (score: number) => {
-  if (score >= 80) return { color: '#166534', bg: '#dcfce7' };
-  if (score >= 60) return { color: '#92400e', bg: '#fef3c7' };
-  return { color: '#991b1b', bg: '#fee2e2' };
-};
-
 export default function RolePlayHubPage() {
   const [modeFilter, setModeFilter] = useState('');
 
@@ -64,22 +72,42 @@ export default function RolePlayHubPage() {
   const filteredForRecent = modeFilter ? sessions.filter((s) => s.mode === modeFilter) : sessions;
   const recentSessions = filteredForRecent.slice(0, 5);
 
+  const finishedSessions = sessions.filter((s) => s.status === 'finished' && s.score != null);
+  const totalSessions = sessions.length;
+  const avgScore = finishedSessions.length > 0
+    ? Math.round(finishedSessions.reduce((sum, s) => sum + (s.score ?? 0), 0) / finishedSessions.length)
+    : null;
+
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-2 block">← Practice</Link>
-            <h1 className="text-3xl font-bold mb-1" style={{ color: '#141c52' }}>Role Play</h1>
+            <h1 className="text-3xl font-bold mb-1" style={{ color: BRAND.primary }}>Role Play</h1>
             <p className="text-gray-500">AI-powered conversation practice. Choose a scenario, set your topic, and start talking.</p>
           </div>
           <Link href="/practice/roleplay/history"
             className="text-sm font-medium hover:underline mt-7"
-            style={{ color: '#141c52' }}>
+            style={{ color: BRAND.primary }}>
             History →
           </Link>
         </div>
+
+        {/* Stat pills */}
+        {totalSessions > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600">
+              🗣️ {totalSessions} session{totalSessions !== 1 ? 's' : ''}
+            </span>
+            {avgScore !== null && (
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600">
+                🏆 Avg score {avgScore}/100
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Active session resume banner */}
         {activeSession && (() => {
@@ -89,17 +117,20 @@ export default function RolePlayHubPage() {
               className="rounded-xl px-5 py-4 flex items-center justify-between gap-4 mb-8"
               style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}
             >
-              <div>
-                <p className="text-xs font-semibold text-white/60 mb-0.5">Unfinished Session</p>
-                <p className="text-sm font-bold">
-                  {meta?.emoji ?? '🗣️'} {meta?.title ?? activeSession.mode}
-                  {activeSession.topic ? ` — ${activeSession.topic}` : ''}
-                </p>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-white/60 mb-0.5">Unfinished Session</p>
+                  <p className="text-sm font-bold">
+                    {meta?.emoji ?? '🗣️'} {meta?.title ?? activeSession.mode}
+                    {activeSession.topic ? ` — ${activeSession.topic}` : ''}
+                  </p>
+                </div>
               </div>
               <Link
                 href={`/practice/roleplay/${activeSession.mode}`}
                 className="shrink-0 text-sm font-bold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
-                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+                style={{ background: BRAND.gradient, color: BRAND.primary }}
               >
                 Resume →
               </Link>
@@ -109,35 +140,51 @@ export default function RolePlayHubPage() {
 
         {/* Mode Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
-          {MODES.map((mode) => (
-            <div key={mode.id}
-              className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
-              <div className="text-3xl mb-3">{mode.emoji}</div>
-              <h2 className="font-bold text-lg mb-2" style={{ color: '#141c52' }}>{mode.title}</h2>
-              <p className="text-gray-500 text-sm mb-4 leading-relaxed">{mode.description}</p>
-              <div className="flex flex-wrap gap-1.5 mb-5">
-                {mode.examples.map((ex) => (
-                  <span key={ex} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
-                    {ex}
-                  </span>
-                ))}
+          {MODES.map((mode) => {
+            const mc = MODE_COLORS[mode.id];
+            return (
+              <div key={mode.id} className="rounded-2xl border overflow-hidden hover:shadow-md transition-shadow"
+                style={{ borderColor: mc.border }}>
+                {/* Colored header band */}
+                <div className="relative overflow-hidden px-5 py-5" style={{ background: mc.bg }}>
+                  <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+                    style={{ background: mc.text, opacity: 0.12 }} />
+                  <div className="relative flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{mode.emoji}</span>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide mb-0.5"
+                          style={{ color: mc.text }}>Role Play</p>
+                        <h2 className="font-bold text-base" style={{ color: BRAND.primary }}>{mode.title}</h2>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/practice/roleplay/${mode.id}`}
+                      className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90"
+                      style={{ background: BRAND.gradient, color: BRAND.primary }}
+                    >
+                      Start →
+                    </Link>
+                  </div>
+                </div>
+                {/* White body */}
+                <div className="bg-white px-5 py-4">
+                  <p className="text-gray-500 text-sm mb-3 leading-relaxed">{mode.description}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {mode.examples.map((ex) => (
+                      <span key={ex} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                        {ex}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <Link
-                href={`/practice/roleplay/${mode.id}`}
-                className="inline-block text-sm font-bold px-5 py-2.5 rounded-full transition-opacity hover:opacity-90"
-                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-              >
-                Start Session →
-              </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Per-mode stats */}
         {sessions.length > 0 && (() => {
-          const finishedSessions = sessions.filter((s) => s.status === 'finished' && s.score != null);
-          if (finishedSessions.length === 0) return null;
-
           const modeStats = MODES.map((mode) => {
             const modeSessions = finishedSessions.filter((s) => s.mode === mode.id);
             const count = modeSessions.length;
@@ -151,35 +198,40 @@ export default function RolePlayHubPage() {
           if (modeStats.length === 0) return null;
 
           return (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-              <h2 className="font-bold text-lg mb-4" style={{ color: '#141c52' }}>Your Performance</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {modeStats.map((m) => {
-                  const barColor = (m.avg ?? 0) >= 80 ? '#22c55e' : (m.avg ?? 0) >= 60 ? '#f59e0b' : '#ef4444';
-                  return (
-                    <div key={m.id} className="bg-gray-50 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span>{m.emoji}</span>
-                        <p className="text-sm font-semibold" style={{ color: '#141c52' }}>{m.title}</p>
-                        <span className="ml-auto text-xs text-gray-400">{m.count} session{m.count !== 1 ? 's' : ''}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full transition-all"
-                            style={{ width: `${m.avg ?? 0}%`, backgroundColor: barColor }} />
-                        </div>
-                        <span className="text-sm font-bold w-14 text-right" style={{ color: barColor }}>
-                          avg {m.avg}
-                        </span>
-                      </div>
-                      {m.best != null && (
-                        <p className="text-xs text-gray-400 mt-1">Best: {m.best}/100</p>
-                      )}
-                    </div>
-                  );
-                })}
+            <section className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#fef3c7', color: '#92400e' }}>🏆</span>
+                <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Your Performance</h2>
               </div>
-            </div>
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {modeStats.map((m) => {
+                    const barColor = (m.avg ?? 0) >= 80 ? '#22c55e' : (m.avg ?? 0) >= 60 ? '#f59e0b' : '#ef4444';
+                    return (
+                      <div key={m.id} className="bg-gray-50 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span>{m.emoji}</span>
+                          <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>{m.title}</p>
+                          <span className="ml-auto text-xs text-gray-400">{m.count} session{m.count !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all"
+                              style={{ width: `${m.avg ?? 0}%`, backgroundColor: barColor }} />
+                          </div>
+                          <span className="text-sm font-bold w-14 text-right" style={{ color: barColor }}>
+                            avg {m.avg}
+                          </span>
+                        </div>
+                        {m.best != null && (
+                          <p className="text-xs text-gray-400 mt-1">Best: {m.best}/100</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
           );
         })()}
 
@@ -187,17 +239,17 @@ export default function RolePlayHubPage() {
         {sessions.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-              <h2 className="font-bold text-lg" style={{ color: '#141c52' }}>Recent Sessions</h2>
+              <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Recent Sessions</h2>
               <div className="flex flex-wrap gap-1.5">
                 {[{ id: '', emoji: '🗣️', title: 'All' }, ...MODES].map((m) => (
                   <button
                     key={m.id}
                     onClick={() => setModeFilter(m.id)}
-                    className="text-xs px-2.5 py-1 rounded-full font-medium transition-colors"
+                    className="text-xs px-2.5 py-1 rounded-full font-medium transition-colors border"
                     style={
                       modeFilter === m.id
-                        ? { backgroundColor: '#141c52', color: '#fff' }
-                        : { backgroundColor: '#e5e7eb', color: '#374151' }
+                        ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
+                        : { backgroundColor: 'white', color: '#6b7280', borderColor: '#e5e7eb' }
                     }
                   >
                     {m.emoji} {m.title}
@@ -219,7 +271,7 @@ export default function RolePlayHubPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{modeMeta?.emoji ?? '🗣️'}</span>
                       <div>
-                        <p className="text-sm font-semibold" style={{ color: '#141c52' }}>
+                        <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>
                           {modeMeta?.title ?? s.mode}
                           {s.topic && <span className="font-normal text-gray-500"> — {s.topic}</span>}
                         </p>
@@ -231,7 +283,7 @@ export default function RolePlayHubPage() {
                     </div>
                     {s.score != null ? (
                       <span className="text-xs font-bold px-2.5 py-1 rounded-full"
-                        style={MODE_SCORE_COLOR(s.score)}>
+                        style={SCORE_COLOR(s.score)}>
                         {s.score} / 100
                       </span>
                     ) : (

@@ -6,6 +6,9 @@ import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const GAME_COLOR = { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' };
+
 interface Pair {
   id: number;
   word: string;
@@ -139,69 +142,73 @@ export default function MemoryMatchPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold" style={{ color: '#141c52' }}>
-            Memory Match
-          </h1>
-          <Link href="/practice" className="text-sm text-gray-400 hover:underline">
-            ← Games
-          </Link>
+
+        {/* Page header with game color chip */}
+        <div className="mb-6">
+          <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-2 block">← Practice</Link>
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 rounded-lg text-sm font-semibold"
+              style={{ background: GAME_COLOR.bg, color: GAME_COLOR.text }}>
+              🃏 Memory Match
+            </span>
+            {!done && (
+              <div className="flex gap-3 text-sm text-gray-500 ml-auto">
+                <span>Attempts: <strong style={{ color: BRAND.primary }}>{attempts}</strong></span>
+                <span>Matched: <strong style={{ color: BRAND.primary }}>{matched}/{pairs.length}</strong></span>
+              </div>
+            )}
+          </div>
         </div>
 
         {done ? (
-          <div className="bg-white rounded-2xl shadow p-8 text-center">
-            <p className="text-lg font-medium text-gray-700 mb-1">
-              All {pairs.length} pairs matched in {attempts} attempt{attempts !== 1 ? 's' : ''}!
-            </p>
-            <p className="text-3xl font-bold mb-6" style={{ color: '#141c52' }}>
-              Score: {score}
-            </p>
-            <Button
-              onClick={handlePlayAgain}
-              className="rounded-full font-medium text-[#141c52]"
-              style={{ backgroundColor: '#FADB43' }}
-            >
-              Play Again
-            </Button>
-            <Link
-              href="/practice/history?game=memory"
-              className="block text-sm text-gray-400 hover:underline mt-3"
-            >
-              View session history →
-            </Link>
+          <div className="rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+            {/* Score band */}
+            <div className="px-6 py-6 text-center" style={{ background: GAME_COLOR.bg }}>
+              <p className="text-lg font-semibold mb-1" style={{ color: GAME_COLOR.text }}>
+                All {pairs.length} pairs matched in {attempts} attempt{attempts !== 1 ? 's' : ''}!
+              </p>
+              <p className="text-4xl font-bold" style={{ color: BRAND.primary }}>Score: {score}</p>
+            </div>
+            {/* White body */}
+            <div className="bg-white px-6 py-6 text-center">
+              <Button
+                onClick={handlePlayAgain}
+                className="rounded-full font-medium text-[#141c52]"
+                style={{ backgroundColor: '#FADB43' }}
+              >
+                Play Again
+              </Button>
+              <Link
+                href="/practice/history?game=memory"
+                className="block text-sm text-gray-400 hover:underline mt-3"
+              >
+                View session history →
+              </Link>
+            </div>
           </div>
         ) : (
-          <>
-            <div className="flex justify-between text-sm text-gray-500 mb-4 px-1">
-              <span>Attempts: {attempts}</span>
-              <span>
-                Matched: {matched} / {pairs.length}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-4 gap-3">
-              {cards.map((card) => {
-                const isRevealed = card.flipped || card.matched;
-                return (
-                  <button
-                    key={card.uid}
-                    onClick={() => handleFlip(card.uid)}
-                    disabled={isRevealed || locked}
-                    className="h-20 rounded-xl font-semibold text-xs px-2 transition-all duration-300 cursor-pointer"
-                    style={
-                      card.matched
-                        ? { backgroundColor: '#bbf7d0', color: '#065f46', border: '2px solid #16a34a' }
-                        : isRevealed
-                        ? { backgroundColor: '#FADB43', color: '#141c52', border: '2px solid #FADB43' }
-                        : { backgroundColor: '#141c52', color: '#fff', border: '2px solid #141c52' }
-                    }
-                  >
-                    {isRevealed ? card.text : '?'}
-                  </button>
-                );
-              })}
-            </div>
-          </>
+          <div className="grid grid-cols-4 gap-3">
+            {cards.map((card) => {
+              const isRevealed = card.flipped || card.matched;
+              return (
+                <button
+                  key={card.uid}
+                  onClick={() => handleFlip(card.uid)}
+                  disabled={isRevealed || locked}
+                  className="h-20 rounded-xl font-semibold text-xs px-2 transition-all duration-300 cursor-pointer"
+                  style={
+                    card.matched
+                      ? { backgroundColor: '#bbf7d0', color: '#065f46', border: '2px solid #16a34a' }
+                      : isRevealed
+                      ? { backgroundColor: '#FADB43', color: BRAND.primary, border: '2px solid #FADB43' }
+                      : { backgroundColor: BRAND.primary, color: '#fff', border: `2px solid ${BRAND.primary}` }
+                  }
+                >
+                  {isRevealed ? card.text : '?'}
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

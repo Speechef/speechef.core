@@ -5,6 +5,21 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
+import ScoreArc from '../ScoreArc';
+
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const MODE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  job_interview: { bg: '#fef3c7', text: '#78350f', border: '#fde68a' },
+  presentation:  { bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe' },
+  debate:        { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
+  small_talk:    { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
+};
+
+const SCORE_COLOR = (s: number) =>
+  s >= 80 ? { color: '#166534', bg: '#dcfce7' }
+  : s >= 60 ? { color: '#92400e', bg: '#fef3c7' }
+  : { color: '#991b1b', bg: '#fee2e2' };
 
 type Stage = 'setup' | 'session' | 'results';
 
@@ -52,40 +67,11 @@ const MODE_META: Record<string, { title: string; emoji: string; placeholder: str
   },
 };
 
-function ScoreArc({ score }: { score: number }) {
-  const r = 52;
-  const cx = 64;
-  const cy = 64;
-  const circ = 2 * Math.PI * r;
-  const pct = score / 100;
-  const offset = circ * (1 - pct);
-  const color = score >= 80 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444';
-
-  return (
-    <svg width={128} height={128} viewBox="0 0 128 128">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e7eb" strokeWidth={10} />
-      <circle
-        cx={cx} cy={cy} r={r}
-        fill="none"
-        stroke={color}
-        strokeWidth={10}
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        transform={`rotate(-90 ${cx} ${cy})`}
-      />
-      <text x={cx} y={cy + 6} textAnchor="middle" fontSize={22} fontWeight="bold" fill="#141c52">
-        {score}
-      </text>
-      <text x={cx} y={cy + 20} textAnchor="middle" fontSize={10} fill="#9ca3af">/ 100</text>
-    </svg>
-  );
-}
-
 export default function RolePlaySessionPage() {
   const { mode } = useParams<{ mode: string }>();
   const router = useRouter();
   const meta = MODE_META[mode] ?? MODE_META.job_interview;
+  const modeColor = MODE_COLORS[mode] ?? MODE_COLORS.job_interview;
 
   const [stage, setStage] = useState<Stage>('setup');
   const [topic, setTopic] = useState('');
@@ -157,59 +143,75 @@ export default function RolePlaySessionPage() {
   if (stage === 'setup') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-8">
-          <Link href="/practice/roleplay" className="text-sm text-gray-400 hover:text-gray-600 mb-4 block">
-            ← Role Play
-          </Link>
-          <div className="text-4xl mb-3">{meta.emoji}</div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>{meta.title}</h1>
-          <p className="text-gray-500 text-sm mb-6">Set a topic to personalise your session, then jump in.</p>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#141c52' }}>
-                {meta.topicLabel} <span className="font-normal text-gray-400">(optional)</span>
-              </label>
-              <input
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder={meta.placeholder}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') startMutation.mutate();
-                }}
-              />
+        <div className="w-full max-w-md rounded-2xl border overflow-hidden" style={{ borderColor: modeColor.border }}>
+          {/* Colored header band */}
+          <div className="relative overflow-hidden px-6 py-6" style={{ background: modeColor.bg }}>
+            <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+              style={{ background: modeColor.text, opacity: 0.12 }} />
+            <Link href="/practice/roleplay" className="relative text-xs font-medium mb-3 block hover:underline"
+              style={{ color: modeColor.text, opacity: 0.7 }}>
+              ← Role Play
+            </Link>
+            <div className="relative flex items-center gap-4">
+              <span className="text-5xl">{meta.emoji}</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-0.5"
+                  style={{ color: modeColor.text }}>Role Play</p>
+                <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>{meta.title}</h1>
+              </div>
             </div>
+          </div>
 
-            {/* Suggestion chips */}
-            <div className="flex flex-wrap gap-2">
-              {meta.suggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setTopic(s)}
-                  className="text-xs px-3 py-1.5 rounded-full border transition-all"
-                  style={topic === s
-                    ? { borderColor: '#141c52', backgroundColor: '#f0f2ff', color: '#141c52', fontWeight: 600 }
-                    : { borderColor: '#e5e7eb', backgroundColor: 'white', color: '#6b7280' }}
-                >
-                  {s}
-                </button>
-              ))}
+          {/* White body */}
+          <div className="bg-white px-6 py-6">
+            <p className="text-gray-500 text-sm mb-6">Set a topic to personalise your session, then jump in.</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-1.5" style={{ color: BRAND.primary }}>
+                  {meta.topicLabel} <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+                <input
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-gray-400"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder={meta.placeholder}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') startMutation.mutate();
+                  }}
+                />
+              </div>
+
+              {/* Suggestion chips */}
+              <div className="flex flex-wrap gap-2">
+                {meta.suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setTopic(s)}
+                    className="text-xs px-3 py-1.5 rounded-full border transition-all"
+                    style={topic === s
+                      ? { borderColor: BRAND.primary, backgroundColor: '#f0f2ff', color: BRAND.primary, fontWeight: 600 }
+                      : { borderColor: '#e5e7eb', backgroundColor: 'white', color: '#6b7280' }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => startMutation.mutate()}
+                disabled={startMutation.isPending}
+                className="w-full py-3 rounded-full text-sm font-bold disabled:opacity-50 transition-opacity hover:opacity-90"
+                style={{ background: BRAND.gradient, color: BRAND.primary }}
+              >
+                {startMutation.isPending ? 'Starting…' : 'Start Session →'}
+              </button>
+
+              {startMutation.isError && (
+                <p className="text-xs text-red-500 text-center">Failed to start. Please try again.</p>
+              )}
             </div>
-
-            <button
-              onClick={() => startMutation.mutate()}
-              disabled={startMutation.isPending}
-              className="w-full py-3 rounded-full text-sm font-bold disabled:opacity-50 transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-            >
-              {startMutation.isPending ? 'Starting…' : 'Start Session →'}
-            </button>
-
-            {startMutation.isError && (
-              <p className="text-xs text-red-500 text-center">Failed to start. Please try again.</p>
-            )}
           </div>
         </div>
       </div>
@@ -218,24 +220,35 @@ export default function RolePlaySessionPage() {
 
   // ── Results screen ─────────────────────────────────────────────────────────
   if (stage === 'results' && result) {
+    const scoreCol = SCORE_COLOR(result.score);
     return (
       <div className="min-h-screen bg-gray-50 py-10 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center mb-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Session Complete</p>
-            <ScoreArc score={result.score} />
-            <p className="text-lg font-bold mt-4 mb-2" style={{ color: '#141c52' }}>Your Communication Score</p>
-            <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto">{result.feedback}</p>
+          <div className="rounded-2xl border overflow-hidden mb-6" style={{ borderColor: scoreCol.bg }}>
+            {/* Score band */}
+            <div className="px-6 py-6 text-center" style={{ background: scoreCol.bg }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: scoreCol.color }}>
+                Session Complete
+              </p>
+              <div className="flex justify-center">
+                <ScoreArc score={result.score} size={128} />
+              </div>
+              <p className="text-lg font-bold mt-4" style={{ color: BRAND.primary }}>Your Communication Score</p>
+            </div>
+            {/* White body */}
+            <div className="bg-white px-6 py-5">
+              <p className="text-gray-600 text-sm leading-relaxed">{result.feedback}</p>
+            </div>
           </div>
 
           {result.tips.length > 0 && (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-              <h2 className="font-bold mb-4" style={{ color: '#141c52' }}>3 Things to Improve</h2>
+              <h2 className="font-bold mb-4" style={{ color: BRAND.primary }}>3 Things to Improve</h2>
               <ol className="space-y-3">
                 {result.tips.map((tip, i) => (
                   <li key={i} className="flex gap-3 text-sm text-gray-700">
                     <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                      style={{ backgroundColor: '#141c52' }}>
+                      style={{ backgroundColor: BRAND.primary }}>
                       {i + 1}
                     </span>
                     <span className="leading-relaxed">{tip}</span>
@@ -251,7 +264,7 @@ export default function RolePlaySessionPage() {
               <button
                 onClick={() => setShowTranscript((v) => !v)}
                 className="w-full flex items-center justify-between px-6 py-4 text-sm font-semibold hover:bg-gray-50 transition-colors"
-                style={{ color: '#141c52' }}
+                style={{ color: BRAND.primary }}
               >
                 <span>View Conversation ({result.turns.length} turns)</span>
                 <span className="text-gray-400">{showTranscript ? '▲' : '▼'}</span>
@@ -264,7 +277,7 @@ export default function RolePlaySessionPage() {
                       <div key={i} className={`flex gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
                         {!isUser && (
                           <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5"
-                            style={{ backgroundColor: '#141c52', color: 'white' }}>
+                            style={{ backgroundColor: BRAND.primary, color: 'white' }}>
                             AI
                           </span>
                         )}
@@ -272,7 +285,7 @@ export default function RolePlaySessionPage() {
                           className={`max-w-xs text-xs leading-relaxed rounded-xl px-3 py-2 ${
                             isUser ? 'rounded-tr-sm' : 'rounded-tl-sm bg-gray-50'
                           }`}
-                          style={isUser ? { backgroundColor: '#141c52', color: 'white' } : undefined}
+                          style={isUser ? { backgroundColor: BRAND.primary, color: 'white' } : undefined}
                         >
                           {t.content}
                         </div>
@@ -294,14 +307,14 @@ export default function RolePlaySessionPage() {
                 setShowTranscript(false);
               }}
               className="flex-1 py-3 rounded-full text-sm font-bold border-2 transition-colors hover:bg-gray-50"
-              style={{ borderColor: '#141c52', color: '#141c52' }}
+              style={{ borderColor: BRAND.primary, color: BRAND.primary }}
             >
               Try Again
             </button>
             <Link
               href="/practice/roleplay"
               className="flex-1 py-3 rounded-full text-sm font-bold text-center transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               Other Modes
             </Link>
@@ -321,7 +334,7 @@ export default function RolePlaySessionPage() {
         <div className="flex items-center gap-3">
           <span className="text-xl">{meta.emoji}</span>
           <div>
-            <p className="font-bold text-sm" style={{ color: '#141c52' }}>{meta.title}</p>
+            <p className="font-bold text-sm" style={{ color: BRAND.primary }}>{meta.title}</p>
             {topic && <p className="text-xs text-gray-400">{topic}</p>}
           </div>
         </div>
@@ -329,7 +342,7 @@ export default function RolePlaySessionPage() {
           onClick={() => finishMutation.mutate()}
           disabled={finishMutation.isPending || userTurnCount < 1}
           className="text-xs font-bold px-4 py-2 rounded-full disabled:opacity-40 transition-opacity hover:opacity-90"
-          style={{ background: '#141c52', color: 'white' }}
+          style={{ background: BRAND.primary, color: 'white' }}
         >
           {finishMutation.isPending ? 'Finishing…' : 'Finish & Score →'}
         </button>
@@ -344,7 +357,7 @@ export default function RolePlaySessionPage() {
               <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                 {!isUser && (
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mr-2 mt-0.5"
-                    style={{ backgroundColor: '#141c52', color: 'white' }}>
+                    style={{ backgroundColor: BRAND.primary, color: 'white' }}>
                     AI
                   </div>
                 )}
@@ -352,7 +365,7 @@ export default function RolePlaySessionPage() {
                   className={`max-w-sm rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                     isUser ? 'rounded-tr-sm' : 'rounded-tl-sm bg-white border border-gray-100'
                   }`}
-                  style={isUser ? { backgroundColor: '#141c52', color: 'white' } : undefined}
+                  style={isUser ? { backgroundColor: BRAND.primary, color: 'white' } : undefined}
                 >
                   {t.content}
                 </div>
@@ -364,7 +377,7 @@ export default function RolePlaySessionPage() {
           {aiThinking && (
             <div className="flex justify-start">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mr-2"
-                style={{ backgroundColor: '#141c52', color: 'white' }}>
+                style={{ backgroundColor: BRAND.primary, color: 'white' }}>
                 AI
               </div>
               <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
@@ -389,7 +402,7 @@ export default function RolePlaySessionPage() {
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Type your response…"
             rows={2}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-indigo-400"
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-gray-400"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey && draft.trim()) {
                 e.preventDefault();
@@ -401,7 +414,7 @@ export default function RolePlaySessionPage() {
             onClick={sendMessage}
             disabled={!draft.trim() || aiThinking || turnMutation.isPending}
             className="self-end px-5 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40 flex-shrink-0"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+            style={{ background: BRAND.gradient, color: BRAND.primary }}
           >
             Send
           </button>

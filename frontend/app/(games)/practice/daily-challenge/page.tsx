@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const GAME_COLOR = { bg: '#fef3c7', text: '#78350f', border: '#fde68a' };
+
 interface DailyQuestion {
   id: number;
   word: string;
@@ -30,7 +33,6 @@ const ROLEPLAY_SUGGESTIONS = [
   { mode: 'small_talk', label: 'Small Talk', topic: 'Networking event', emoji: '💬' },
 ];
 
-// Pick a deterministic roleplay suggestion for today
 const todaySeed = parseInt(TODAY.replace(/-/g, ''), 10) % ROLEPLAY_SUGGESTIONS.length;
 const todayRolePlay = ROLEPLAY_SUGGESTIONS[todaySeed];
 
@@ -41,7 +43,6 @@ export default function DailyChallengePage() {
   const [alreadyDone, setAlreadyDone] = useState(false);
   const [storedResult, setStoredResult] = useState<{ correct: boolean; word: string } | null>(null);
 
-  // Check localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -74,11 +75,9 @@ export default function DailyChallengePage() {
       const correct: boolean = data.correct;
       setWasCorrect(correct);
       setSubmitted(true);
-      // Save XP in backend if correct
       if (correct) {
         api.post('/practice/guess/complete/', { score: 5 }).catch(() => {});
       }
-      // Persist to localStorage
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({ correct, word: question?.word ?? '' })
@@ -99,7 +98,7 @@ export default function DailyChallengePage() {
 
           <div className={`rounded-2xl p-8 text-center mb-6 ${storedResult.correct ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
             <p className="text-4xl mb-3">{storedResult.correct ? '🎉' : '💪'}</p>
-            <h1 className="text-xl font-bold mb-1" style={{ color: '#141c52' }}>
+            <h1 className="text-xl font-bold mb-1" style={{ color: BRAND.primary }}>
               {storedResult.correct ? "You nailed it!" : "Better luck tomorrow!"}
             </h1>
             <p className="text-gray-500 text-sm">
@@ -122,7 +121,7 @@ export default function DailyChallengePage() {
         <div className="max-w-xl mx-auto">
           <div className={`rounded-2xl p-8 text-center mb-6 ${wasCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
             <p className="text-4xl mb-3">{wasCorrect ? '🎉' : '😬'}</p>
-            <h2 className="text-xl font-bold mb-2" style={{ color: '#141c52' }}>
+            <h2 className="text-xl font-bold mb-2" style={{ color: BRAND.primary }}>
               {wasCorrect ? 'Correct!' : 'Not quite!'}
             </h2>
             <p className="text-sm text-gray-600">
@@ -144,17 +143,30 @@ export default function DailyChallengePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-xl mx-auto">
-        <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-4 block">← Practice</Link>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: '#141c52' }}>Daily Challenge</h1>
-            <p className="text-sm text-gray-400">{todayFormatted()}</p>
+        {/* Colored page header band */}
+        <div className="rounded-2xl border overflow-hidden mb-6" style={{ borderColor: GAME_COLOR.border }}>
+          <div className="relative overflow-hidden px-6 py-5" style={{ background: GAME_COLOR.bg }}>
+            <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+              style={{ background: GAME_COLOR.text, opacity: 0.12 }} />
+            <Link href="/practice" className="relative text-xs font-medium mb-3 block hover:underline"
+              style={{ color: GAME_COLOR.text, opacity: 0.7 }}>
+              ← Practice
+            </Link>
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🔥</span>
+                <div>
+                  <h1 className="text-xl font-bold" style={{ color: BRAND.primary }}>Daily Challenge</h1>
+                  <p className="text-xs" style={{ color: GAME_COLOR.text }}>{todayFormatted()}</p>
+                </div>
+              </div>
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0"
+                style={{ background: GAME_COLOR.text, color: 'white' }}>
+                🔥 Daily
+              </span>
+            </div>
           </div>
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full text-yellow-800 bg-yellow-100">
-            🔥 Daily
-          </span>
         </div>
 
         {/* Word card */}
@@ -165,7 +177,7 @@ export default function DailyChallengePage() {
           {isLoading || !question ? (
             <div className="h-10 bg-gray-100 rounded-xl animate-pulse mx-auto w-40" />
           ) : (
-            <p className="text-4xl font-extrabold text-center" style={{ color: '#141c52' }}>
+            <p className="text-4xl font-extrabold text-center" style={{ color: BRAND.primary }}>
               {question.word}
             </p>
           )}
@@ -181,9 +193,9 @@ export default function DailyChallengePage() {
                   onClick={() => setSelected(opt)}
                   className="text-left px-5 py-4 rounded-xl border-2 text-sm font-medium transition-all"
                   style={{
-                    borderColor: selected === opt ? '#141c52' : '#e5e7eb',
-                    backgroundColor: selected === opt ? '#141c52' : 'white',
-                    color: selected === opt ? 'white' : '#374151',
+                    borderColor: selected === opt ? BRAND.primary : '#e5e7eb',
+                    backgroundColor: selected === opt ? '#f0f2ff' : 'white',
+                    color: selected === opt ? BRAND.primary : '#374151',
                   }}
                 >
                   <span className="font-bold mr-2" style={{ opacity: 0.5 }}>
@@ -198,7 +210,7 @@ export default function DailyChallengePage() {
               onClick={() => checkMutation.mutate()}
               disabled={!selected || checkMutation.isPending}
               className="w-full py-3 rounded-full text-sm font-bold disabled:opacity-40 transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               {checkMutation.isPending ? 'Checking…' : 'Submit Answer →'}
             </button>
@@ -214,7 +226,6 @@ function BonusSection() {
     <div className="space-y-4">
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Keep practising today</p>
 
-      {/* Role Play suggestion */}
       <Link
         href={`/practice/roleplay/${todayRolePlay.mode}`}
         className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow"
@@ -227,7 +238,6 @@ function BonusSection() {
         <span className="ml-auto text-gray-400 text-sm">→</span>
       </Link>
 
-      {/* Vocabulary Blitz */}
       <Link
         href="/practice/vocabulary-blitz"
         className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow"
@@ -240,7 +250,6 @@ function BonusSection() {
         <span className="ml-auto text-gray-400 text-sm">→</span>
       </Link>
 
-      {/* Test Prep */}
       <Link
         href="/practice/test-prep"
         className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow"

@@ -6,6 +6,8 @@ import api from '@/lib/api';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
 interface LeaderboardEntry {
   user__username: string;
   total_score: number;
@@ -58,25 +60,27 @@ export default function LeaderboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold" style={{ color: '#141c52' }}>
-            Leaderboard
-          </h1>
-          <Link href="/practice" className="text-sm text-gray-400 hover:underline">
-            ← Games
-          </Link>
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-1 block">← Practice</Link>
+            <h1 className="text-3xl font-bold" style={{ color: BRAND.primary }}>Leaderboard</h1>
+            <p className="text-gray-500 text-sm mt-1">Top players across all word games.</p>
+          </div>
         </div>
 
+        {/* Filter tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {GAME_FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setGame(f.value)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors border"
               style={
                 game === f.value
-                  ? { backgroundColor: '#141c52', color: '#fff' }
-                  : { backgroundColor: '#e5e7eb', color: '#374151' }
+                  ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
+                  : { backgroundColor: 'white', color: '#6b7280', borderColor: '#e5e7eb' }
               }
             >
               {f.label}
@@ -91,9 +95,12 @@ export default function LeaderboardPage() {
             style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}
           >
             <div className="flex items-center gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-black">#{myRank}</p>
-                <p className="text-xs text-white/60">Your Rank</p>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+                <div className="text-center">
+                  <p className="text-2xl font-black">#{myRank}</p>
+                  <p className="text-xs text-white/60">Your Rank</p>
+                </div>
               </div>
               <div className="w-px h-10 bg-white/20" />
               <div className="text-center">
@@ -108,17 +115,31 @@ export default function LeaderboardPage() {
             </div>
             <Link href="/practice/history"
               className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+              style={{ background: BRAND.gradient, color: BRAND.primary }}>
               My History →
             </Link>
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow overflow-hidden">
+        {/* Leaderboard table */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           {isLoading ? (
-            <p className="text-center text-gray-400 py-10">Loading…</p>
+            <div className="p-4 space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />
+              ))}
+            </div>
           ) : entries.length === 0 ? (
-            <p className="text-center text-gray-400 py-10">No scores yet. Be the first to play!</p>
+            <div className="p-12 text-center">
+              <p className="text-4xl mb-3">🏆</p>
+              <p className="font-semibold text-lg mb-1" style={{ color: BRAND.primary }}>No scores yet</p>
+              <p className="text-gray-400 text-sm mb-5">Be the first to play and claim the top spot!</p>
+              <Link href="/practice"
+                className="inline-block px-6 py-2.5 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
+                style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                Play Now →
+              </Link>
+            </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
@@ -139,19 +160,19 @@ export default function LeaderboardPage() {
                       style={isMe ? { backgroundColor: '#eef0fa' } : undefined}
                     >
                       <td className="px-5 py-3 text-gray-400 font-mono">{i + 1}</td>
-                      <td className="px-5 py-3 font-medium" style={{ color: '#141c52' }}>
+                      <td className="px-5 py-3 font-medium" style={{ color: BRAND.primary }}>
                         {i === 0 && '🥇 '}
                         {i === 1 && '🥈 '}
                         {i === 2 && '🥉 '}
                         <span className={isMe ? 'font-bold' : ''}>{entry.user__username}</span>
                         {isMe && (
                           <span className="ml-2 text-xs font-bold px-1.5 py-0.5 rounded"
-                            style={{ backgroundColor: '#141c52', color: '#FADB43' }}>
+                            style={{ backgroundColor: BRAND.primary, color: '#FADB43' }}>
                             You
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-right font-bold" style={{ color: '#141c52' }}>
+                      <td className="px-5 py-3 text-right font-bold" style={{ color: BRAND.primary }}>
                         {entry.total_score}
                       </td>
                       <td className="px-5 py-3 text-right text-gray-400">{entry.games_played}</td>
