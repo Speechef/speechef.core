@@ -1,9 +1,19 @@
 'use client';
+import { Suspense } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
+
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const SECTION_TYPE_META: Record<string, { bg: string; text: string; emoji: string }> = {
+  Speaking:  { bg: '#ede9fe', text: '#6d28d9', emoji: '🎤' },
+  Writing:   { bg: '#dbeafe', text: '#1e40af', emoji: '✍️' },
+  Listening: { bg: '#d1fae5', text: '#065f46', emoji: '🎧' },
+  Reading:   { bg: '#fef9c3', text: '#92400e', emoji: '📖' },
+};
 
 interface ExamSection {
   id: number;
@@ -32,6 +42,14 @@ const EXAM_ICONS: Record<string, string> = {
   celpip: '🍁',
 };
 
+const EXAM_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  ielts:  { bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe' },
+  toefl:  { bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe' },
+  pte:    { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
+  oet:    { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
+  celpip: { bg: '#fef3c7', text: '#78350f', border: '#fde68a' },
+};
+
 const SECTION_TYPE_LABELS: Record<string, string> = {
   listening: '🎧 Listening',
   reading: '📖 Reading',
@@ -48,14 +66,14 @@ const SECTION_FILTER_TABS = [
 ];
 
 const SCORING_GUIDES = [
-  { slug_key: 'ielts', label: 'IELTS', scale: '0–9 bands', target: 'Band 6.5–7.0', color: '#4f46e5' },
-  { slug_key: 'toefl', label: 'TOEFL', scale: '0–120 pts', target: '80–100 pts', color: '#0891b2' },
-  { slug_key: 'pte', label: 'PTE', scale: '10–90 pts', target: '65+ pts', color: '#059669' },
-  { slug_key: 'oet', label: 'OET', scale: 'Grade A–E', target: 'Grade B', color: '#dc2626' },
-  { slug_key: 'celpip', label: 'CELPIP', scale: 'Level 1–12', target: 'Level 7+', color: '#d97706' },
+  { slug_key: 'ielts',  label: 'IELTS',   scale: '0–9 bands',  target: 'Band 6.5–7.0' },
+  { slug_key: 'toefl',  label: 'TOEFL',   scale: '0–120 pts',  target: '80–100 pts' },
+  { slug_key: 'pte',    label: 'PTE',     scale: '10–90 pts',  target: '65+ pts' },
+  { slug_key: 'oet',    label: 'OET',     scale: 'Grade A–E',  target: 'Grade B' },
+  { slug_key: 'celpip', label: 'CELPIP',  scale: 'Level 1–12', target: 'Level 7+' },
 ];
 
-export default function TestPrepHubPage() {
+function TestPrepHubContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sectionFilter = searchParams.get('section') ?? 'all';
@@ -84,20 +102,28 @@ export default function TestPrepHubPage() {
 
         {/* Header */}
         <div className="mb-6">
+          <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-2 block">← Practice</Link>
           <p className="text-sm font-semibold uppercase tracking-wide mb-1" style={{ color: '#fe9940' }}>Test Prep</p>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#141c52' }}>Prepare for Your Exam</h1>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: BRAND.primary }}>Prepare for Your Exam</h1>
           <p className="text-gray-500 text-sm">Timed, distraction-free practice sessions for IELTS, TOEFL, PTE, OET, and CELPIP. Each attempt is scored by our AI.</p>
         </div>
 
-        {/* Scoring quick-reference strip */}
-        <div className="grid grid-cols-5 gap-2 mb-8">
-          {SCORING_GUIDES.map((g) => (
-            <div key={g.slug_key} className="bg-white rounded-xl border border-gray-100 p-3 text-center">
-              <p className="text-xs font-bold mb-0.5" style={{ color: g.color }}>{g.label}</p>
-              <p className="text-xs text-gray-500">{g.scale}</p>
-              <p className="text-xs font-semibold text-gray-700 mt-1">Target: {g.target}</p>
-            </div>
-          ))}
+        {/* Scoring quick-reference — card style with colored header bands */}
+        <div className="grid grid-cols-5 gap-3 mb-8">
+          {SCORING_GUIDES.map((g) => {
+            const ec = EXAM_COLORS[g.slug_key] ?? { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' };
+            return (
+              <div key={g.slug_key} className="rounded-xl border overflow-hidden" style={{ borderColor: ec.border }}>
+                <div className="py-2 text-center" style={{ background: ec.bg }}>
+                  <p className="text-xs font-bold" style={{ color: ec.text }}>{g.label}</p>
+                </div>
+                <div className="bg-white px-2 py-2 text-center">
+                  <p className="text-xs text-gray-500">{g.scale}</p>
+                  <p className="text-xs font-semibold text-gray-700 mt-1">Target: {g.target}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Section type filter tabs */}
@@ -108,7 +134,7 @@ export default function TestPrepHubPage() {
               onClick={() => setSectionFilter(tab.id)}
               className="px-4 py-1.5 rounded-full text-sm font-medium transition-all border"
               style={sectionFilter === tab.id
-                ? { background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52', borderColor: 'transparent' }
+                ? { background: BRAND.gradient, color: BRAND.primary, borderColor: 'transparent' }
                 : { background: 'white', color: '#6b7280', borderColor: '#e5e7eb' }}
             >
               {tab.label}
@@ -128,7 +154,8 @@ export default function TestPrepHubPage() {
             <p className="font-semibold">No exams match this filter</p>
             <button
               onClick={() => setSectionFilter('all')}
-              className="mt-3 text-sm text-indigo-600 hover:underline"
+              className="mt-3 text-sm hover:underline"
+              style={{ color: BRAND.primary }}
             >
               View all exams
             </button>
@@ -138,22 +165,26 @@ export default function TestPrepHubPage() {
             {filteredExams.map((exam) => {
               const slugBase = exam.slug.split('-')[0];
               const icon = EXAM_ICONS[slugBase] ?? '📋';
+              const ec = EXAM_COLORS[slugBase] ?? { bg: '#f8faff', text: BRAND.primary, border: '#e5e7eb' };
               return (
-                <div key={exam.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                  {/* Card header */}
-                  <div className="p-6 border-b border-gray-50" style={{ background: 'linear-gradient(135deg,#f8faff,#f0f2ff)' }}>
-                    <div className="flex items-center gap-3 mb-3">
+                <div key={exam.id} className="rounded-2xl border overflow-hidden hover:shadow-md transition-shadow"
+                  style={{ borderColor: ec.border }}>
+                  {/* Colored card header */}
+                  <div className="relative overflow-hidden p-6" style={{ background: ec.bg }}>
+                    <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+                      style={{ background: ec.text, opacity: 0.1 }} />
+                    <div className="relative flex items-center gap-3 mb-2">
                       <span className="text-3xl">{icon}</span>
                       <div>
-                        <h2 className="text-lg font-bold" style={{ color: '#141c52' }}>{exam.name}</h2>
-                        <p className="text-xs text-gray-400 uppercase tracking-wide">{exam.slug}</p>
+                        <h2 className="text-lg font-bold" style={{ color: BRAND.primary }}>{exam.name}</h2>
+                        <p className="text-xs uppercase tracking-wide" style={{ color: ec.text }}>{exam.slug}</p>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{exam.description}</p>
+                    <p className="relative text-sm text-gray-600 line-clamp-2">{exam.description}</p>
                   </div>
 
                   {/* Sections list */}
-                  <div className="p-5">
+                  <div className="bg-white p-5">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                       {sectionFilter === 'all' ? 'All Sections' : `${sectionFilter.charAt(0).toUpperCase() + sectionFilter.slice(1)} Sections`}
                     </p>
@@ -162,10 +193,10 @@ export default function TestPrepHubPage() {
                         <Link
                           key={section.id}
                           href={`/practice/test-prep/${exam.slug}/${section.slug}`}
-                          className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-indigo-50 transition-colors group"
+                          className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium" style={{ color: '#141c52' }}>
+                            <span className="text-sm font-medium" style={{ color: BRAND.primary }}>
                               {SECTION_TYPE_LABELS[section.section_type] ?? section.name}
                             </span>
                             <span className="text-xs text-gray-400">
@@ -181,7 +212,7 @@ export default function TestPrepHubPage() {
                             {section.time_limit_minutes > 0 && (
                               <span className="text-xs text-gray-400">⏱ {section.time_limit_minutes}m</span>
                             )}
-                            <svg className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                           </div>
@@ -191,7 +222,7 @@ export default function TestPrepHubPage() {
                     <Link
                       href={`/practice/test-prep/${exam.slug}`}
                       className="mt-4 block text-center text-sm font-semibold py-2.5 rounded-xl transition-opacity hover:opacity-90"
-                      style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+                      style={{ background: BRAND.gradient, color: BRAND.primary }}
                     >
                       View Full Exam →
                     </Link>
@@ -203,13 +234,14 @@ export default function TestPrepHubPage() {
         )}
 
         {/* Recent attempts */}
-        <div className="mt-10 bg-white rounded-2xl border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold" style={{ color: '#141c52' }}>Recent Attempts</h2>
-            <Link href="/practice" className="text-sm text-indigo-600 hover:underline">← Back to Practice</Link>
+        <section className="mt-10 bg-white rounded-2xl border border-gray-100 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#fef9c3', color: '#92400e' }}>📋</span>
+            <h2 className="font-bold" style={{ color: BRAND.primary }}>Recent Attempts</h2>
+            <Link href="/practice" className="text-sm ml-auto hover:underline" style={{ color: BRAND.primary }}>← Practice</Link>
           </div>
           <RecentAttempts />
-        </div>
+        </section>
       </div>
     </div>
   );
@@ -259,5 +291,13 @@ function RecentAttempts() {
         </div>
       ))}
     </div>
+  );
+}
+
+export default function TestPrepHubPage() {
+  return (
+    <Suspense>
+      <TestPrepHubContent />
+    </Suspense>
   );
 }

@@ -21,7 +21,7 @@ class PostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'created_on', 'categories', 'completed', 'is_bookmarked', 'is_completed']
+        fields = ['id', 'title', 'created_on', 'categories', 'is_bookmarked', 'is_completed']
 
     def get_is_bookmarked(self, obj):
         request = self.context.get('request')
@@ -43,7 +43,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'body', 'created_on', 'categories', 'completed', 'is_completed', 'comments']
+        fields = ['id', 'title', 'body', 'created_on', 'categories', 'is_completed', 'comments']
 
     def get_is_completed(self, obj):
         request = self.context.get('request')

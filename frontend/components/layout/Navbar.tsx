@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/learn',     label: 'Learn' },
   { href: '/practice',  label: 'Practice' },
+  { href: '/progress',  label: 'Progress' },
   { href: '/jobs',      label: 'Jobs' },
   { href: '/mentors',   label: 'Mentors' },
 ];
@@ -22,11 +23,16 @@ export default function Navbar() {
   const { isLoggedIn, logout } = useAuthStore();
   const [profileOpen, setProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted]   = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
+
+  // Delay auth-dependent rendering until after hydration so SSR output matches
+  // the initial client render (both show logged-out state until mount).
+  useEffect(() => { setMounted(true); }, []);
 
   const { data: user } = useQuery<{ username: string }>({
     queryKey: ['profile'],
-    enabled: isLoggedIn,
+    enabled: mounted && isLoggedIn,
     queryFn: () => api.get('/auth/profile/').then((r) => r.data),
   });
 
@@ -58,7 +64,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link
-          href={isLoggedIn ? '/dashboard' : '/'}
+          href={mounted && isLoggedIn ? '/dashboard' : '/'}
           className="text-xl font-extrabold tracking-tight shrink-0 mr-4"
           style={{ color: '#141c52' }}
         >
@@ -90,7 +96,7 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="ml-auto flex items-center gap-2">
-          {isLoggedIn ? (
+          {mounted && isLoggedIn ? (
             <>
               {/* Analyze CTA — gradient (desktop) */}
               <Link
@@ -226,7 +232,7 @@ export default function Navbar() {
               );
             })}
             <div className="pt-2 border-t border-gray-100 mt-2">
-              {isLoggedIn ? (
+              {mounted && isLoggedIn ? (
                 <>
                   <Link
                     href="/analyze"

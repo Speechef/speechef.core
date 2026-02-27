@@ -6,6 +6,9 @@ import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const GAME_COLOR = { bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe' };
+
 const MAX_WRONG = 3;
 const POINTS_PER_CORRECT = 10;
 
@@ -121,51 +124,52 @@ export default function GuessTheWordPage() {
     const isNewBest = currentScore > 0 && currentScore >= personalBest;
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4">
-        <div className="max-w-lg mx-auto bg-white rounded-2xl shadow p-8 text-center">
-          <div className="text-5xl mb-4">💀</div>
-          <h2 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>
-            Game Over
-          </h2>
-          <p className="text-gray-500 text-sm mb-6">3 wrong answers — better luck next time!</p>
-
-          <div className="flex justify-center gap-8 mb-8">
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Your Score</p>
-              <p className="text-4xl font-bold" style={{ color: '#141c52' }}>
-                {currentScore}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Personal Best</p>
-              <p className="text-4xl font-bold" style={{ color: '#FADB43' }}>
-                {isNewBest ? currentScore : personalBest}
-              </p>
-            </div>
+        <div className="max-w-lg mx-auto rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+          {/* Score band */}
+          <div className="px-6 py-6 text-center" style={{ background: GAME_COLOR.bg }}>
+            <div className="text-5xl mb-3">💀</div>
+            <h2 className="text-2xl font-bold mb-1" style={{ color: BRAND.primary }}>Game Over</h2>
+            <p className="text-sm" style={{ color: GAME_COLOR.text }}>3 wrong answers — better luck next time!</p>
           </div>
+          {/* White body */}
+          <div className="bg-white px-6 py-6">
+            <div className="flex justify-center gap-8 mb-8">
+              <div className="text-center">
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Your Score</p>
+                <p className="text-4xl font-bold" style={{ color: BRAND.primary }}>{currentScore}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Personal Best</p>
+                <p className="text-4xl font-bold" style={{ color: '#FADB43' }}>
+                  {isNewBest ? currentScore : personalBest}
+                </p>
+              </div>
+            </div>
 
-          {isNewBest && (
-            <p className="text-green-600 text-sm font-medium mb-4">New personal best!</p>
-          )}
+            {isNewBest && (
+              <p className="text-green-600 text-sm font-medium mb-4 text-center">New personal best!</p>
+            )}
 
-          <Button
-            onClick={handlePlayAgain}
-            className="w-full rounded-full font-medium text-[#141c52]"
-            style={{ backgroundColor: '#FADB43' }}
-          >
-            Play Again
-          </Button>
-          <Link
-            href="/practice"
-            className="block text-sm text-gray-400 hover:underline mt-4"
-          >
-            ← Back to Games
-          </Link>
-          <Link
-            href="/practice/history?game=guess"
-            className="block text-sm text-gray-400 hover:underline mt-2"
-          >
-            View session history →
-          </Link>
+            <Button
+              onClick={handlePlayAgain}
+              className="w-full rounded-full font-medium text-[#141c52]"
+              style={{ backgroundColor: '#FADB43' }}
+            >
+              Play Again
+            </Button>
+            <Link
+              href="/practice"
+              className="block text-sm text-gray-400 hover:underline mt-4 text-center"
+            >
+              ← Back to Games
+            </Link>
+            <Link
+              href="/practice/history?game=guess"
+              className="block text-sm text-gray-400 hover:underline mt-2 text-center"
+            >
+              View session history →
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -173,24 +177,27 @@ export default function GuessTheWordPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-lg mx-auto bg-white rounded-2xl shadow p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-bold" style={{ color: '#141c52' }}>
-            Guess the Word
-          </h1>
-          <Link href="/practice" className="text-sm text-gray-400 hover:underline">
-            ← Games
-          </Link>
+      <div className="max-w-lg mx-auto bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        {/* Game header band */}
+        <div className="relative overflow-hidden px-5 py-4" style={{ background: GAME_COLOR.bg }}>
+          <div className="absolute top-[-15px] right-[-15px] w-16 h-16 rounded-full"
+            style={{ background: GAME_COLOR.text, opacity: 0.12 }} />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🧠</span>
+              <span className="font-bold text-sm" style={{ color: BRAND.primary }}>Guess the Word</span>
+            </div>
+            <Link href="/practice" className="text-xs hover:underline" style={{ color: GAME_COLOR.text, opacity: 0.7 }}>
+              ← Games
+            </Link>
+          </div>
         </div>
 
         {/* Score bar */}
-        <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2 mb-5 text-sm">
+        <div className="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm border-b border-gray-100">
           <div>
             <span className="text-gray-400">Score </span>
-            <span className="font-bold" style={{ color: '#141c52' }}>
-              {currentScore} pts
-            </span>
+            <span className="font-bold" style={{ color: BRAND.primary }}>{currentScore} pts</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-400">Lives</span>
@@ -198,81 +205,81 @@ export default function GuessTheWordPage() {
           </div>
           <div>
             <span className="text-gray-400">Best </span>
-            <span className="font-bold" style={{ color: '#141c52' }}>
-              {personalBest} pts
-            </span>
+            <span className="font-bold" style={{ color: BRAND.primary }}>{personalBest} pts</span>
           </div>
         </div>
 
-        <p className="text-gray-500 text-sm mb-2">What does this word mean?</p>
-        <div
-          className="text-3xl font-bold text-center py-6 rounded-xl mb-6"
-          style={{ backgroundColor: '#141c52', color: '#FADB43' }}
-        >
-          {question.word}
-        </div>
-
-        <div className="space-y-3 mb-6">
-          {question.options.map((option) => {
-            let style: React.CSSProperties = { borderColor: '#e5e7eb', backgroundColor: '#fff' };
-            if (result) {
-              if (option === result.correct_meaning) {
-                style = { borderColor: '#16a34a', backgroundColor: '#f0fdf4' };
-              } else if (option === selected && !result.correct) {
-                style = { borderColor: '#dc2626', backgroundColor: '#fef2f2' };
-              }
-            } else if (option === selected) {
-              style = { borderColor: '#141c52', backgroundColor: '#eef0ff' };
-            }
-
-            return (
-              <button
-                key={option}
-                onClick={() => !result && setSelected(option)}
-                disabled={!!result}
-                className="w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors"
-                style={style}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
-
-        {result && (
+        <div className="p-6">
+          <p className="text-gray-500 text-sm mb-2">What does this word mean?</p>
           <div
-            className={`text-sm px-4 py-3 rounded-xl mb-4 font-medium ${
-              result.correct ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-            }`}
+            className="text-3xl font-bold text-center py-6 rounded-xl mb-6"
+            style={{ backgroundColor: BRAND.primary, color: '#FADB43' }}
           >
-            {result.correct
-              ? `Correct! +${POINTS_PER_CORRECT} pts`
-              : `Wrong — the answer was: ${result.correct_meaning}${
-                  wrongAttempts >= MAX_WRONG - 1 && !isGameOver
-                    ? ' (last life!)'
-                    : ` (${MAX_WRONG - wrongAttempts} ${MAX_WRONG - wrongAttempts === 1 ? 'life' : 'lives'} left)`
-                }`}
+            {question.word}
           </div>
-        )}
 
-        {!result ? (
-          <Button
-            onClick={handleSubmit}
-            disabled={!selected || submitting}
-            className="w-full rounded-full font-medium text-[#141c52]"
-            style={{ backgroundColor: '#FADB43' }}
-          >
-            Submit Answer
-          </Button>
-        ) : (
-          <Button
-            onClick={handleNext}
-            className="w-full rounded-full font-medium text-[#141c52]"
-            style={{ backgroundColor: '#FADB43' }}
-          >
-            Next Question →
-          </Button>
-        )}
+          <div className="space-y-3 mb-6">
+            {question.options.map((option) => {
+              let style: React.CSSProperties = { borderColor: '#e5e7eb', backgroundColor: '#fff' };
+              if (result) {
+                if (option === result.correct_meaning) {
+                  style = { borderColor: '#16a34a', backgroundColor: '#f0fdf4' };
+                } else if (option === selected && !result.correct) {
+                  style = { borderColor: '#dc2626', backgroundColor: '#fef2f2' };
+                }
+              } else if (option === selected) {
+                style = { borderColor: BRAND.primary, backgroundColor: '#eef0ff' };
+              }
+
+              return (
+                <button
+                  key={option}
+                  onClick={() => !result && setSelected(option)}
+                  disabled={!!result}
+                  className="w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors"
+                  style={style}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+
+          {result && (
+            <div
+              className={`text-sm px-4 py-3 rounded-xl mb-4 font-medium ${
+                result.correct ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+              }`}
+            >
+              {result.correct
+                ? `Correct! +${POINTS_PER_CORRECT} pts`
+                : `Wrong — the answer was: ${result.correct_meaning}${
+                    wrongAttempts >= MAX_WRONG - 1 && !isGameOver
+                      ? ' (last life!)'
+                      : ` (${MAX_WRONG - wrongAttempts} ${MAX_WRONG - wrongAttempts === 1 ? 'life' : 'lives'} left)`
+                  }`}
+            </div>
+          )}
+
+          {!result ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={!selected || submitting}
+              className="w-full rounded-full font-medium text-[#141c52]"
+              style={{ backgroundColor: '#FADB43' }}
+            >
+              Submit Answer
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              className="w-full rounded-full font-medium text-[#141c52]"
+              style={{ backgroundColor: '#FADB43' }}
+            >
+              Next Question →
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

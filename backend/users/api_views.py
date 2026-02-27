@@ -105,7 +105,7 @@ def forgot_password(request):
     if user:
         uid   = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        reset_url = f"http://localhost:3000/reset-password/{uid}/{token}"
+        reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
         # In development: log the link to stdout/server log for easy access.
         logger.info('[PASSWORD RESET] %s', reset_url)
         print(f'\n[PASSWORD RESET] {reset_url}\n', flush=True)
@@ -141,6 +141,17 @@ def reset_password(request):
     user.set_password(new_password)
     user.save()
     return Response({'ok': True})
+
+
+# ── Account deletion (ACC1.1) ─────────────────────────────────────────────────
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    """Permanently delete the authenticated user's account and all associated data."""
+    user = request.user
+    user.delete()
+    return Response({'deleted': True}, status=status.HTTP_200_OK)
 
 
 # ── Notifications ─────────────────────────────────────────────────────────────

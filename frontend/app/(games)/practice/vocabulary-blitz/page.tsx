@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const GAME_COLOR = { bg: '#fef9c3', text: '#92400e', border: '#fde68a' };
+
 const GAME_DURATION = 60; // seconds
 
 interface Question {
@@ -67,7 +70,6 @@ export default function VocabularyBlitzPage() {
     setStage('finished');
   }, [saveMutation]);
 
-  // Start game
   const startGame = useCallback(async () => {
     setScore(0);
     setQuestionsAnswered(0);
@@ -78,7 +80,6 @@ export default function VocabularyBlitzPage() {
     await loadNextQuestion();
   }, [loadNextQuestion]);
 
-  // Timer
   useEffect(() => {
     if (stage !== 'playing') return;
     timerRef.current = setInterval(() => {
@@ -124,42 +125,57 @@ export default function VocabularyBlitzPage() {
     ? [question.option_a, question.option_b, question.option_c, question.option_d]
     : [];
 
-  const timerColor = timeLeft <= 10 ? '#ef4444' : timeLeft <= 20 ? '#f59e0b' : '#141c52';
-  const timerBg = timeLeft <= 10 ? '#fee2e2' : timeLeft <= 20 ? '#fef3c7' : '#dbeafe';
+  const timerColor = timeLeft <= 10 ? '#ef4444' : timeLeft <= 20 ? '#f59e0b' : BRAND.primary;
+  const timerBg    = timeLeft <= 10 ? '#fee2e2' : timeLeft <= 20 ? '#fef3c7' : '#dbeafe';
 
   // ── Idle ──────────────────────────────────────────────────────────────────
   if (stage === 'idle') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-10 text-center">
-          <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-4 block text-left">
-            ← Practice
-          </Link>
-          <div className="text-5xl mb-4">⚡</div>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: '#141c52' }}>Vocabulary Blitz</h1>
-          <p className="text-gray-500 text-sm mb-6">
-            Answer as many word questions as you can in <strong>60 seconds</strong>.
-            Questions advance automatically on correct answers.
-          </p>
-          <div className="grid grid-cols-3 gap-3 mb-8 text-center text-sm">
-            {[
-              { icon: '⏱', label: '60 seconds' },
-              { icon: '✅', label: '+1 per correct' },
-              { icon: '🔥', label: 'Streak bonus' },
-            ].map((item) => (
-              <div key={item.label} className="bg-gray-50 rounded-xl py-3">
-                <p className="text-xl mb-0.5">{item.icon}</p>
-                <p className="text-xs text-gray-500">{item.label}</p>
+        <div className="w-full max-w-md rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+          {/* Colored header band */}
+          <div className="relative overflow-hidden px-6 py-6" style={{ background: GAME_COLOR.bg }}>
+            <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+              style={{ background: GAME_COLOR.text, opacity: 0.12 }} />
+            <Link href="/practice" className="relative text-xs font-medium mb-3 block hover:underline"
+              style={{ color: GAME_COLOR.text, opacity: 0.7 }}>
+              ← Practice
+            </Link>
+            <div className="relative flex items-center gap-4">
+              <span className="text-5xl">⚡</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-0.5"
+                  style={{ color: GAME_COLOR.text }}>60 Second Challenge</p>
+                <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>Vocabulary Blitz</h1>
               </div>
-            ))}
+            </div>
           </div>
-          <button
-            onClick={startGame}
-            className="w-full py-3 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-          >
-            Start Blitz →
-          </button>
+          {/* White body */}
+          <div className="bg-white px-6 py-6 text-center">
+            <p className="text-gray-500 text-sm mb-6">
+              Answer as many word questions as you can in <strong>60 seconds</strong>.
+              Questions advance automatically on correct answers.
+            </p>
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              {[
+                { icon: '⏱', label: '60 seconds' },
+                { icon: '✅', label: '+1 per correct' },
+                { icon: '🔥', label: 'Streak bonus' },
+              ].map((item) => (
+                <div key={item.label} className="bg-gray-50 rounded-xl py-3">
+                  <p className="text-xl mb-0.5">{item.icon}</p>
+                  <p className="text-xs text-gray-500">{item.label}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={startGame}
+              className="w-full py-3 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
+            >
+              Start Blitz →
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -170,49 +186,51 @@ export default function VocabularyBlitzPage() {
     const accuracy = questionsAnswered > 0 ? Math.round((score / questionsAnswered) * 100) : 0;
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-10 text-center">
-          <div className="text-5xl mb-4">
-            {score >= 20 ? '🏆' : score >= 10 ? '🌟' : '⚡'}
+        <div className="w-full max-w-md rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+          {/* Score band */}
+          <div className="px-6 py-6 text-center" style={{ background: GAME_COLOR.bg }}>
+            <div className="text-4xl mb-2">{score >= 20 ? '🏆' : score >= 10 ? '🌟' : '⚡'}</div>
+            <p className="text-5xl font-extrabold" style={{ color: BRAND.primary }}>{score}</p>
+            <p className="text-sm mt-1" style={{ color: GAME_COLOR.text }}>correct answers in 60 seconds</p>
           </div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>Blitz Complete!</h1>
-          <p className="text-5xl font-extrabold my-4" style={{ color: '#141c52' }}>{score}</p>
-          <p className="text-gray-400 text-sm mb-6">correct answers in 60 seconds</p>
-
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            {[
-              { label: 'Answered', value: questionsAnswered },
-              { label: 'Accuracy', value: `${accuracy}%` },
-              { label: 'Best Streak', value: `${bestStreak}🔥` },
-            ].map((item) => (
-              <div key={item.label} className="bg-gray-50 rounded-xl py-3">
-                <p className="font-bold text-lg" style={{ color: '#141c52' }}>{item.value}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{item.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={startGame}
-              className="flex-1 py-3 rounded-full text-sm font-bold border-2 transition-colors hover:bg-gray-50"
-              style={{ borderColor: '#141c52', color: '#141c52' }}
-            >
-              Play Again
-            </button>
+          {/* White body */}
+          <div className="bg-white px-6 py-6">
+            <h2 className="text-lg font-bold text-center mb-5" style={{ color: BRAND.primary }}>Blitz Complete!</h2>
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              {[
+                { label: 'Answered', value: questionsAnswered },
+                { label: 'Accuracy', value: `${accuracy}%` },
+                { label: 'Best Streak', value: `${bestStreak}🔥` },
+              ].map((item) => (
+                <div key={item.label} className="bg-gray-50 rounded-xl py-3 text-center">
+                  <p className="font-bold text-lg" style={{ color: BRAND.primary }}>{item.value}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{item.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={startGame}
+                className="flex-1 py-3 rounded-full text-sm font-bold border-2 transition-colors hover:bg-gray-50"
+                style={{ borderColor: BRAND.primary, color: BRAND.primary }}
+              >
+                Play Again
+              </button>
+              <Link
+                href="/practice"
+                className="flex-1 py-3 rounded-full text-sm font-bold text-center"
+                style={{ background: BRAND.gradient, color: BRAND.primary }}
+              >
+                More Games
+              </Link>
+            </div>
             <Link
-              href="/practice"
-              className="flex-1 py-3 rounded-full text-sm font-bold text-center"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              href="/practice/history?game=blitz"
+              className="block text-center text-sm text-gray-400 hover:underline mt-4"
             >
-              More Games
+              View session history →
             </Link>
           </div>
-          <Link
-            href="/practice/history?game=blitz"
-            className="block text-center text-sm text-gray-400 hover:underline mt-4"
-          >
-            View session history →
-          </Link>
         </div>
       </div>
     );
@@ -222,10 +240,13 @@ export default function VocabularyBlitzPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
+        {/* Thin game color top bar */}
+        <div className="h-1 rounded-full mb-6" style={{ backgroundColor: GAME_COLOR.text }} />
+
         {/* HUD */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-extrabold" style={{ color: '#141c52' }}>{score}</span>
+            <span className="text-2xl font-extrabold" style={{ color: BRAND.primary }}>{score}</span>
             <span className="text-sm text-gray-400">pts</span>
             {streak >= 3 && (
               <span className="text-sm font-bold text-orange-500">{streak}🔥</span>
@@ -265,7 +286,7 @@ export default function VocabularyBlitzPage() {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                 What does this word mean?
               </p>
-              <p className="text-3xl font-extrabold" style={{ color: '#141c52' }}>
+              <p className="text-3xl font-extrabold" style={{ color: BRAND.primary }}>
                 {question.word}
               </p>
             </>
@@ -290,7 +311,7 @@ export default function VocabularyBlitzPage() {
                 key={i}
                 onClick={() => handleAnswer(opt)}
                 disabled={answerState !== 'idle'}
-                className="py-4 px-3 rounded-xl border-2 text-sm font-medium text-left transition-all disabled:cursor-not-allowed hover:border-indigo-300 hover:bg-indigo-50"
+                className="py-4 px-3 rounded-xl border-2 text-sm font-medium text-left transition-all disabled:cursor-not-allowed hover:border-gray-400 hover:bg-gray-50"
                 style={{
                   borderColor: '#e5e7eb',
                   color: '#374151',

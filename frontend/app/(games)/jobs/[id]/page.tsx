@@ -7,6 +7,16 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const EMPLOYMENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  full_time: { bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe' },
+  part_time: { bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' },
+  contract:  { bg: '#fef3c7', text: '#78350f', border: '#fde68a' },
+  freelance: { bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe' },
+};
+const DEFAULT_JOB_COLOR = { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' };
+
 interface JobDetail {
   id: number;
   title: string;
@@ -97,9 +107,11 @@ export default function JobDetailPage() {
     );
   }
 
-  const qualifies = latestScore !== null && job.min_speechef_score !== null
+  const qualifies = latestScore != null && job.min_speechef_score !== null
     ? latestScore >= job.min_speechef_score
     : null;
+
+  const ec = EMPLOYMENT_COLORS[job.employment_type] ?? DEFAULT_JOB_COLOR;
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -108,159 +120,172 @@ export default function JobDetailPage() {
           ← Back to Jobs
         </Link>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-          {/* Header */}
-          <div className="flex items-start gap-4 mb-6">
-            <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-white text-xl flex-shrink-0"
-              style={{ backgroundColor: '#141c52' }}
-            >
-              {job.company?.[0] ?? '?'}
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold" style={{ color: '#141c52' }}>{job.title}</h1>
-              <p className="text-gray-500 mt-0.5">{job.company}</p>
-              <div className="flex flex-wrap gap-3 mt-3 text-sm text-gray-400">
-                <span>{job.remote ? '🌍 Remote' : `📍 ${job.location}`}</span>
-                {job.employment_type && <span>· {EMPLOYMENT_LABELS[job.employment_type] ?? job.employment_type}</span>}
-                {job.job_rate && <span>· ${job.job_rate.toLocaleString()}/yr</span>}
-              </div>
-            </div>
-            {job.is_featured && (
-              <span
-                className="text-xs px-3 py-1 rounded-full font-semibold flex-shrink-0"
-                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+        {/* Main card — colored header band + white body */}
+        <div className="rounded-2xl border overflow-hidden mb-6" style={{ borderColor: ec.border }}>
+          {/* Colored header band */}
+          <div className="relative overflow-hidden px-8 py-6" style={{ background: ec.bg }}>
+            <div className="absolute top-[-24px] right-[-24px] w-28 h-28 rounded-full"
+              style={{ background: ec.text, opacity: 0.1 }} />
+            <div className="relative flex items-start gap-4">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-white text-xl flex-shrink-0"
+                style={{ backgroundColor: BRAND.primary }}
               >
-                Featured
-              </span>
-            )}
-          </div>
-
-          {/* Score requirement */}
-          {job.min_speechef_score && (
-            <div
-              className="rounded-xl p-4 mb-6"
-              style={{
-                backgroundColor: qualifies === true ? '#f0fdf4' : qualifies === false ? '#fffbeb' : '#f9fafb',
-                borderWidth: 1,
-                borderStyle: 'solid',
-                borderColor: qualifies === true ? '#86efac' : qualifies === false ? '#fcd34d' : '#e5e7eb',
-              }}
-            >
-              <p className="text-sm font-semibold mb-1" style={{ color: '#141c52' }}>
-                Communication Score Required: {job.min_speechef_score}/100
-              </p>
-              {isLoggedIn && latestScore !== null ? (
-                <p className="text-sm">
-                  {qualifies
-                    ? `✅ Your score (${latestScore}) meets the requirement.`
-                    : `⚠️ Your score (${latestScore}) is ${job.min_speechef_score - latestScore} points below the requirement.`}
-                  {!qualifies && (
-                    <> <Link href="/practice" className="font-semibold underline ml-1">Practice to improve →</Link></>
-                  )}
-                </p>
-              ) : !isLoggedIn ? (
-                <p className="text-sm text-gray-500">
-                  <Link href="/login" className="font-semibold underline">Log in</Link> to check if your score qualifies.
-                </p>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  No score yet. <Link href="/analyze" className="font-semibold underline">Analyze a speech</Link> to get your score.
-                </p>
+                {job.company?.[0] ?? '?'}
+              </div>
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>{job.title}</h1>
+                <p className="mt-0.5 font-medium" style={{ color: ec.text }}>{job.company}</p>
+                <div className="flex flex-wrap gap-3 mt-3 text-sm text-gray-500">
+                  <span>{job.remote ? '🌍 Remote' : `📍 ${job.location}`}</span>
+                  {job.employment_type && <span>· {EMPLOYMENT_LABELS[job.employment_type] ?? job.employment_type}</span>}
+                  {job.job_rate && <span>· ${job.job_rate.toLocaleString()}/yr</span>}
+                </div>
+              </div>
+              {job.is_featured && (
+                <span
+                  className="text-xs px-3 py-1 rounded-full font-semibold flex-shrink-0"
+                  style={{ background: BRAND.gradient, color: BRAND.primary }}
+                >
+                  Featured
+                </span>
               )}
             </div>
-          )}
-
-          {/* Description */}
-          <div className="mb-8">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-400 mb-3">Job Description</h2>
-            <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{job.description}</div>
           </div>
 
-          {/* Required languages */}
-          {job.required_languages?.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-gray-400 mb-2">Required Languages</h2>
-              <div className="flex flex-wrap gap-2">
-                {job.required_languages.map((lang) => (
-                  <span key={lang} className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">{lang}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Apply section */}
-          <div className="border-t border-gray-100 pt-6">
-            {applied ? (
-              <div className="text-center py-6">
-                <p className="text-4xl mb-3">🎉</p>
-                <p className="font-bold text-lg" style={{ color: '#141c52' }}>Application submitted!</p>
-                <p className="text-sm text-gray-500 mt-1">The employer will review your Speechef profile and score.</p>
-                <Link href="/jobs" className="inline-block mt-4 text-sm font-semibold underline" style={{ color: '#141c52' }}>
-                  Browse more jobs
-                </Link>
-              </div>
-            ) : job.application_url ? (
-              <div>
-                <a
-                  href={job.application_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center py-3 rounded-xl font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-                >
-                  Apply on Company Site →
-                </a>
-              </div>
-            ) : isLoggedIn ? (
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium text-gray-600">Cover Note (optional)</label>
-                    <span className={`text-xs ${coverNote.length > 450 ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>
-                      {coverNote.length} / 500
-                    </span>
-                  </div>
-                  <textarea
-                    value={coverNote}
-                    onChange={(e) => setCoverNote(e.target.value)}
-                    rows={3}
-                    maxLength={500}
-                    placeholder="Briefly introduce yourself and why you're a great fit..."
-                    className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:ring-2"
-                    style={{ '--tw-ring-color': '#FADB43' } as React.CSSProperties}
-                  />
-                </div>
-                {latestScore !== null && (
-                  <p className="text-xs text-gray-400">
-                    Your current Speechef score ({latestScore}/100) will be attached to your application.
+          {/* White body */}
+          <div className="bg-white px-8 py-6 space-y-6">
+            {/* Score requirement */}
+            {job.min_speechef_score && (
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  backgroundColor: qualifies === true ? '#f0fdf4' : qualifies === false ? '#fffbeb' : '#f9fafb',
+                  borderWidth: 1,
+                  borderStyle: 'solid',
+                  borderColor: qualifies === true ? '#86efac' : qualifies === false ? '#fcd34d' : '#e5e7eb',
+                }}
+              >
+                <p className="text-sm font-semibold mb-1" style={{ color: BRAND.primary }}>
+                  Communication Score Required: {job.min_speechef_score}/100
+                </p>
+                {isLoggedIn && latestScore != null ? (
+                  <p className="text-sm">
+                    {qualifies
+                      ? `✅ Your score (${latestScore}) meets the requirement.`
+                      : `⚠️ Your score (${latestScore}) is ${job.min_speechef_score - latestScore} points below the requirement.`}
+                    {!qualifies && (
+                      <> <Link href="/practice" className="font-semibold underline ml-1">Practice to improve →</Link></>
+                    )}
+                  </p>
+                ) : !isLoggedIn ? (
+                  <p className="text-sm text-gray-500">
+                    <Link href="/login" className="font-semibold underline">Log in</Link> to check if your score qualifies.
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No score yet. <Link href="/analyze" className="font-semibold underline">Analyze a speech</Link> to get your score.
                   </p>
                 )}
-                <button
-                  onClick={() => applyMutation.mutate()}
-                  disabled={applyMutation.isPending}
-                  className="w-full py-3 rounded-xl font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-                >
-                  {applyMutation.isPending ? 'Submitting…' : 'Apply with Speechef Profile →'}
-                </button>
-                {applyMutation.isError && (
-                  <p className="text-sm text-red-500 text-center">
-                    {(applyMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'Something went wrong. Try again.'}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="text-center">
-                <Link
-                  href="/login"
-                  className="inline-block px-8 py-3 rounded-xl font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-                >
-                  Log in to Apply →
-                </Link>
               </div>
             )}
+
+            {/* Description */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: ec.bg, color: ec.text }}>📄</span>
+                <h2 className="font-bold text-sm uppercase tracking-wide" style={{ color: BRAND.primary }}>Job Description</h2>
+              </div>
+              <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{job.description}</div>
+            </div>
+
+            {/* Required languages */}
+            {job.required_languages?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#d1fae5', color: '#065f46' }}>🌐</span>
+                  <h2 className="font-bold text-sm uppercase tracking-wide" style={{ color: BRAND.primary }}>Required Languages</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {job.required_languages.map((lang) => (
+                    <span key={lang} className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">{lang}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Apply section */}
+            <div className="border-t border-gray-100 pt-4">
+              {applied ? (
+                <div className="text-center py-6">
+                  <p className="text-4xl mb-3">🎉</p>
+                  <p className="font-bold text-lg" style={{ color: BRAND.primary }}>Application submitted!</p>
+                  <p className="text-sm text-gray-500 mt-1">The employer will review your Speechef profile and score.</p>
+                  <Link href="/jobs" className="inline-block mt-4 text-sm font-semibold underline" style={{ color: BRAND.primary }}>
+                    Browse more jobs
+                  </Link>
+                </div>
+              ) : job.application_url ? (
+                <div>
+                  <a
+                    href={job.application_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full text-center py-3 rounded-xl font-semibold transition-opacity hover:opacity-90"
+                    style={{ background: BRAND.gradient, color: BRAND.primary }}
+                  >
+                    Apply on Company Site →
+                  </a>
+                </div>
+              ) : isLoggedIn ? (
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-sm font-medium text-gray-600">Cover Note (optional)</label>
+                      <span className={`text-xs ${coverNote.length > 450 ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>
+                        {coverNote.length} / 500
+                      </span>
+                    </div>
+                    <textarea
+                      value={coverNote}
+                      onChange={(e) => setCoverNote(e.target.value)}
+                      rows={3}
+                      maxLength={500}
+                      placeholder="Briefly introduce yourself and why you're a great fit..."
+                      className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:border-gray-400 transition-colors"
+                    />
+                  </div>
+                  {latestScore !== null && (
+                    <p className="text-xs text-gray-400">
+                      Your current Speechef score ({latestScore}/100) will be attached to your application.
+                    </p>
+                  )}
+                  <button
+                    onClick={() => applyMutation.mutate()}
+                    disabled={applyMutation.isPending}
+                    className="w-full py-3 rounded-xl font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                    style={{ background: BRAND.gradient, color: BRAND.primary }}
+                  >
+                    {applyMutation.isPending ? 'Submitting…' : 'Apply with Speechef Profile →'}
+                  </button>
+                  {applyMutation.isError && (
+                    <p className="text-sm text-red-500 text-center">
+                      {(applyMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'Something went wrong. Try again.'}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <Link
+                    href="/login"
+                    className="inline-block px-8 py-3 rounded-xl font-semibold transition-opacity hover:opacity-90"
+                    style={{ background: BRAND.gradient, color: BRAND.primary }}
+                  >
+                    Log in to Apply →
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -270,17 +295,20 @@ export default function JobDetailPage() {
           if (more.length === 0) return null;
           return (
             <div className="mt-6">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-gray-400 mb-3">More Jobs</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#fef3c7', color: '#78350f' }}>💼</span>
+                <h2 className="font-bold text-sm uppercase tracking-wide" style={{ color: BRAND.primary }}>More Jobs</h2>
+              </div>
               <div className="space-y-3">
                 {more.map((j) => (
                   <Link key={j.id} href={`/jobs/${j.id}`}
                     className="flex items-center gap-3 bg-white rounded-xl border border-gray-100 px-4 py-3 hover:shadow-sm transition-shadow">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm shrink-0"
-                      style={{ backgroundColor: '#141c52' }}>
+                      style={{ backgroundColor: BRAND.primary }}>
                       {j.company?.[0] ?? '?'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: '#141c52' }}>{j.title}</p>
+                      <p className="text-sm font-semibold truncate" style={{ color: BRAND.primary }}>{j.title}</p>
                       <p className="text-xs text-gray-400 truncate">
                         {j.company} · {j.remote ? 'Remote' : j.location}
                         {j.employment_type ? ` · ${EMPLOYMENT_LABELS[j.employment_type] ?? j.employment_type}` : ''}

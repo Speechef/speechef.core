@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ interface AnalysisSession {
   id: number;
   file_type: 'audio' | 'video';
   status: 'pending' | 'processing' | 'done' | 'failed';
+  source: 'upload' | 'mentor_session';
   created_at: string;
   completed_at: string | null;
   error: string | null;
@@ -140,13 +142,29 @@ const STATUS_TABS: { key: string; label: string }[] = [
   { key: 'failed', label: 'Failed' },
 ];
 
-export default function AnalysisHistoryPage() {
+const SOURCE_TABS: { key: string; label: string }[] = [
+  { key: '', label: 'All' },
+  { key: 'upload', label: 'Uploads' },
+  { key: 'mentor_session', label: 'Mentor Sessions' },
+];
+
+function AnalysisHistoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const filterStatus = searchParams.get('status') ?? '';
+  const filterSource = searchParams.get('source') ?? '';
+
   function setFilterStatus(val: string) {
-    const url = val ? `/analyze/history?status=${val}` : '/analyze/history';
-    router.push(url);
+    const p = new URLSearchParams();
+    if (val) p.set('status', val);
+    if (filterSource) p.set('source', filterSource);
+    router.push(`/analyze/history${p.size ? `?${p}` : ''}`);
+  }
+  function setFilterSource(val: string) {
+    const p = new URLSearchParams();
+    if (filterStatus) p.set('status', filterStatus);
+    if (val) p.set('source', val);
+    router.push(`/analyze/history${p.size ? `?${p}` : ''}`);
   }
 
   const { data: sessions = [], isLoading } = useQuery<AnalysisSession[]>({
@@ -154,9 +172,13 @@ export default function AnalysisHistoryPage() {
     queryFn: () => api.get('/analysis/sessions/').then((r) => r.data),
   });
 
-  const displayedSessions = filterStatus
-    ? sessions.filter((s) => s.status === filterStatus)
+  const sourceFiltered = filterSource
+    ? sessions.filter((s) => s.source === filterSource)
     : sessions;
+
+  const displayedSessions = filterStatus
+    ? sourceFiltered.filter((s) => s.status === filterStatus)
+    : sourceFiltered;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -178,11 +200,38 @@ export default function AnalysisHistoryPage() {
         {/* Score trend chart */}
         {!isLoading && <ScoreTrendCard sessions={sessions} />}
 
+        {/* Source filter chips */}
+        {!isLoading && sessions.some((s) => s.source === 'mentor_session') && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {SOURCE_TABS.map((tab) => {
+              const count = tab.key ? sessions.filter((s) => s.source === tab.key).length : sessions.length;
+              const isActive = filterSource === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilterSource(tab.key)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+                  style={
+                    isActive
+                      ? { backgroundColor: '#1e2d78', color: '#fff' }
+                      : { backgroundColor: '#ede9fe', color: '#4c1d95' }
+                  }
+                >
+                  {tab.label}
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-white/20' : 'bg-white text-purple-500'}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Status filter tabs */}
         {!isLoading && sessions.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {STATUS_TABS.map((tab) => {
-              const count = tab.key ? sessions.filter((s) => s.status === tab.key).length : sessions.length;
+              const count = tab.key ? sourceFiltered.filter((s) => s.status === tab.key).length : sourceFiltered.length;
               const isActive = filterStatus === tab.key;
               return (
                 <button
@@ -245,8 +294,14 @@ export default function AnalysisHistoryPage() {
                     {s.file_type === 'video' ? '🎬' : '🎙️'}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: '#141c52' }}>
+                    <p className="text-sm font-semibold flex items-center gap-2" style={{ color: '#141c52' }}>
                       {s.file_type === 'video' ? 'Video' : 'Audio'} Analysis
+                      {s.source === 'mentor_session' && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: '#ede9fe', color: '#4c1d95' }}>
+                          Mentor Session
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-gray-400">
                       {new Date(s.created_at).toLocaleDateString('en-US', {
@@ -290,5 +345,13 @@ export default function AnalysisHistoryPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AnalysisHistoryPage() {
+  return (
+    <Suspense>
+      <AnalysisHistoryContent />
+    </Suspense>
   );
 }

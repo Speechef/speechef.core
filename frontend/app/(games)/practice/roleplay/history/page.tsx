@@ -1,9 +1,17 @@
 'use client';
+import { Suspense } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
+
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const SCORE_COLOR = (s: number) =>
+  s >= 80 ? { color: '#166534', bg: '#dcfce7' }
+  : s >= 60 ? { color: '#92400e', bg: '#fef3c7' }
+  : { color: '#991b1b', bg: '#fee2e2' };
 
 interface RolePlaySession {
   id: number;
@@ -31,10 +39,9 @@ const MODE_META: Record<string, { label: string; emoji: string }> = {
 };
 
 function ScorePill({ score }: { score: number }) {
-  const color = score >= 80 ? '#166534' : score >= 60 ? '#92400e' : '#991b1b';
-  const bg    = score >= 80 ? '#dcfce7' : score >= 60 ? '#fef3c7' : '#fee2e2';
+  const sc = SCORE_COLOR(score);
   return (
-    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ color, backgroundColor: bg }}>
+    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ color: sc.color, backgroundColor: sc.bg }}>
       {score} / 100
     </span>
   );
@@ -43,7 +50,7 @@ function ScorePill({ score }: { score: number }) {
 const VALID_SORTS = ['newest', 'score_desc', 'score_asc'] as const;
 type SortBy = typeof VALID_SORTS[number];
 
-export default function RolePlayHistoryPage() {
+function RolePlayHistoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeMode = searchParams.get('mode') ?? 'all';
@@ -82,23 +89,32 @@ export default function RolePlayHistoryPage() {
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <Link href="/practice/roleplay" className="text-sm text-gray-400 hover:text-gray-600 mb-1 block">
               ← Role Play
             </Link>
-            <h1 className="text-3xl font-bold" style={{ color: '#141c52' }}>Session History</h1>
+            <h1 className="text-3xl font-bold" style={{ color: BRAND.primary }}>Session History</h1>
             <p className="text-gray-500 text-sm mt-1">All your past role play sessions.</p>
           </div>
-          {avgScore !== null && (
-            <div className="text-right">
-              <p className="text-xs text-gray-400 mb-0.5">Avg score</p>
-              <p className="text-3xl font-extrabold" style={{ color: '#141c52' }}>
-                {avgScore}<span className="text-base font-normal text-gray-400">/100</span>
-              </p>
-            </div>
-          )}
         </div>
+
+        {/* Stat pills */}
+        {!isLoading && filtered.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600">
+              🗣️ {filtered.length} session{filtered.length !== 1 ? 's' : ''}
+            </span>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600">
+              ✅ {finished.length} finished
+            </span>
+            {avgScore !== null && (
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600">
+                🏆 {avgScore}/100 avg
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Mode filter tabs + sort */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
@@ -106,10 +122,10 @@ export default function RolePlayHistoryPage() {
             <button
               key={m.id}
               onClick={() => pushParams(m.id, sortBy)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border"
               style={activeMode === m.id
-                ? { backgroundColor: '#141c52', color: '#fff' }
-                : { backgroundColor: '#e5e7eb', color: '#374151' }}
+                ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
+                : { backgroundColor: 'white', color: '#6b7280', borderColor: '#e5e7eb' }}
             >
               <span>{m.emoji}</span>
               {m.label}
@@ -126,17 +142,6 @@ export default function RolePlayHistoryPage() {
           </select>
         </div>
 
-        {/* Summary bar */}
-        {!isLoading && filtered.length > 0 && (
-          <div className="flex gap-6 mb-5 text-sm text-gray-500">
-            <span><strong style={{ color: '#141c52' }}>{filtered.length}</strong> session{filtered.length !== 1 ? 's' : ''}</span>
-            <span><strong style={{ color: '#141c52' }}>{finished.length}</strong> finished</span>
-            {avgScore !== null && (
-              <span><strong style={{ color: '#141c52' }}>{avgScore}/100</strong> avg</span>
-            )}
-          </div>
-        )}
-
         {/* List */}
         {isLoading ? (
           <div className="space-y-3">
@@ -147,7 +152,7 @@ export default function RolePlayHistoryPage() {
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
             <p className="text-4xl mb-3">🗣️</p>
-            <p className="font-semibold text-lg mb-1" style={{ color: '#141c52' }}>
+            <p className="font-semibold text-lg mb-1" style={{ color: BRAND.primary }}>
               {activeMode === 'all' ? 'No sessions yet' : `No ${MODE_META[activeMode]?.label ?? activeMode} sessions yet`}
             </p>
             <p className="text-gray-400 text-sm mb-5">
@@ -156,7 +161,7 @@ export default function RolePlayHistoryPage() {
             <Link
               href={activeMode === 'all' ? '/practice/roleplay' : `/practice/roleplay/${activeMode}`}
               className="inline-block text-sm font-bold px-6 py-2.5 rounded-full transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               Start a Session →
             </Link>
@@ -174,7 +179,7 @@ export default function RolePlayHistoryPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{meta?.emoji ?? '🗣️'}</span>
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: '#141c52' }}>
+                      <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>
                         {meta?.label ?? s.mode}
                         {s.topic && (
                           <span className="font-normal text-gray-500"> — {s.topic}</span>
@@ -202,5 +207,13 @@ export default function RolePlayHistoryPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function RolePlayHistoryPage() {
+  return (
+    <Suspense>
+      <RolePlayHistoryContent />
+    </Suspense>
   );
 }

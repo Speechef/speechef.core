@@ -5,6 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const SECTION_TYPE_META: Record<string, { bg: string; text: string; emoji: string }> = {
+  speaking:  { bg: '#ede9fe', text: '#6d28d9', emoji: '🎙️' },
+  writing:   { bg: '#dbeafe', text: '#1e40af', emoji: '✍️' },
+  listening: { bg: '#d1fae5', text: '#065f46', emoji: '🎧' },
+  reading:   { bg: '#fef9c3', text: '#92400e', emoji: '📖' },
+  general:   { bg: '#f3f4f6', text: '#374151', emoji: '📝' },
+};
+
 interface Question {
   id: number;
   question_type: string;
@@ -120,8 +130,8 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob) => void }) {
       {state === 'idle' && (
         <button onClick={start}
           className="w-16 h-16 rounded-full flex items-center justify-center transition-transform hover:scale-105"
-          style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }}>
-          <svg className="w-7 h-7" style={{ color: '#141c52' }} fill="currentColor" viewBox="0 0 24 24">
+          style={{ background: BRAND.gradient }}>
+          <svg className="w-7 h-7" style={{ color: BRAND.primary }} fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z" />
           </svg>
         </button>
@@ -194,7 +204,7 @@ function QuestionView({
         <p className="text-gray-800 leading-relaxed whitespace-pre-line">{question.prompt}</p>
       </div>
 
-      {/* Band descriptors (collapsible hint) */}
+      {/* Band descriptors */}
       {question.band_descriptors && Object.keys(question.band_descriptors).length > 0 && (
         <BandDescriptorHint descriptors={question.band_descriptors} />
       )}
@@ -206,11 +216,11 @@ function QuestionView({
             <button key={i} onClick={() => setAnswer(opt)}
               className="w-full text-left px-4 py-3 rounded-xl border-2 text-sm transition-all"
               style={{
-                borderColor: answer === opt ? '#141c52' : '#e5e7eb',
+                borderColor: answer === opt ? BRAND.primary : '#e5e7eb',
                 backgroundColor: answer === opt ? '#f0f2ff' : 'white',
                 color: '#374151',
               }}>
-              <span className="font-medium mr-2" style={{ color: '#141c52' }}>
+              <span className="font-medium mr-2" style={{ color: BRAND.primary }}>
                 {String.fromCharCode(65 + i)}.
               </span>
               {opt}
@@ -229,7 +239,7 @@ function QuestionView({
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Type your essay response here…"
           rows={8}
-          className="w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-indigo-400 resize-none"
+          className="w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-gray-400 resize-none"
         />
       )}
 
@@ -238,18 +248,17 @@ function QuestionView({
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Type your answer…"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-400"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gray-400"
         />
       )}
 
-      {/* read_and_respond / listen_and_answer fallback */}
       {(question.question_type === 'read_and_respond' || question.question_type === 'listen_and_answer') && (
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Type your response…"
           rows={5}
-          className="w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-indigo-400 resize-none"
+          className="w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-gray-400 resize-none"
         />
       )}
 
@@ -258,13 +267,13 @@ function QuestionView({
         {!saved ? (
           <button onClick={save} disabled={!answer}
             className="flex-1 py-3 rounded-xl text-sm font-bold disabled:opacity-40 transition-opacity"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+            style={{ background: BRAND.gradient, color: BRAND.primary }}>
             Save Answer
           </button>
         ) : (
           <button onClick={onNext}
             className="flex-1 py-3 rounded-xl text-sm font-bold"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+            style={{ background: BRAND.gradient, color: BRAND.primary }}>
             {index === total - 1 ? 'Finish Section →' : 'Next Question →'}
           </button>
         )}
@@ -276,9 +285,10 @@ function QuestionView({
 function BandDescriptorHint({ descriptors }: { descriptors: Record<string, string> }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-indigo-100 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
       <button onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+        className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold bg-gray-50 hover:bg-gray-100 transition-colors"
+        style={{ color: BRAND.primary }}>
         <span>Scoring Criteria</span>
         <span>{open ? '▲' : '▼'}</span>
       </button>
@@ -298,62 +308,69 @@ function BandDescriptorHint({ descriptors }: { descriptors: Record<string, strin
 
 // ──────────────────────────────────────────────── Results screen
 function ResultsScreen({
-  finalData, questions, onRetry, onBack,
+  finalData, questions, sectionType, onRetry, onBack,
 }: {
-  finalData: FinalData; questions: Question[]; onRetry: () => void; onBack: () => void;
+  finalData: FinalData; questions: Question[]; sectionType: string; onRetry: () => void; onBack: () => void;
 }) {
   const [showReview, setShowReview] = useState(false);
   const score = finalData.predicted_score;
   const review = finalData.review ?? [];
   const reviewable = review.filter((r) => r.correct_answer !== null);
+  const stm = SECTION_TYPE_META[sectionType] ?? SECTION_TYPE_META.general;
+
+  const scoreColor = score?.overall !== undefined
+    ? (score.overall >= 7 ? { color: '#166534', bg: '#dcfce7' }
+      : score.overall >= 5 ? { color: '#92400e', bg: '#fef3c7' }
+      : { color: '#991b1b', bg: '#fee2e2' })
+    : { color: BRAND.primary, bg: stm.bg };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
       <div className="max-w-lg w-full space-y-4">
-        {/* Score card */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }}>
-            <svg className="w-8 h-8" style={{ color: '#141c52' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+        {/* Score card with colored band */}
+        <div className="rounded-2xl border overflow-hidden" style={{ borderColor: scoreColor.bg }}>
+          <div className="px-8 py-6 text-center" style={{ background: scoreColor.bg }}>
+            <h2 className="text-2xl font-bold mb-1" style={{ color: BRAND.primary }}>Section Complete!</h2>
+
+            {score?.band_estimate && (
+              <div className="my-4">
+                <p className="text-4xl font-black" style={{ color: BRAND.primary }}>{score.band_estimate}</p>
+                <p className="text-sm mt-1" style={{ color: scoreColor.color }}>Estimated score</p>
+              </div>
+            )}
+            {score && !score.band_estimate && (
+              <p className="text-4xl font-black my-4" style={{ color: BRAND.primary }}>
+                {score.overall ?? '—'}<span className="text-lg font-normal text-gray-400">/10</span>
+              </p>
+            )}
           </div>
-          <h2 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>Section Complete!</h2>
-
-          {score?.band_estimate && (
-            <div className="my-4">
-              <p className="text-4xl font-black" style={{ color: '#141c52' }}>{score.band_estimate}</p>
-              <p className="text-sm text-gray-400 mt-1">Estimated score</p>
-            </div>
-          )}
-          {score && !score.band_estimate && (
-            <p className="text-4xl font-black my-4" style={{ color: '#141c52' }}>
-              {score.overall ?? '—'}<span className="text-lg font-normal text-gray-400">/10</span>
-            </p>
-          )}
-
           {score && (
-            <div className="flex justify-center gap-6 text-sm text-gray-500 mt-2">
-              <span>Answered: {score.answered ?? questions.length}</span>
-              {score.scored !== undefined && score.scored > 0 && (
-                <span>Auto-scored: {score.scored}</span>
-              )}
-              {score.overall !== undefined && (
-                <span>Avg: {score.overall}/10</span>
-              )}
+            <div className="bg-white px-6 py-3">
+              <div className="flex justify-center gap-6 text-sm text-gray-500">
+                <span>Answered: {score.answered ?? questions.length}</span>
+                {score.scored !== undefined && score.scored > 0 && (
+                  <span>Auto-scored: {score.scored}</span>
+                )}
+                {score.overall !== undefined && (
+                  <span>Avg: {score.overall}/10</span>
+                )}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Review accordion — MC and fill_blank only */}
+        {/* Review accordion */}
         {reviewable.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <button
               onClick={() => setShowReview((v) => !v)}
               className="w-full flex items-center justify-between px-6 py-4 text-sm font-semibold"
-              style={{ color: '#141c52' }}
+              style={{ color: BRAND.primary }}
             >
-              <span>Review Answers ({reviewable.length} questions)</span>
+              <span className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-lg text-xs" style={{ background: stm.bg, color: stm.text }}>📋</span>
+                Review Answers ({reviewable.length} questions)
+              </span>
               <span>{showReview ? '▲' : '▼'}</span>
             </button>
             {showReview && (
@@ -392,10 +409,10 @@ function ResultsScreen({
           </div>
         )}
 
-        {/* Tips card for spoken/written responses */}
+        {/* AI scoring notice */}
         {review.some((r) => r.question_type === 'free_speech' || r.question_type === 'essay_prompt') && (
-          <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-5">
-            <p className="text-sm font-semibold mb-2" style={{ color: '#141c52' }}>AI Scoring</p>
+          <div className="rounded-2xl border p-5" style={{ background: stm.bg, borderColor: stm.bg }}>
+            <p className="text-sm font-semibold mb-2" style={{ color: BRAND.primary }}>AI Scoring</p>
             <p className="text-xs text-gray-600">Your spoken and written responses are queued for AI analysis. Full band scores and detailed feedback will appear in your profile once processing is complete (usually within a few minutes).</p>
           </div>
         )}
@@ -404,7 +421,7 @@ function ResultsScreen({
         <div className="flex flex-col gap-3">
           <button onClick={onBack}
             className="py-3 rounded-xl text-sm font-bold"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+            style={{ background: BRAND.gradient, color: BRAND.primary }}>
             Back to Test Prep Hub →
           </button>
           <button onClick={onRetry}
@@ -483,6 +500,12 @@ export default function ExamSessionPage() {
     setFinalData(null);
   };
 
+  // Derive section type for styling
+  const sectionType = sectionInfo
+    ? (['speaking', 'writing', 'listening', 'reading'].find((t) => sectionInfo.name.toLowerCase().includes(t)) ?? 'general')
+    : 'general';
+  const stm = SECTION_TYPE_META[sectionType] ?? SECTION_TYPE_META.general;
+
   // ── Loading
   if (isLoading) {
     return (
@@ -498,6 +521,7 @@ export default function ExamSessionPage() {
       <ResultsScreen
         finalData={finalData}
         questions={questions}
+        sectionType={sectionType}
         onRetry={handleRetry}
         onBack={() => router.push('/practice/test-prep')}
       />
@@ -506,54 +530,55 @@ export default function ExamSessionPage() {
 
   // ── Not started — intro screen
   if (!started) {
-    const sectionType = sectionInfo
-      ? (['speaking', 'writing', 'listening', 'reading'].find((t) => sectionInfo.name.toLowerCase().includes(t)) ?? 'general')
-      : 'general';
     const icon = SECTION_ICONS[sectionType] ?? '📋';
 
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 p-8">
-          <div className="text-center mb-6">
+        <div className="max-w-md w-full rounded-2xl border overflow-hidden" style={{ borderColor: stm.bg }}>
+          {/* Colored intro band */}
+          <div className="px-8 py-6 text-center" style={{ background: stm.bg }}>
             <span className="text-5xl block mb-3">{icon}</span>
-            <h2 className="text-xl font-bold mb-1" style={{ color: '#141c52' }}>
+            <h2 className="text-xl font-bold mb-1" style={{ color: BRAND.primary }}>
               {sectionInfo?.name ?? section.replace(/-/g, ' ')}
             </h2>
-            <p className="text-sm text-gray-500">{exam.toUpperCase().replace(/-/g, ' ')}</p>
+            <p className="text-sm" style={{ color: stm.text }}>{exam.toUpperCase().replace(/-/g, ' ')}</p>
           </div>
 
-          {/* Stats row */}
-          <div className="flex justify-center gap-6 mb-6 text-center">
-            <div>
-              <p className="text-xl font-bold" style={{ color: '#141c52' }}>{questions.length}</p>
-              <p className="text-xs text-gray-400">Questions</p>
-            </div>
-            {sectionInfo && sectionInfo.duration_seconds > 0 && (
+          {/* White body */}
+          <div className="bg-white px-8 py-6">
+            {/* Stats row */}
+            <div className="flex justify-center gap-6 mb-6 text-center">
               <div>
-                <p className="text-xl font-bold" style={{ color: '#141c52' }}>
-                  {Math.round(sectionInfo.duration_seconds / 60)} min
-                </p>
-                <p className="text-xs text-gray-400">Time Limit</p>
+                <p className="text-xl font-bold" style={{ color: BRAND.primary }}>{questions.length}</p>
+                <p className="text-xs text-gray-400">Questions</p>
+              </div>
+              {sectionInfo && sectionInfo.duration_seconds > 0 && (
+                <div>
+                  <p className="text-xl font-bold" style={{ color: BRAND.primary }}>
+                    {Math.round(sectionInfo.duration_seconds / 60)} min
+                  </p>
+                  <p className="text-xs text-gray-400">Time Limit</p>
+                </div>
+              )}
+            </div>
+
+            {/* Instructions */}
+            {sectionInfo?.instructions && (
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Instructions</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{sectionInfo.instructions}</p>
               </div>
             )}
+
+            <button
+              onClick={handleStart}
+              disabled={startMutation.isPending || questions.length === 0}
+              className="w-full py-3 rounded-xl text-sm font-bold disabled:opacity-50"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
+            >
+              {startMutation.isPending ? 'Starting…' : questions.length === 0 ? 'No questions available' : 'Start Session →'}
+            </button>
           </div>
-
-          {/* Instructions */}
-          {sectionInfo?.instructions && (
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Instructions</p>
-              <p className="text-sm text-gray-600 leading-relaxed">{sectionInfo.instructions}</p>
-            </div>
-          )}
-
-          <button
-            onClick={handleStart}
-            disabled={startMutation.isPending || questions.length === 0}
-            className="w-full py-3 rounded-xl text-sm font-bold disabled:opacity-50"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-          >
-            {startMutation.isPending ? 'Starting…' : questions.length === 0 ? 'No questions available' : 'Start Session →'}
-          </button>
         </div>
       </div>
     );
@@ -566,11 +591,10 @@ export default function ExamSessionPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Minimal exam header */}
       <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <p className="text-sm font-bold" style={{ color: '#141c52' }}>
+        <p className="text-sm font-bold" style={{ color: BRAND.primary }}>
           {exam.toUpperCase().replace(/-/g, ' ')} · {sectionInfo?.name ?? section.replace(/-/g, ' ')}
         </p>
         <div className="flex items-center gap-4">
-          {/* Section-level countdown timer */}
           {sectionInfo && sectionInfo.duration_seconds > 0 && (
             <ExamTimer
               compact
@@ -578,14 +602,13 @@ export default function ExamSessionPage() {
               onExpire={handleNext}
             />
           )}
-          {/* Progress bar */}
           <div className="flex items-center gap-2">
             <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${(currentQ / questions.length) * 100}%`,
-                  background: 'linear-gradient(to right,#FADB43,#fe9940)',
+                  background: BRAND.gradient,
                 }}
               />
             </div>

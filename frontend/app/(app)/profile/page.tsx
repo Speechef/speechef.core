@@ -31,7 +31,7 @@ interface Review {
 
 interface MentorSession {
   id: number;
-  mentor_name: string;
+  mentor: { id: number; name: string };
   scheduled_at: string;
   status: string;
   duration_minutes: number;
@@ -121,22 +121,10 @@ export default function ProfilePage() {
 
   const { data: sessions = [] } = useQuery<AnalysisSession[]>({
     queryKey: ['profile-sessions'],
-    queryFn: async () => {
-      const { data } = await api.get('/analysis/sessions/');
-      // fetch results for done sessions
-      const done = data.filter((s: AnalysisSession) => s.status === 'done').slice(0, 8);
-      const withResults = await Promise.all(
-        done.map(async (s: AnalysisSession) => {
-          try {
-            const r = await api.get(`/analysis/${s.id}/results/`);
-            return { ...s, result: r.data };
-          } catch {
-            return s;
-          }
-        })
-      );
-      return withResults;
-    },
+    // AnalysisSessionSerializer already returns result inline — no extra fetches needed
+    queryFn: () => api.get('/analysis/sessions/').then((r) =>
+      (r.data as AnalysisSession[]).filter((s) => s.status === 'done').slice(0, 8)
+    ),
   });
 
   const { data: reviews = [] } = useQuery<Review[]>({
@@ -282,7 +270,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 {recentSessions.map((s) => (
-                  <Link key={s.id} href="/analyze"
+                  <Link key={s.id} href={`/analyze?session=${s.id}`}
                     className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
                     <div>
                       <p className="text-sm font-medium" style={{ color: '#141c52' }}>
@@ -378,7 +366,7 @@ export default function ProfilePage() {
                   className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50">
                   <div>
                     <p className="text-sm font-medium" style={{ color: '#141c52' }}>
-                      Session with {s.mentor_name}
+                      Session with {s.mentor.name}
                     </p>
                     <p className="text-xs text-gray-400">
                       {new Date(s.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

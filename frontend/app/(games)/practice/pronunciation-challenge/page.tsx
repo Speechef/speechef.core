@@ -4,6 +4,9 @@ import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const GAME_COLOR = { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' };
+
 const ROUNDS = 5;
 const MAX_RECORD_MS = 8000; // 8 seconds max per round
 
@@ -129,7 +132,6 @@ export default function PronunciationChallengePage() {
       recorder.start();
       setRoundStage('recording');
 
-      // Auto-stop after max time
       autoStopRef.current = setTimeout(() => {
         if (recorder.state === 'recording') recorder.stop();
       }, MAX_RECORD_MS);
@@ -185,43 +187,57 @@ export default function PronunciationChallengePage() {
   }
 
   const avgAccuracy = results.length ? Math.round(totalScore / results.length) : 0;
-  const maxScore = ROUNDS * 100;
 
   // ── Idle ──────────────────────────────────────────────────────────────────
   if (stage === 'idle') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-10 text-center">
-          <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-4 block text-left">
-            ← Practice
-          </Link>
-          <div className="text-5xl mb-4">🎙️</div>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: '#141c52' }}>Pronunciation Challenge</h1>
-          <p className="text-gray-500 text-sm mb-6">
-            Read each phrase aloud. AI will transcribe your speech and score your pronunciation accuracy.
-          </p>
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            {[
-              { icon: '📢', label: `${ROUNDS} phrases` },
-              { icon: '🤖', label: 'AI-scored' },
-              { icon: '🎯', label: 'Accuracy %' },
-            ].map((item) => (
-              <div key={item.label} className="bg-gray-50 rounded-xl py-3">
-                <p className="text-xl mb-0.5">{item.icon}</p>
-                <p className="text-xs text-gray-500">{item.label}</p>
+        <div className="w-full max-w-md rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+          {/* Colored header band */}
+          <div className="relative overflow-hidden px-6 py-6" style={{ background: GAME_COLOR.bg }}>
+            <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+              style={{ background: GAME_COLOR.text, opacity: 0.12 }} />
+            <Link href="/practice" className="relative text-xs font-medium mb-3 block hover:underline"
+              style={{ color: GAME_COLOR.text, opacity: 0.7 }}>
+              ← Practice
+            </Link>
+            <div className="relative flex items-center gap-4">
+              <span className="text-5xl">🎙️</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-0.5"
+                  style={{ color: GAME_COLOR.text }}>AI-Scored Speaking</p>
+                <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>Pronunciation Challenge</h1>
               </div>
-            ))}
+            </div>
           </div>
-          <p className="text-xs text-gray-400 mb-6">
-            Requires microphone access. Speak clearly in a quiet environment for best results.
-          </p>
-          <button
-            onClick={startGame}
-            className="w-full py-3 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-          >
-            Start Challenge →
-          </button>
+          {/* White body */}
+          <div className="bg-white px-6 py-6 text-center">
+            <p className="text-gray-500 text-sm mb-6">
+              Read each phrase aloud. AI will transcribe your speech and score your pronunciation accuracy.
+            </p>
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {[
+                { icon: '📢', label: `${ROUNDS} phrases` },
+                { icon: '🤖', label: 'AI-scored' },
+                { icon: '🎯', label: 'Accuracy %' },
+              ].map((item) => (
+                <div key={item.label} className="bg-gray-50 rounded-xl py-3">
+                  <p className="text-xl mb-0.5">{item.icon}</p>
+                  <p className="text-xs text-gray-500">{item.label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mb-6 px-2">
+              Requires microphone access. Speak clearly in a quiet environment for best results.
+            </p>
+            <button
+              onClick={startGame}
+              className="w-full py-3 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
+            >
+              Start Challenge →
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -237,17 +253,23 @@ export default function PronunciationChallengePage() {
     return (
       <div className="min-h-screen bg-gray-50 py-10 px-4">
         <div className="max-w-xl mx-auto space-y-5">
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-            <div className="text-5xl mb-3">{grade.emoji}</div>
-            <h1 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>{grade.label}</h1>
-            <p className="text-4xl font-extrabold my-3" style={{ color: '#141c52' }}>
-              {avgAccuracy}<span className="text-lg font-normal text-gray-400">% avg accuracy</span>
-            </p>
-            <p className="text-gray-400 text-sm">{ROUNDS} phrases completed</p>
+          {/* Score band card */}
+          <div className="rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+            <div className="px-6 py-6 text-center" style={{ background: GAME_COLOR.bg }}>
+              <div className="text-5xl mb-3">{grade.emoji}</div>
+              <h1 className="text-2xl font-bold mb-1" style={{ color: BRAND.primary }}>{grade.label}</h1>
+              <p className="text-4xl font-extrabold my-3" style={{ color: BRAND.primary }}>
+                {avgAccuracy}<span className="text-lg font-normal" style={{ color: GAME_COLOR.text }}>% avg accuracy</span>
+              </p>
+              <p className="text-sm" style={{ color: GAME_COLOR.text }}>{ROUNDS} phrases completed</p>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="font-bold mb-4" style={{ color: '#141c52' }}>Round Breakdown</h2>
+            <h2 className="font-bold mb-4 flex items-center gap-2" style={{ color: BRAND.primary }}>
+              <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: GAME_COLOR.bg, color: GAME_COLOR.text }}>📋</span>
+              Round Breakdown
+            </h2>
             <div className="space-y-5">
               {results.map((r, i) => (
                 <div key={i}>
@@ -272,14 +294,14 @@ export default function PronunciationChallengePage() {
             <button
               onClick={startGame}
               className="flex-1 py-3 rounded-full text-sm font-bold border-2 transition-colors hover:bg-gray-50"
-              style={{ borderColor: '#141c52', color: '#141c52' }}
+              style={{ borderColor: BRAND.primary, color: BRAND.primary }}
             >
               Play Again
             </button>
             <Link
               href="/practice"
               className="flex-1 py-3 rounded-full text-sm font-bold text-center transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               More Games
             </Link>
@@ -299,6 +321,9 @@ export default function PronunciationChallengePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-xl mx-auto">
+        {/* Thin game color top bar */}
+        <div className="h-1 rounded-full mb-6" style={{ backgroundColor: GAME_COLOR.text }} />
+
         {/* Progress */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm font-semibold text-gray-400">
@@ -310,11 +335,11 @@ export default function PronunciationChallengePage() {
                 style={{
                   backgroundColor:
                     i < currentRound ? '#22c55e' :
-                    i === currentRound ? '#141c52' : '#e5e7eb',
+                    i === currentRound ? BRAND.primary : '#e5e7eb',
                 }} />
             ))}
           </div>
-          <p className="text-sm font-bold" style={{ color: '#141c52' }}>
+          <p className="text-sm font-bold" style={{ color: BRAND.primary }}>
             {results.length ? `${Math.round(totalScore / results.length)}% avg` : '—'}
           </p>
         </div>
@@ -327,7 +352,7 @@ export default function PronunciationChallengePage() {
           {roundStage === 'result' && roundResult ? (
             <HighlightedPhrase phrase={currentPhrase} mismatches={roundResult.mismatches} />
           ) : (
-            <p className="text-lg font-semibold leading-relaxed" style={{ color: '#141c52' }}>
+            <p className="text-lg font-semibold leading-relaxed" style={{ color: BRAND.primary }}>
               {currentPhrase}
             </p>
           )}
@@ -345,18 +370,18 @@ export default function PronunciationChallengePage() {
           <button
             onClick={startRecording}
             className="w-full py-4 rounded-full text-sm font-bold transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+            style={{ background: BRAND.gradient, color: BRAND.primary }}
           >
             <span className="text-xl">🎙️</span> Start Recording
           </button>
         )}
 
-        {/* Recording stage */}
+        {/* Recording stage — styled with game color */}
         {roundStage === 'recording' && (
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <span className="inline-block w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-sm font-semibold text-red-600">Recording…</span>
+              <span className="inline-block w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: GAME_COLOR.text }} />
+              <span className="text-sm font-semibold" style={{ color: GAME_COLOR.text }}>Recording…</span>
               <span className="text-xs text-gray-400">(max {MAX_RECORD_MS / 1000}s)</span>
             </div>
             <button
@@ -389,7 +414,7 @@ export default function PronunciationChallengePage() {
           }`}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xl">{roundResult.accuracy >= 80 ? '✅' : '⚠️'}</span>
-              <p className="font-bold text-sm" style={{ color: '#141c52' }}>
+              <p className="font-bold text-sm" style={{ color: BRAND.primary }}>
                 {roundResult.accuracy >= 80 ? 'Great pronunciation!' : 'Keep practising!'}
               </p>
             </div>
@@ -410,7 +435,7 @@ export default function PronunciationChallengePage() {
             <button
               onClick={nextRound}
               className="w-full mt-4 py-2.5 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               {currentRound + 1 >= ROUNDS ? 'See Results →' : 'Next Phrase →'}
             </button>

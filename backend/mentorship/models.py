@@ -16,6 +16,7 @@ class MentorProfile(models.Model):
     rating_avg = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     session_count = models.IntegerField(default=0)
     stripe_account_id = models.CharField(max_length=200, null=True, blank=True)
+    offers_intro_call = models.BooleanField(default=False)  # MM8.1
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -46,6 +47,21 @@ class MentorAvailability(models.Model):
         return f"{self.mentor.user.username} — {self.day_of_week} {self.start_time}–{self.end_time}"
 
 
+class MentorUnavailability(models.Model):
+    """Date ranges when a mentor is explicitly blocked. MM7.1"""
+    mentor = models.ForeignKey(MentorProfile, on_delete=models.CASCADE, related_name="unavailability")
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["start_date"]
+        verbose_name_plural = "Mentor Unavailability"
+
+    def __str__(self):
+        return f"{self.mentor.user.username} blocked {self.start_date}–{self.end_date}"
+
+
 class MentorBundle(models.Model):
     mentor = models.ForeignKey(MentorProfile, on_delete=models.CASCADE, related_name="bundles")
     name = models.CharField(max_length=100)
@@ -55,6 +71,23 @@ class MentorBundle(models.Model):
 
     def __str__(self):
         return f"{self.mentor.user.username} — {self.name}"
+
+
+class UserBundle(models.Model):
+    """A purchased bundle of sessions for a specific mentor. MM4.1"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bundles")
+    bundle = models.ForeignKey(MentorBundle, on_delete=models.CASCADE, related_name="purchases")
+    mentor = models.ForeignKey(MentorProfile, on_delete=models.CASCADE, related_name="sold_bundles")
+    sessions_remaining = models.IntegerField()
+    stripe_checkout_session = models.CharField(max_length=200, blank=True)
+    purchased_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["-purchased_at"]
+
+    def __str__(self):
+        return f"{self.user.username} — {self.bundle.name} ({self.sessions_remaining} left)"
 
 
 class MentorSession(models.Model):
@@ -78,6 +111,16 @@ class MentorSession(models.Model):
     homework = models.TextField(blank=True)
     student_rating = models.IntegerField(null=True, blank=True)
     student_review = models.TextField(blank=True)
+    # MM6.1 — cancellation
+    cancelled_by = models.CharField(max_length=10, null=True, blank=True)  # 'student' | 'mentor'
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True)
+    refund_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    # MM9.1 — mentor reply to review
+    mentor_reply = models.TextField(blank=True)
+    mentor_replied_at = models.DateTimeField(null=True, blank=True)
+    # MM6.2 — student rescheduling
+    rescheduled_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -85,3 +128,17 @@ class MentorSession(models.Model):
 
     def __str__(self):
         return f"{self.student.username} with {self.mentor.user.username} — {self.scheduled_at}"
+
+
+class MentorStudentNote(models.Model):
+    """Mentor's private note/goal for a specific student. MM10.1"""
+    mentor = models.ForeignKey(MentorProfile, on_delete=models.CASCADE, related_name="student_notes")
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mentor_notes")
+    note = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [["mentor", "student"]]
+
+    def __str__(self):
+        return f"{self.mentor.user.username} note for {self.student.username}"

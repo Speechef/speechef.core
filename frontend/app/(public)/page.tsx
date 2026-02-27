@@ -504,9 +504,8 @@ export default function LandingPage() {
               <div
                 key={p.tier}
                 className={`bg-white rounded-2xl p-6 shadow flex flex-col relative ${
-                  p.highlight ? 'ring-2' : ''
+                  p.highlight ? 'ring-2 ring-yellow-300' : ''
                 }`}
-                style={p.highlight ? { ringColor: '#FADB43' } : {}}
               >
                 {p.badge && (
                   <span

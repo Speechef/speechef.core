@@ -12,7 +12,7 @@ interface Category { id: number; name: string; }
 interface Comment  { id: number; author: string; body: string; created_on: string; }
 interface Post {
   id: number; title: string; body: string; created_on: string;
-  categories: Category[]; completed: boolean; is_completed: boolean; comments: Comment[];
+  categories: Category[]; is_completed: boolean; comments: Comment[];
 }
 interface CourseInfo {
   id: string; name: string; description: string;
@@ -48,6 +48,17 @@ const COURSES: CourseInfo[] = [
   { id: 'writing',       name: 'Professional Writing',  description: 'Craft clear, compelling emails and documents',               emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
 ];
 
+const CHAPTER_NAMES: Record<string, Record<number, string>> = {
+  'Grammar':          { 1: 'The Basics', 2: 'Nouns & Articles', 3: 'Pronouns & Adjectives', 4: 'Tenses', 5: 'Sentence Structure', 6: 'Advanced Grammar' },
+  'Pronunciation':    { 1: 'Sound Foundations', 2: 'Specific Challenges', 3: 'Advanced Features' },
+  'Fluency':          { 1: 'Building Flow', 2: 'Mastering Pace' },
+  'Vocabulary':       { 1: 'Core Vocabulary', 2: 'Advanced Usage' },
+  'Communication':    { 1: 'Verbal Foundations', 2: 'Active Communication', 3: 'Non-Verbal Presence' },
+  'Listening':        { 1: 'Foundations' },
+  'Interview Skills': { 1: 'Interview Essentials' },
+  'Writing':          { 1: 'Professional Writing' },
+};
+
 const AVATAR_COLORS = [
   { bg: '#dbeafe', text: '#1e40af' }, { bg: '#fce7f3', text: '#9d174d' },
   { bg: '#d1fae5', text: '#065f46' }, { bg: '#fef3c7', text: '#78350f' },
@@ -61,7 +72,8 @@ function slugify(text: string): string {
 }
 
 function readTime(body: string): string {
-  return `${Math.max(1, Math.ceil(body.split(/\s+/).filter(Boolean).length / 200))} min read`;
+  const { cleanBody } = parsePostMeta(body);
+  return `${Math.max(1, Math.ceil(cleanBody.split(/\s+/).filter(Boolean).length / 200))} min read`;
 }
 
 function extractTOC(body: string): { id: string; text: string }[] {
@@ -75,6 +87,21 @@ function authorAvatarColor(name: string) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % AVATAR_COLORS.length;
   return AVATAR_COLORS[Math.abs(h)];
+}
+
+function parsePostMeta(body: string): { chapter: number | null; difficulty: 'Easy' | 'Medium' | 'Hard' | null; cleanBody: string } {
+  const lines = body.split('\n');
+  let chapter: number | null = null;
+  let difficulty: 'Easy' | 'Medium' | 'Hard' | null = null;
+  let startIdx = 0;
+  for (let i = 0; i < Math.min(lines.length, 5); i++) {
+    const chMatch = lines[i].match(/^Chapter:\s*(\d+)$/);
+    const dfMatch = lines[i].match(/^Difficulty:\s*(Easy|Medium|Hard)$/);
+    if (chMatch) { chapter = parseInt(chMatch[1], 10); startIdx = Math.max(startIdx, i + 1); }
+    if (dfMatch) { difficulty = dfMatch[1] as 'Easy' | 'Medium' | 'Hard'; startIdx = Math.max(startIdx, i + 1); }
+  }
+  while (startIdx < lines.length && !lines[startIdx].trim()) startIdx++;
+  return { chapter, difficulty, cleanBody: lines.slice(startIdx).join('\n') };
 }
 
 function getSectionType(heading: string): SectionType {
@@ -116,7 +143,7 @@ function renderLines(lines: string[], catMeta: CatMeta | undefined): React.React
     if (line.startsWith('### ')) {
       const text = line.replace(/^### /, '');
       els.push(
-        <h4 key={`h3-${i}`} className="flex items-center gap-2 text-base font-bold text-[#141c52] mt-5 mb-2">
+        <h4 key={`h3-${i}`} className="flex items-center gap-2 text-[15px] font-bold text-[#141c52] mt-7 mb-2.5 tracking-[-0.01em]">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catMeta?.text ?? '#141c52' }} />
           {text}
         </h4>,
@@ -172,16 +199,16 @@ function renderLines(lines: string[], catMeta: CatMeta | undefined): React.React
         i++;
       }
       els.push(
-        <ul key={`ul-${i}`} className="space-y-2.5 mb-5 mt-1">
+        <ul key={`ul-${i}`} className="space-y-3 mb-6 mt-1.5">
           {bullets.map((b, bi) => (
-            <li key={bi} className="flex items-start gap-3">
+            <li key={bi} className="flex items-start gap-3.5">
               <span
-                className="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shrink-0 mt-0.5"
-                style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', border: `1px solid ${catMeta?.border ?? '#e5e7eb'}` }}
+                className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 mt-[3px]"
+                style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', border: `1.5px solid ${catMeta?.border ?? '#e5e7eb'}` }}
               >
                 ✓
               </span>
-              <span className="text-[15px] text-gray-700 leading-relaxed">{b}</span>
+              <span className="text-[15.5px] text-gray-600 leading-[1.78]">{b}</span>
             </li>
           ))}
         </ul>,
@@ -190,7 +217,7 @@ function renderLines(lines: string[], catMeta: CatMeta | undefined): React.React
     // Regular paragraph
     } else {
       els.push(
-        <p key={`p-${i}`} className="text-[15px] text-gray-700 leading-relaxed mb-4">{line}</p>,
+        <p key={`p-${i}`} className="text-base text-gray-600 leading-[1.85] mb-5 tracking-[0.003em]">{line}</p>,
       );
       i++;
     }
@@ -295,17 +322,17 @@ function renderBody(body: string, catMeta: CatMeta | undefined): React.ReactNode
         return (
           <div
             key={`section-${si}`}
-            className="body-anim scroll-mt-8 mt-10 mb-2"
+            className="body-anim scroll-mt-8 mt-12 mb-2"
             id={section.headingId ?? undefined}
           >
             <div className="flex items-center gap-3 mb-2">
               <div
-                className="w-1 h-7 rounded-full shrink-0"
+                className="w-1 h-6 rounded-full shrink-0"
                 style={{ backgroundColor: catMeta?.text ?? '#141c52' }}
               />
-              <h3 className="text-[1.15rem] font-bold text-[#141c52] leading-snug">{section.heading}</h3>
+              <h3 className="text-[1.1rem] font-bold text-[#141c52] leading-snug tracking-[-0.015em]">{section.heading}</h3>
             </div>
-            <div className="h-px mb-4 ml-4" style={{ backgroundColor: catMeta?.border ?? '#e5e7eb' }} />
+            <div className="h-px mb-5 ml-4" style={{ backgroundColor: catMeta?.border ?? '#e5e7eb' }} />
             {content}
           </div>
         );
@@ -575,7 +602,8 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
   // ── Derived data ───────────────────────────────────────────────────────────
   const primaryCat   = post.categories[0];
   const catMeta      = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
-  const toc          = extractTOC(post.body);
+  const { chapter, difficulty, cleanBody } = parsePostMeta(post.body);
+  const toc          = extractTOC(cleanBody);
   const postCatNames = post.categories.map((c) => c.name);
   const activeCourse = COURSES.find((c) => postCatNames.includes(c.category));
   const courseMeta   = activeCourse ? CATEGORY_META[activeCourse.category] : undefined;
@@ -705,6 +733,15 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
                   {activeCourse.emoji} Lesson {courseIdx + 1} of {coursePosts.length}
                 </span>
               )}
+              {chapter && (
+                <span
+                  className="text-xs font-medium px-2.5 py-1 rounded-full"
+                  style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', border: `1px solid ${catMeta?.border ?? '#e5e7eb'}` }}
+                >
+                  Ch {chapter} · {CHAPTER_NAMES[activeCourse?.category ?? '']?.[chapter] ?? `Chapter ${chapter}`}
+                </span>
+              )}
+              {difficulty && <DifficultyBadge difficulty={difficulty} />}
             </div>
 
             {/* Title */}
@@ -718,17 +755,21 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
               </span>
               <span className="text-gray-300">·</span>
               <span className="flex items-center gap-1 text-xs text-gray-500">
-                <span>⏱️</span>{readTime(post.body)}
+                <span>⏱️</span>{readTime(cleanBody)}
               </span>
 
               {isLoggedIn ? (
                 <button
                   onClick={() => {
-                    completeMutation.mutate();
-                    if (!nextLesson && !post.is_completed) {
-                      setJustCompleted(true);
-                      setTimeout(() => setJustCompleted(false), 3000);
-                    }
+                    const isFinalLesson = !nextLesson && !post.is_completed;
+                    completeMutation.mutate(undefined, {
+                      onSuccess: () => {
+                        if (isFinalLesson) {
+                          setJustCompleted(true);
+                          setTimeout(() => setJustCompleted(false), 3000);
+                        }
+                      },
+                    });
                   }}
                   disabled={completeMutation.isPending}
                   className={`ml-auto text-xs font-bold px-4 py-1.5 rounded-full transition-all disabled:opacity-60 ${
@@ -742,10 +783,10 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
               ) : (
                 <span
                   className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full ${
-                    post.completed ? 'bg-green-100 text-green-700' : 'bg-white text-gray-400 border border-gray-200'
+                    post.is_completed ? 'bg-green-100 text-green-700' : 'bg-white text-gray-400 border border-gray-200'
                   }`}
                 >
-                  {post.completed ? '✓ Completed' : 'Pending'}
+                  {post.is_completed ? '✓ Completed' : 'Pending'}
                 </span>
               )}
             </div>
@@ -772,9 +813,30 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
         {toc.length >= 2 && <TableOfContents toc={toc} catMeta={catMeta} />}
 
         {/* ── BODY ──────────────────────────────────────────────────────── */}
-        <div ref={bodyRef} className="mb-10">
-          {renderBody(post.body, catMeta)}
+        <div
+          ref={bodyRef}
+          className="mb-10 rounded-2xl px-6 sm:px-8 pt-6 pb-8"
+          style={{
+            backgroundColor: '#fff',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.04)',
+          }}
+        >
+          {renderBody(cleanBody, catMeta)}
         </div>
+
+        {/* ── COURSE COMPLETION BANNER ──────────────────────────────────── */}
+        {activeCourse && !nextLesson && post.is_completed && (
+          <CourseCompletionBanner
+            course={activeCourse}
+            courseMeta={courseMeta}
+            totalLessons={coursePosts.length}
+            totalReadTime={coursePosts.reduce(
+              (s, p) => s + Math.max(1, Math.ceil(parsePostMeta(p.body ?? '').cleanBody.split(/\s+/).filter(Boolean).length / 200)),
+              0,
+            )}
+            chapterCount={new Set(coursePosts.map((p) => parsePostMeta(p.body ?? '').chapter).filter((c): c is number => c !== null)).size}
+          />
+        )}
 
         {/* ── RELATED ARTICLES ──────────────────────────────────────────── */}
         {related.length > 0 && (
@@ -813,8 +875,8 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
           </section>
         )}
 
-        {/* ── GLOBAL PREV / NEXT ────────────────────────────────────────── */}
-        {(prevGlobal || nextGlobal) && (
+        {/* ── GLOBAL PREV / NEXT (hidden in course mode — CourseNavigator handles that) ── */}
+        {!activeCourse && (prevGlobal || nextGlobal) && (
           <div className="flex gap-3 my-8">
             {prevGlobal ? (
               <Link
@@ -902,7 +964,8 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
                 onChange={(e) => setCommentBody(e.target.value)}
                 rows={3}
                 placeholder="Share your thoughts…"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                disabled={submitting}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all disabled:opacity-60 disabled:bg-gray-50"
               />
               {formError && <p className="text-red-500 text-xs mt-1.5">{formError}</p>}
               <button
@@ -929,6 +992,103 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
   );
 }
 
+// ─── CourseCompletionBanner ───────────────────────────────────────────────────
+
+function CourseCompletionBanner({
+  course,
+  courseMeta,
+  totalLessons,
+  totalReadTime,
+  chapterCount,
+}: {
+  course: CourseInfo;
+  courseMeta: CatMeta | undefined;
+  totalLessons: number;
+  totalReadTime: number;
+  chapterCount: number;
+}) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden mb-8 relative pop-in"
+      style={{
+        background: courseMeta
+          ? `linear-gradient(135deg, ${courseMeta.bg} 0%, #ffffff 60%)`
+          : 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 60%)',
+        border: `2px solid ${courseMeta?.border ?? '#bbf7d0'}`,
+      }}
+    >
+      {/* Decorative blobs */}
+      <div
+        className="absolute -right-10 -top-10 w-40 h-40 rounded-full opacity-[0.07] pointer-events-none"
+        style={{ backgroundColor: courseMeta?.text ?? '#166534' }}
+      />
+      <div
+        className="absolute left-10 -bottom-8 w-28 h-28 rounded-full opacity-[0.05] pointer-events-none"
+        style={{ backgroundColor: courseMeta?.text ?? '#166534' }}
+      />
+
+      <div className="relative z-10 px-6 py-6">
+        {/* Trophy row */}
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0"
+            style={{ backgroundColor: courseMeta?.border ?? '#bbf7d0' }}
+          >
+            🏆
+          </div>
+          <div>
+            <p
+              className="text-xs font-bold uppercase tracking-wider mb-0.5"
+              style={{ color: courseMeta?.text ?? '#166534', opacity: 0.6 }}
+            >
+              Course Complete
+            </p>
+            <h3
+              className="text-xl font-bold leading-tight"
+              style={{ color: courseMeta?.text ?? '#141c52' }}
+            >
+              You finished {course.name}!
+            </h3>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex gap-3 flex-wrap mb-5">
+          {[
+            { icon: '📖', value: totalLessons, label: totalLessons === 1 ? 'lesson' : 'lessons' },
+            ...(chapterCount > 0 ? [{ icon: '🗂️', value: chapterCount, label: chapterCount === 1 ? 'chapter' : 'chapters' }] : []),
+            { icon: '⏱️', value: `~${totalReadTime}`, label: 'min read' },
+          ].map(({ icon, value, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+              style={{ backgroundColor: '#fff', border: `1px solid ${courseMeta?.border ?? '#bbf7d0'}` }}
+            >
+              <span>{icon}</span>
+              <span className="font-bold" style={{ color: courseMeta?.text ?? '#141c52' }}>{value}</span>
+              <span className="text-gray-400">{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/learn"
+            className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-full transition-opacity hover:opacity-85"
+            style={{ backgroundColor: courseMeta?.text ?? '#141c52', color: '#fff' }}
+          >
+            Browse more courses →
+          </Link>
+          <p className="text-xs text-gray-400">
+            Great work! Keep the momentum going.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── CourseNavigator ─────────────────────────────────────────────────────────
 
 function CourseNavigator({
@@ -948,7 +1108,7 @@ function CourseNavigator({
 }) {
   const [expanded, setExpanded] = useState(false);
   const totalReadTime = coursePosts.reduce(
-    (sum, p) => sum + Math.max(1, Math.ceil(p.body.split(/\s+/).filter(Boolean).length / 200)),
+    (sum, p) => sum + Math.max(1, Math.ceil(parsePostMeta(p.body ?? '').cleanBody.split(/\s+/).filter(Boolean).length / 200)),
     0,
   );
 
@@ -1006,6 +1166,10 @@ function CourseNavigator({
         <div className="flex gap-1 mb-3.5 flex-wrap">
           {coursePosts.map((p, idx) => {
             const isCurrent = String(p.id) === currentId;
+            const { chapter: dotChapter } = parsePostMeta(p.body ?? '');
+            const dotTitle = dotChapter
+              ? `Ch ${dotChapter} · Lesson ${idx + 1}: ${p.title}`
+              : `Lesson ${idx + 1}: ${p.title}`;
             return (
               <Link
                 key={p.id}
@@ -1019,7 +1183,7 @@ function CourseNavigator({
                     ? courseMeta?.text ?? '#141c52'
                     : courseMeta?.border ?? '#e5e7eb',
                 }}
-                title={`Lesson ${idx + 1}: ${p.title}`}
+                title={dotTitle}
               />
             );
           })}
@@ -1064,54 +1228,114 @@ function CourseNavigator({
         </button>
       </div>
 
-      {/* Expandable lesson list */}
+      {/* Expandable lesson list — grouped by chapter */}
       {expanded && (
         <div
           className="px-5 pb-4 pt-3 border-t"
           style={{ borderColor: courseMeta?.border ?? '#e5e7eb' }}
         >
-          <ol className="space-y-1">
-            {coursePosts.map((p, idx) => {
-              const isCurrent = String(p.id) === currentId;
-              return (
-                <li key={p.id}>
-                  <Link
-                    href={`/learn/${p.id}`}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all hover:bg-gray-50"
-                    style={isCurrent ? { backgroundColor: courseMeta?.bg ?? '#f9fafb' } : {}}
-                  >
+          {(() => {
+            const postsWithMeta = coursePosts.map((p, idx) => ({
+              p, idx, ...parsePostMeta(p.body ?? ''),
+            }));
+            const chapterMap = new Map<number, typeof postsWithMeta>();
+            for (const pm of postsWithMeta) {
+              const ch = pm.chapter ?? 0;
+              if (!chapterMap.has(ch)) chapterMap.set(ch, []);
+              chapterMap.get(ch)!.push(pm);
+            }
+            const sortedChapters = Array.from(chapterMap.entries()).sort(([a], [b]) => a - b);
+            return sortedChapters.map(([chNum, items]) => (
+              <div key={chNum} className="mb-3">
+                {chNum > 0 && (
+                  <div className="flex items-center gap-2 mb-1.5 px-3 py-0.5">
                     <span
-                      className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0"
-                      style={
-                        p.is_completed
-                          ? { backgroundColor: '#dcfce7', color: '#166534' }
-                          : isCurrent
-                          ? { backgroundColor: courseMeta?.text ?? '#141c52', color: '#fff' }
-                          : { backgroundColor: '#f3f4f6', color: '#9ca3af' }
-                      }
+                      className="text-[10px] font-black uppercase tracking-wider"
+                      style={{ color: courseMeta?.text ?? '#141c52', opacity: 0.45 }}
                     >
-                      {p.is_completed ? '✓' : idx + 1}
+                      Ch {chNum}
                     </span>
                     <span
-                      className="flex-1 text-sm line-clamp-1"
-                      style={{
-                        color: isCurrent ? courseMeta?.text ?? '#141c52' : '#374151',
-                        fontWeight: isCurrent ? 600 : 400,
-                      }}
+                      className="text-[11px] font-semibold"
+                      style={{ color: courseMeta?.text ?? '#141c52', opacity: 0.65 }}
                     >
-                      {p.title}
+                      {CHAPTER_NAMES[course.category]?.[chNum] ?? `Chapter ${chNum}`}
                     </span>
-                    {p.body && (
-                      <span className="text-xs text-gray-400 shrink-0">{readTime(p.body)}</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
+                  </div>
+                )}
+                <ol className="space-y-0.5">
+                  {items.map(({ p, idx, difficulty, cleanBody: lessonCleanBody }) => {
+                    const isCurrent = String(p.id) === currentId;
+                    return (
+                      <li key={p.id}>
+                        <Link
+                          href={`/learn/${p.id}`}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all hover:bg-gray-50"
+                          style={isCurrent ? { backgroundColor: courseMeta?.bg ?? '#f9fafb' } : {}}
+                        >
+                          <span
+                            className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0"
+                            style={
+                              p.is_completed
+                                ? { backgroundColor: '#dcfce7', color: '#166534' }
+                                : isCurrent
+                                ? { backgroundColor: courseMeta?.text ?? '#141c52', color: '#fff' }
+                                : { backgroundColor: '#f3f4f6', color: '#9ca3af' }
+                            }
+                          >
+                            {p.is_completed ? '✓' : idx + 1}
+                          </span>
+                          <span
+                            className="flex-1 text-sm line-clamp-1"
+                            style={{
+                              color: isCurrent ? courseMeta?.text ?? '#141c52' : '#374151',
+                              fontWeight: isCurrent ? 600 : 400,
+                            }}
+                          >
+                            {p.title}
+                          </span>
+                          {difficulty && <DifficultyBadge difficulty={difficulty} size="xs" />}
+                          {lessonCleanBody && (
+                            <span className="text-xs text-gray-400 shrink-0">{readTime(lessonCleanBody)}</span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            ));
+          })()}
         </div>
       )}
     </div>
+  );
+}
+
+// ─── DifficultyBadge ─────────────────────────────────────────────────────────
+
+function DifficultyBadge({
+  difficulty,
+  size = 'sm',
+}: {
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  size?: 'xs' | 'sm';
+}) {
+  const map = {
+    Easy:   { bg: '#dcfce7', text: '#166534', border: '#bbf7d0', icon: '🟢' },
+    Medium: { bg: '#fef9c3', text: '#92400e', border: '#fde68a', icon: '🟡' },
+    Hard:   { bg: '#fee2e2', text: '#991b1b', border: '#fecaca', icon: '🔴' },
+  };
+  const m = map[difficulty];
+  return (
+    <span
+      className={`font-semibold rounded-full inline-flex items-center gap-1 whitespace-nowrap ${
+        size === 'xs' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5'
+      }`}
+      style={{ backgroundColor: m.bg, color: m.text, border: `1px solid ${m.border}` }}
+    >
+      {m.icon} {difficulty}
+    </span>
   );
 }
 
@@ -1146,15 +1370,16 @@ function TableOfContents({
         <span className="text-base">{catMeta?.emoji ?? '📋'}</span>
         <h3 className="text-sm font-bold" style={{ color: catMeta?.text ?? '#141c52' }}>In this article</h3>
       </div>
-      <ol className="space-y-2">
+      <ol className="space-y-1">
         {toc.map((item, idx) => {
           const isActive = activeId === item.id;
           return (
             <li key={item.id}>
               <a
                 href={`#${item.id}`}
-                className="flex items-center gap-3 text-sm transition-all"
-                style={{ color: isActive ? catMeta?.text ?? '#141c52' : '#6b7280' }}
+                aria-label={`Jump to section: ${item.text}`}
+                className="flex items-center gap-3 text-sm transition-all rounded-xl px-2 py-1.5 -mx-2 hover:bg-white/60"
+                style={{ color: isActive ? catMeta?.text ?? '#141c52' : '#9ca3af' }}
               >
                 <span
                   className="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shrink-0 transition-all"
@@ -1166,7 +1391,10 @@ function TableOfContents({
                 >
                   {idx + 1}
                 </span>
-                <span className={isActive ? 'font-semibold' : ''}>{item.text}</span>
+                <span className={`transition-all ${isActive ? 'font-semibold' : 'font-normal'}`}>{item.text}</span>
+                {isActive && (
+                  <span className="ml-auto text-xs" style={{ color: catMeta?.text ?? '#141c52' }}>↑</span>
+                )}
               </a>
             </li>
           );

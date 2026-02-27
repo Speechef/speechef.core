@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const GAME_COLOR = { bg: '#fce7f3', text: '#9d174d', border: '#fbcfe8' };
+
 const ROUNDS = 5;
 
 interface Question {
@@ -104,7 +107,6 @@ export default function SentenceBuilderPage() {
   async function nextRound() {
     const next = currentRound + 1;
     if (next >= ROUNDS) {
-      // Save final score
       api.post('/practice/guess/complete/', {
         score: totalScore,
         game: 'sentence',
@@ -126,35 +128,50 @@ export default function SentenceBuilderPage() {
   if (stage === 'idle') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-10 text-center">
-          <Link href="/practice" className="text-sm text-gray-400 hover:text-gray-600 mb-4 block text-left">
-            ← Practice
-          </Link>
-          <div className="text-5xl mb-4">✍️</div>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: '#141c52' }}>Sentence Builder</h1>
-          <p className="text-gray-500 text-sm mb-6">
-            You'll see a word and its definition. Write a sentence using it correctly.
-            AI will score your response out of 10 per round.
-          </p>
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            {[
-              { icon: '🔤', label: `${ROUNDS} rounds` },
-              { icon: '🤖', label: 'AI-graded' },
-              { icon: '📊', label: `Score / ${maxScore}` },
-            ].map((item) => (
-              <div key={item.label} className="bg-gray-50 rounded-xl py-3">
-                <p className="text-xl mb-0.5">{item.icon}</p>
-                <p className="text-xs text-gray-500">{item.label}</p>
+        <div className="w-full max-w-md rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+          {/* Colored header band */}
+          <div className="relative overflow-hidden px-6 py-6" style={{ background: GAME_COLOR.bg }}>
+            <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
+              style={{ background: GAME_COLOR.text, opacity: 0.12 }} />
+            <Link href="/practice" className="relative text-xs font-medium mb-3 block hover:underline"
+              style={{ color: GAME_COLOR.text, opacity: 0.7 }}>
+              ← Practice
+            </Link>
+            <div className="relative flex items-center gap-4">
+              <span className="text-5xl">✍️</span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-0.5"
+                  style={{ color: GAME_COLOR.text }}>AI-Graded Writing</p>
+                <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>Sentence Builder</h1>
               </div>
-            ))}
+            </div>
           </div>
-          <button
-            onClick={startGame}
-            className="w-full py-3 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-          >
-            Start Building →
-          </button>
+          {/* White body */}
+          <div className="bg-white px-6 py-6 text-center">
+            <p className="text-gray-500 text-sm mb-6">
+              You'll see a word and its definition. Write a sentence using it correctly.
+              AI will score your response out of 10 per round.
+            </p>
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              {[
+                { icon: '🔤', label: `${ROUNDS} rounds` },
+                { icon: '🤖', label: 'AI-graded' },
+                { icon: '📊', label: `Score / ${maxScore}` },
+              ].map((item) => (
+                <div key={item.label} className="bg-gray-50 rounded-xl py-3">
+                  <p className="text-xl mb-0.5">{item.icon}</p>
+                  <p className="text-xs text-gray-500">{item.label}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={startGame}
+              className="w-full py-3 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
+            >
+              Start Building →
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -170,25 +187,30 @@ export default function SentenceBuilderPage() {
     return (
       <div className="min-h-screen bg-gray-50 py-10 px-4">
         <div className="max-w-xl mx-auto space-y-5">
-          {/* Header */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-            <div className="text-5xl mb-3">{grade.emoji}</div>
-            <h1 className="text-2xl font-bold mb-1" style={{ color: '#141c52' }}>{grade.label}</h1>
-            <p className="text-4xl font-extrabold my-3" style={{ color: '#141c52' }}>
-              {totalScore}<span className="text-lg font-normal text-gray-400"> / {maxScore}</span>
-            </p>
-            <p className="text-gray-400 text-sm">{pct}% accuracy across {ROUNDS} rounds</p>
+          {/* Score band card */}
+          <div className="rounded-2xl border overflow-hidden" style={{ borderColor: GAME_COLOR.border }}>
+            <div className="px-6 py-6 text-center" style={{ background: GAME_COLOR.bg }}>
+              <div className="text-5xl mb-3">{grade.emoji}</div>
+              <h1 className="text-2xl font-bold mb-1" style={{ color: BRAND.primary }}>{grade.label}</h1>
+              <p className="text-4xl font-extrabold my-3" style={{ color: BRAND.primary }}>
+                {totalScore}<span className="text-lg font-normal text-gray-400"> / {maxScore}</span>
+              </p>
+              <p className="text-sm" style={{ color: GAME_COLOR.text }}>{pct}% accuracy across {ROUNDS} rounds</p>
+            </div>
           </div>
 
           {/* Round breakdown */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="font-bold mb-4" style={{ color: '#141c52' }}>Round Breakdown</h2>
+            <h2 className="font-bold mb-4 flex items-center gap-2" style={{ color: BRAND.primary }}>
+              <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: GAME_COLOR.bg, color: GAME_COLOR.text }}>📋</span>
+              Round Breakdown
+            </h2>
             <div className="space-y-5">
               {results.map((r, i) => (
                 <div key={i}>
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <div>
-                      <span className="font-bold text-sm" style={{ color: '#141c52' }}>{r.word}</span>
+                      <span className="font-bold text-sm" style={{ color: BRAND.primary }}>{r.word}</span>
                       <p className="text-xs text-gray-500 mt-0.5 italic">"{r.sentence}"</p>
                     </div>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
@@ -208,14 +230,14 @@ export default function SentenceBuilderPage() {
             <button
               onClick={startGame}
               className="flex-1 py-3 rounded-full text-sm font-bold border-2 transition-colors hover:bg-gray-50"
-              style={{ borderColor: '#141c52', color: '#141c52' }}
+              style={{ borderColor: BRAND.primary, color: BRAND.primary }}
             >
               Play Again
             </button>
             <Link
               href="/practice"
               className="flex-1 py-3 rounded-full text-sm font-bold text-center transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               More Games
             </Link>
@@ -235,6 +257,9 @@ export default function SentenceBuilderPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-xl mx-auto">
+        {/* Thin game color top bar */}
+        <div className="h-1 rounded-full mb-6" style={{ backgroundColor: GAME_COLOR.text }} />
+
         {/* Progress */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm font-semibold text-gray-400">
@@ -246,11 +271,11 @@ export default function SentenceBuilderPage() {
                 style={{
                   backgroundColor:
                     i < currentRound ? '#22c55e' :
-                    i === currentRound ? '#141c52' : '#e5e7eb',
+                    i === currentRound ? BRAND.primary : '#e5e7eb',
                 }} />
             ))}
           </div>
-          <p className="text-sm font-bold" style={{ color: '#141c52' }}>
+          <p className="text-sm font-bold" style={{ color: BRAND.primary }}>
             {totalScore} pts
           </p>
         </div>
@@ -267,7 +292,7 @@ export default function SentenceBuilderPage() {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                 Use this word in a sentence
               </p>
-              <p className="text-3xl font-extrabold mb-2" style={{ color: '#141c52' }}>
+              <p className="text-3xl font-extrabold mb-2" style={{ color: BRAND.primary }}>
                 {currentWord.word}
               </p>
               <p className="text-sm text-gray-500 italic">
@@ -287,7 +312,7 @@ export default function SentenceBuilderPage() {
                 onChange={(e) => setSentence(e.target.value)}
                 placeholder={`Write a sentence using "${currentWord?.word ?? '...'}"`}
                 rows={3}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-indigo-400"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-gray-400"
                 disabled={!currentWord || loadingWord}
               />
               <p className="text-xs text-gray-400 mt-1">
@@ -303,7 +328,7 @@ export default function SentenceBuilderPage() {
                 loadingWord
               }
               className="w-full py-3 rounded-full text-sm font-bold disabled:opacity-40 transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               {checkMutation.isPending ? 'Checking…' : 'Submit Sentence →'}
             </button>
@@ -317,10 +342,10 @@ export default function SentenceBuilderPage() {
           }`}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xl">{roundResult.correct ? '✅' : '⚠️'}</span>
-              <p className="font-bold text-sm" style={{ color: '#141c52' }}>
+              <p className="font-bold text-sm" style={{ color: BRAND.primary }}>
                 {roundResult.correct ? 'Well done!' : 'Almost there!'}
               </p>
-              <span className="ml-auto font-extrabold text-lg" style={{ color: '#141c52' }}>
+              <span className="ml-auto font-extrabold text-lg" style={{ color: BRAND.primary }}>
                 +{roundResult.score}
               </span>
             </div>
@@ -331,7 +356,7 @@ export default function SentenceBuilderPage() {
             <button
               onClick={nextRound}
               className="w-full mt-4 py-2.5 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
               {currentRound + 1 >= ROUNDS ? 'See Results →' : 'Next Word →'}
             </button>
