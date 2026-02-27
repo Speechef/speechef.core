@@ -56,8 +56,8 @@ export default function ReviewStatusPage() {
   const { data: review, isLoading } = useQuery<ReviewDetail>({
     queryKey: ['review', reviewId],
     queryFn: () => api.get(`/review/${reviewId}/status/`).then((r) => r.data),
-    refetchInterval: (data) => {
-      // Poll every 30s until delivered
+    refetchInterval: (query) => {
+      const data = query.state.data;
       if (!data || data.status === 'delivered') return false;
       return 30_000;
     },

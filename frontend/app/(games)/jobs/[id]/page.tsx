@@ -107,7 +107,7 @@ export default function JobDetailPage() {
     );
   }
 
-  const qualifies = latestScore !== null && job.min_speechef_score !== null
+  const qualifies = latestScore != null && job.min_speechef_score !== null
     ? latestScore >= job.min_speechef_score
     : null;
 
@@ -169,7 +169,7 @@ export default function JobDetailPage() {
                 <p className="text-sm font-semibold mb-1" style={{ color: BRAND.primary }}>
                   Communication Score Required: {job.min_speechef_score}/100
                 </p>
-                {isLoggedIn && latestScore !== null ? (
+                {isLoggedIn && latestScore != null ? (
                   <p className="text-sm">
                     {qualifies
                       ? `✅ Your score (${latestScore}) meets the requirement.`

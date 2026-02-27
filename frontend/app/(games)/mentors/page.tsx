@@ -19,6 +19,10 @@ interface Mentor {
   is_active: boolean;
 }
 
+interface RecommendedMentor extends Mentor {
+  match_reason: string | null;
+}
+
 const SPECIALTY_OPTIONS = ['IELTS', 'TOEFL', 'Business English', 'Public Speaking', 'Accent Reduction', 'Interview Prep'];
 const LANGUAGE_OPTIONS = ['English', 'Hindi', 'Mandarin', 'Arabic', 'Spanish', 'French'];
 
@@ -74,6 +78,57 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
           style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
           Book Session →
         </Link>
+      </div>
+    </div>
+  );
+}
+
+function RecommendedSection() {
+  const { data: recommended = [], isLoading } = useQuery<RecommendedMentor[]>({
+    queryKey: ['mentors-recommended'],
+    queryFn: () => api.get('/mentors/recommended/').then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading || recommended.length === 0) return null;
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">Recommended for You</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {recommended.map((m) => (
+          <div key={m.id} className="bg-white rounded-2xl border-2 p-5 hover:shadow-md transition-shadow relative overflow-hidden"
+            style={{ borderColor: '#FADB43' }}>
+            <div className="absolute top-0 right-0 px-2 py-1 text-xs font-bold rounded-bl-xl"
+              style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+              ✦ Recommended
+            </div>
+            <div className="flex items-start gap-3 mb-3 mt-2">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-base flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg,#141c52,#1e2d78)' }}>
+                {m.name?.[0] ?? 'M'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-sm" style={{ color: '#141c52' }}>{m.name}</h3>
+                <p className="text-xs text-gray-500">${m.hourly_rate}/hr</p>
+              </div>
+            </div>
+            {m.match_reason && (
+              <p className="text-xs text-indigo-600 font-medium mb-3">✓ {m.match_reason}</p>
+            )}
+            <div className="flex gap-2">
+              <Link href={`/mentors/${m.id}`}
+                className="flex-1 text-center text-xs font-medium py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                View Profile
+              </Link>
+              <Link href={`/mentors/${m.id}#book`}
+                className="flex-1 text-center text-xs font-bold py-2 rounded-xl transition-opacity hover:opacity-90"
+                style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+                Book →
+              </Link>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -154,6 +209,11 @@ export default function MentorsPage() {
               My Sessions →
             </Link>
           </div>
+        )}
+
+        {/* Personalised recommendations (only for logged-in users with no active filters) */}
+        {isLoggedIn && !specialty && !language && !search && (
+          <RecommendedSection />
         )}
 
         {/* Search */}
