@@ -39,6 +39,14 @@
 - `frontend/public/sw.js` — network-first API, cache-first static, offline fallback
 - `frontend/app/layout.tsx` — manifest link + inline SW registration script
 
+## Mentor page redesign (March 2026)
+- `page.tsx` — full-screen animated hero + big mentor cards + slide-in profile drawer
+- `[id]/page.tsx` — dark gradient hero band + 4 stat cards + new layout, BookingModal preserved
+- Backend: added `member_since_days` computed field to `MentorListSerializer` + `MentorDetailSerializer`
+- Drawer: Follow toggle (client-side state), Book Session links to `[id]#book`
+- Card accents: 5-color CARD_ACCENTS palette cycling on `mentor.id % 5`
+- All animations via CSS keyframes injected with `<style dangerouslySetInnerHTML>` (no external libraries)
+
 ## Migrations
 Latest practice migration: `0006_savedword`
 New apps: `writing`, `interview`, `community` each have `0001_initial`

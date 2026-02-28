@@ -40,10 +40,11 @@ class MentorListSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     top_badge = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
+    member_since_days = serializers.SerializerMethodField()
 
     class Meta:
         model = MentorProfile
-        fields = ["id", "name", "bio", "specialties", "languages", "hourly_rate", "rating_avg", "session_count", "review_count", "top_badge"]
+        fields = ["id", "name", "bio", "specialties", "languages", "hourly_rate", "rating_avg", "session_count", "review_count", "top_badge", "member_since_days"]
 
     def get_name(self, obj):
         u = obj.user
@@ -55,6 +56,10 @@ class MentorListSerializer(serializers.ModelSerializer):
     def get_review_count(self, obj):
         return MentorSession.objects.filter(mentor=obj, student_rating__isnull=False).count()
 
+    def get_member_since_days(self, obj):
+        from django.utils import timezone
+        return (timezone.now() - obj.created_at).days
+
 
 class MentorDetailSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -63,6 +68,7 @@ class MentorDetailSerializer(serializers.ModelSerializer):
     intro_available = serializers.SerializerMethodField()
     top_badge = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
+    member_since_days = serializers.SerializerMethodField()
 
     class Meta:
         model = MentorProfile
@@ -70,7 +76,7 @@ class MentorDetailSerializer(serializers.ModelSerializer):
             "id", "name", "bio", "credentials", "specialties", "languages",
             "hourly_rate", "rating_avg", "session_count", "review_count", "timezone",
             "intro_video_key", "availability", "bundles",
-            "offers_intro_call", "intro_available", "top_badge",
+            "offers_intro_call", "intro_available", "top_badge", "member_since_days",
         ]
 
     def get_name(self, obj):
@@ -90,6 +96,10 @@ class MentorDetailSerializer(serializers.ModelSerializer):
 
     def get_review_count(self, obj):
         return MentorSession.objects.filter(mentor=obj, student_rating__isnull=False).count()
+
+    def get_member_since_days(self, obj):
+        from django.utils import timezone
+        return (timezone.now() - obj.created_at).days
 
 
 class MentorSessionSerializer(serializers.ModelSerializer):
