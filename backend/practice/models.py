@@ -89,3 +89,18 @@ class UserVocabProgress(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.word.word} — {'known' if self.known else 'learning'}"
+
+
+class SavedWord(models.Model):
+    user       = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='saved_words')
+    word       = models.CharField(max_length=150)
+    definition = models.TextField(blank=True)
+    note       = models.CharField(max_length=300, blank=True)
+    saved_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-saved_at']
+        unique_together = ['user', 'word']
+
+    def __str__(self):
+        return f'{self.user.username} — {self.word}'

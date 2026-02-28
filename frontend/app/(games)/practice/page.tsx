@@ -28,6 +28,11 @@ const SECTIONS = {
     bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd',
     gradFrom: '#dbeafe', gradTo: '#bfdbfe',
   },
+  aiTools: {
+    emoji: '🤖', label: 'AI Tools',
+    bg: '#fdf4ff', text: '#7c3aed', border: '#e9d5ff',
+    gradFrom: '#fdf4ff', gradTo: '#f3e8ff',
+  },
 } as const;
 
 // ─── Difficulty styles ─────────────────────────────────────────────────────────
@@ -420,9 +425,32 @@ export default function PracticePage() {
               subtitle="Real conversations with an AI coach — scored &amp; reviewed"
               seeAllHref="/practice/roleplay"
               seeAllLabel="All modes"
-              count={ROLEPLAY_MODES.length}
+              count={ROLEPLAY_MODES.length + 1}
             />
             <RolePlayGrid modes={ROLEPLAY_MODES} />
+            {/* Interview Simulation card */}
+            <Link
+              href="/practice/interview"
+              className="group mt-4 flex items-center justify-between gap-4 rounded-2xl px-5 py-4 hover:shadow-md transition-all duration-200"
+              style={{ background: 'linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%)', border: '1.5px solid #fed7aa' }}
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 shadow-sm"
+                  style={{ background: 'rgba(255,255,255,0.55)', border: '1.5px solid #fed7aa' }}>
+                  🎯
+                </div>
+                <div>
+                  <p className="font-extrabold text-sm leading-tight" style={{ color: '#9a3412' }}>Interview Simulation</p>
+                  <p className="text-xs mt-0.5 font-medium" style={{ color: '#c2410c', opacity: 0.8 }}>
+                    Text-based mock interviews — behavioral, technical, HR &amp; mixed
+                  </p>
+                </div>
+              </div>
+              <span className="flex-shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all group-hover:scale-105"
+                style={{ background: 'rgba(255,255,255,0.6)', color: '#9a3412', border: '1px solid #fed7aa' }}>
+                Start →
+              </span>
+            </Link>
           </section>
 
           {/* ── Test Prep ──────────────────────────────────────────────── */}
@@ -468,6 +496,84 @@ export default function PracticePage() {
                 Open →
               </span>
             </Link>
+          </section>
+
+          {/* ── AI Tools ───────────────────────────────────────────────── */}
+          <section>
+            <SectionHeader
+              theme={SECTIONS.aiTools}
+              title="AI Tools"
+              subtitle="Writing coach, resume analyzer, interview sim &amp; saved words"
+              seeAllHref="/practice/writing-coach"
+              seeAllLabel="Writing Coach"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  href: '/practice/writing-coach',
+                  emoji: '✍️', title: 'AI Writing Coach',
+                  description: 'Get grammar, vocabulary and structure feedback on your essays and emails.',
+                  badge: 'GPT-4o',
+                  color: { bg: '#fdf4ff', text: '#7c3aed', border: '#e9d5ff' },
+                },
+                {
+                  href: '/practice/resume-analyzer',
+                  emoji: '📄', title: 'Resume Analyzer',
+                  description: 'ATS compatibility score, phrase improvements and keyword suggestions.',
+                  badge: 'GPT-4o',
+                  color: { bg: '#f0fdf4', text: '#166534', border: '#bbf7d0' },
+                },
+                {
+                  href: '/practice/interview',
+                  emoji: '🎯', title: 'Interview Simulation',
+                  description: 'Text-based mock interviews with per-answer scoring and final report.',
+                  badge: 'New',
+                  color: { bg: '#fff7ed', text: '#9a3412', border: '#fed7aa' },
+                },
+                {
+                  href: '/practice/saved-words',
+                  emoji: '🔖', title: 'Saved Words',
+                  description: 'Build your personal vocabulary list — save and review any word.',
+                  badge: null,
+                  color: { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe' },
+                },
+              ].map((card) => (
+                <Link
+                  key={card.href}
+                  href={card.href}
+                  className="group block rounded-2xl border overflow-hidden hover:shadow-lg transition-all duration-200"
+                  style={{ borderColor: card.color.border }}
+                >
+                  <div className="relative px-4 py-4 overflow-hidden" style={{ background: card.color.bg }}>
+                    <div className="absolute right-[-14px] top-[-14px] w-16 h-16 rounded-full"
+                      style={{ background: card.color.text, opacity: 0.1 }} />
+                    <div className="relative flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-3xl">{card.emoji}</span>
+                        <div>
+                          <h3 className="font-extrabold text-sm leading-tight" style={{ color: card.color.text }}>{card.title}</h3>
+                          {card.badge && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block"
+                              style={{ background: card.color.text + '20', color: card.color.text }}>
+                              {card.badge}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white px-4 py-3.5 flex items-end justify-between gap-3">
+                    <p className="text-xs text-gray-500 leading-relaxed flex-1">{card.description}</p>
+                    <span
+                      className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full transition-all group-hover:scale-105"
+                      style={{ background: card.color.bg, color: card.color.text, border: `1px solid ${card.color.border}` }}
+                    >
+                      Open →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </section>
 
         </div>

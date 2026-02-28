@@ -9,11 +9,12 @@ import NotificationBell from './NotificationBell';
 import api from '@/lib/api';
 
 const NAV_LINKS = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/learn',     label: 'Learn' },
-  { href: '/practice',  label: 'Practice' },
-  { href: '/mentors',   label: 'Mentors' },
-  { href: '/jobs',      label: 'Jobs' },
+  { href: '/dashboard',  label: 'Dashboard' },
+  { href: '/learn',      label: 'Learn' },
+  { href: '/practice',   label: 'Practice' },
+  { href: '/mentors',    label: 'Mentors' },
+  { href: '/jobs',       label: 'Jobs' },
+  { href: '/community',  label: 'Community' },
 ];
 
 export default function Navbar() {

@@ -18,4 +18,7 @@ urlpatterns = [
     path('vocab/', api_views.vocab_list, name='practice-vocab-list'),
     path('vocab/stats/', api_views.vocab_stats, name='practice-vocab-stats'),
     path('vocab/<int:word_id>/mark/', api_views.vocab_mark, name='practice-vocab-mark'),
+    # Saved words
+    path('saved-words/', api_views.saved_words, name='practice-saved-words'),
+    path('saved-words/<int:pk>/', api_views.delete_saved_word, name='practice-saved-word-delete'),
 ]

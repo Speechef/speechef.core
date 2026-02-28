@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   title: 'Speechef — Master Your Communication',
   description:
     'Speechef helps you master public speaking and communications through expert guidance, community support, and interactive practice games.',
+  manifest: '/manifest.json',
+  themeColor: '#141c52',
 };
 
 export default function RootLayout({
@@ -26,6 +28,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#141c52" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

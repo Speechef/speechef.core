@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Max
 
-from .models import WordQuestion, GameSession, VocabWord, UserVocabProgress
+from .models import WordQuestion, GameSession, VocabWord, UserVocabProgress, SavedWord
 from .serializers import (
     WordQuestionSerializer,
     MemoryMatchPairSerializer,
@@ -428,3 +428,59 @@ def vocab_stats(request):
         'by_difficulty': by_difficulty,
         'by_exam': by_exam,
     })
+
+
+# ─── Saved Words ───────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def saved_words(request):
+    """
+    GET  /practice/saved-words/  → list user's saved words
+    POST /practice/saved-words/  → save { word, definition, note }
+    """
+    if request.method == 'GET':
+        qs = SavedWord.objects.filter(user=request.user)
+        return Response([
+            {
+                'id': w.id,
+                'word': w.word,
+                'definition': w.definition,
+                'note': w.note,
+                'saved_at': w.saved_at.isoformat(),
+            }
+            for w in qs
+        ])
+
+    word = request.data.get('word', '').strip()
+    if not word:
+        return Response({'detail': 'word is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    obj, created = SavedWord.objects.get_or_create(
+        user=request.user,
+        word=word,
+        defaults={
+            'definition': request.data.get('definition', ''),
+            'note': request.data.get('note', ''),
+        },
+    )
+    if not created:
+        # Update definition/note if re-saving
+        obj.definition = request.data.get('definition', obj.definition)
+        obj.note = request.data.get('note', obj.note)
+        obj.save(update_fields=['definition', 'note'])
+    return Response(
+        {'id': obj.id, 'word': obj.word, 'definition': obj.definition, 'note': obj.note, 'saved_at': obj.saved_at.isoformat()},
+        status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+    )
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_saved_word(request, pk):
+    """DELETE /practice/saved-words/<id>/"""
+    try:
+        obj = SavedWord.objects.get(pk=pk, user=request.user)
+    except SavedWord.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    obj.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
