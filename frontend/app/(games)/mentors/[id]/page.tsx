@@ -18,7 +18,7 @@ interface Bundle {
   id: number;
   name: string;
   session_count: number;
-  price: number;
+  price: number | string;
 }
 
 interface UserBundle {
@@ -34,8 +34,8 @@ interface MentorDetail {
   credentials: string;
   specialties: string[];
   languages: string[];
-  hourly_rate: number;
-  rating_avg: number;
+  hourly_rate: number | string;
+  rating_avg: number | string;
   review_count: number;
   availability: Availability[];
   bundles: Bundle[];
@@ -54,16 +54,17 @@ const DAY_JS: Record<string, number> = {
   sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
 };
 
-function StarRating({ rating, count }: { rating: number; count?: number }) {
+function StarRating({ rating, count }: { rating: number | string; count?: number }) {
+  const r = Number(rating);
   return (
     <div className="flex items-center gap-1">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} className={`w-4 h-4 ${i < Math.round(rating) ? 'text-amber-400' : 'text-gray-200'}`}
+        <svg key={i} className={`w-4 h-4 ${i < Math.round(r) ? 'text-amber-400' : 'text-gray-200'}`}
           fill="currentColor" viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
-      <span className="text-sm text-gray-500 ml-1">{rating?.toFixed(1) ?? '—'}{count ? ` (${count})` : ''}</span>
+      <span className="text-sm text-gray-500 ml-1">{isNaN(r) ? '—' : r.toFixed(1)}{count ? ` (${count})` : ''}</span>
     </div>
   );
 }
@@ -171,7 +172,8 @@ function BookingModal({
     );
   }
 
-  const price = isIntro ? 0 : (duration === 60 ? mentor.hourly_rate : mentor.hourly_rate / 2);
+  const rate  = Number(mentor.hourly_rate);
+  const price = isIntro ? 0 : (duration === 60 ? rate : rate / 2);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
@@ -200,7 +202,7 @@ function BookingModal({
                     backgroundColor: duration === d ? '#f0f2ff' : 'white',
                     color: '#141c52',
                   }}>
-                  {d} min — ${d === 60 ? mentor.hourly_rate : mentor.hourly_rate / 2}
+                  {d} min — ${d === 60 ? rate : rate / 2}
                 </button>
               ))}
             </div>

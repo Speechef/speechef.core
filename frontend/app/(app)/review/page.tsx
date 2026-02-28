@@ -10,7 +10,7 @@ interface Expert {
   id: number;
   name: string;
   bio: string;
-  rating_avg: number;
+  rating_avg: number | string;
   review_count: number;
   specialties: string[];
   languages: string[];
@@ -161,7 +161,7 @@ function StepExpert({ selectedId, onSelect }: { selectedId: number | null; onSel
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-sm" style={{ color: '#141c52' }}>{e.name}</p>
-                    <span className="text-xs text-amber-500">★ {e.rating_avg?.toFixed(1) ?? '—'}</span>
+                    <span className="text-xs text-amber-500">★ {e.rating_avg != null ? Number(e.rating_avg).toFixed(1) : '—'}</span>
                   </div>
                   <p className="text-xs text-gray-500 truncate">{(e.specialties ?? []).join(' · ')}</p>
                 </div>
