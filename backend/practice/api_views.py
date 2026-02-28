@@ -2,11 +2,11 @@ import random
 from django.db.models import Sum, Count
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Max
 
-from .models import WordQuestion, GameSession
+from .models import WordQuestion, GameSession, VocabWord, UserVocabProgress
 from .serializers import (
     WordQuestionSerializer,
     MemoryMatchPairSerializer,
@@ -301,3 +301,130 @@ def my_best(request):
         best=Max('score')
     )['best']
     return Response({'best': best or 0})
+
+
+# ─── Vocabulary Tracker ────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def vocab_list(request):
+    """
+    GET /practice/vocab/
+    Returns paginated vocab words with per-user known status.
+    Query params: difficulty=basic|intermediate|advanced, exam_tag=ielts|toefl|…, known=true|false
+    """
+    qs = VocabWord.objects.all()
+
+    difficulty = request.query_params.get('difficulty')
+    if difficulty:
+        qs = qs.filter(difficulty=difficulty)
+
+    exam_tag = request.query_params.get('exam_tag')
+    if exam_tag:
+        qs = qs.filter(exam_tags__contains=exam_tag)
+
+    # Build known map for authenticated users
+    known_ids = set()
+    unknown_ids = set()
+    if request.user.is_authenticated:
+        progress = UserVocabProgress.objects.filter(
+            user=request.user, word__in=qs
+        ).values_list('word_id', 'known')
+        for word_id, k in progress:
+            if k:
+                known_ids.add(word_id)
+            else:
+                unknown_ids.add(word_id)
+
+    known_filter = request.query_params.get('known')
+    if known_filter == 'true' and request.user.is_authenticated:
+        qs = qs.filter(id__in=known_ids)
+    elif known_filter == 'false' and request.user.is_authenticated:
+        qs = qs.exclude(id__in=known_ids)
+
+    words = []
+    for w in qs:
+        is_known = w.id in known_ids if request.user.is_authenticated else None
+        words.append({
+            'id': w.id,
+            'word': w.word,
+            'definition': w.definition,
+            'example': w.example,
+            'exam_tags': w.exam_tags,
+            'difficulty': w.difficulty,
+            'is_known': is_known,
+        })
+
+    return Response(words)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def vocab_mark(request, word_id):
+    """
+    POST /practice/vocab/{id}/mark/
+    Body: { "known": true|false }
+    Returns: { "known": bool }
+    """
+    known = request.data.get('known')
+    if known is None:
+        return Response({'detail': 'known field is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        word = VocabWord.objects.get(pk=word_id)
+    except VocabWord.DoesNotExist:
+        return Response({'detail': 'Word not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    progress, _ = UserVocabProgress.objects.get_or_create(user=request.user, word=word)
+    progress.known = bool(known)
+    progress.save(update_fields=['known', 'reviewed_at'])
+    return Response({'known': progress.known})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def vocab_stats(request):
+    """
+    GET /practice/vocab/stats/
+    Returns { total, known, by_difficulty, by_exam }
+    """
+    total = VocabWord.objects.count()
+
+    if not request.user.is_authenticated:
+        return Response({
+            'total': total,
+            'known': 0,
+            'by_difficulty': {},
+            'by_exam': {},
+        })
+
+    known_word_ids = set(
+        UserVocabProgress.objects.filter(user=request.user, known=True)
+        .values_list('word_id', flat=True)
+    )
+    known = len(known_word_ids)
+
+    # by_difficulty
+    by_difficulty = {}
+    for diff in ['basic', 'intermediate', 'advanced']:
+        diff_total = VocabWord.objects.filter(difficulty=diff).count()
+        diff_known = VocabWord.objects.filter(difficulty=diff, id__in=known_word_ids).count()
+        by_difficulty[diff] = {'total': diff_total, 'known': diff_known}
+
+    # by_exam (collect all unique tags first)
+    all_tags = set()
+    for tags in VocabWord.objects.values_list('exam_tags', flat=True):
+        all_tags.update(tags or [])
+
+    by_exam = {}
+    for tag in sorted(all_tags):
+        tag_total = VocabWord.objects.filter(exam_tags__contains=tag).count()
+        tag_known = VocabWord.objects.filter(exam_tags__contains=tag, id__in=known_word_ids).count()
+        by_exam[tag] = {'total': tag_total, 'known': tag_known}
+
+    return Response({
+        'total': total,
+        'known': known,
+        'by_difficulty': by_difficulty,
+        'by_exam': by_exam,
+    })

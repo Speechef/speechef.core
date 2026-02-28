@@ -31,11 +31,8 @@ export default function WordGamesSection({ games }: Props) {
     queryFn: () => api.get('/practice/sessions/').then((r) => r.data),
   });
 
-  // Build stats map from gameKey
   const statsMap: Record<string, { count: number; best: number }> = {};
-  for (const g of games) {
-    statsMap[g.gameKey] = { count: 0, best: 0 };
-  }
+  for (const g of games) statsMap[g.gameKey] = { count: 0, best: 0 };
   for (const s of sessions) {
     if (s.game in statsMap) {
       statsMap[s.game].count++;
@@ -48,37 +45,34 @@ export default function WordGamesSection({ games }: Props) {
       {games.map((game) => {
         const stats = statsMap[game.gameKey] ?? { count: 0, best: 0 };
         const { color } = game;
-        return (
-          <div
-            key={game.href}
-            className="flex flex-col bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all relative overflow-hidden"
-            style={{ '--card-border': color.border } as React.CSSProperties}
-          >
-            {/* Invisible full-card link overlay */}
-            <Link href={game.href} className="absolute inset-0 rounded-2xl z-0" aria-label={`Play ${game.title}`} />
+        const played = stats.count > 0;
 
+        return (
+          <Link
+            key={game.href}
+            href={game.href}
+            className="group flex flex-col rounded-2xl overflow-hidden border hover:shadow-lg transition-all duration-200"
+            style={{ borderColor: color.border, background: '#fff' }}
+          >
             {/* Colored header band */}
             <div
-              className="px-4 pt-3 pb-3 rounded-t-2xl relative overflow-hidden"
+              className="relative px-4 py-4 overflow-hidden"
               style={{ background: color.bg }}
             >
-              {/* Decorative blob */}
               <div
-                className="absolute rounded-full"
-                style={{
-                  background: color.text,
-                  opacity: 0.15,
-                  width: 56,
-                  height: 56,
-                  top: -18,
-                  right: -10,
-                }}
+                className="absolute right-[-14px] top-[-14px] w-16 h-16 rounded-full pointer-events-none"
+                style={{ background: color.text, opacity: 0.12 }}
               />
-              <div className="flex items-center justify-between relative">
-                <span className="text-2xl">{game.emoji}</span>
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-3xl">{game.emoji}</span>
+                  <span className="font-extrabold text-sm leading-tight" style={{ color: color.text }}>
+                    {game.title}
+                  </span>
+                </div>
                 {game.badge && (
                   <span
-                    className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    className="text-[10px] font-extrabold px-2 py-0.5 rounded-full"
                     style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
                   >
                     {game.badge}
@@ -89,36 +83,60 @@ export default function WordGamesSection({ games }: Props) {
 
             {/* White body */}
             <div className="px-4 py-3 flex flex-col flex-1">
-              <h3 className="font-bold text-sm mb-1" style={{ color: '#141c52' }}>{game.title}</h3>
-              <p className="text-gray-500 text-xs leading-relaxed flex-1">{game.description}</p>
+              <p className="text-xs text-gray-500 leading-relaxed flex-1">{game.description}</p>
 
-              {stats.count > 0 ? (
+              {played ? (
                 <div className="mt-3 pt-3 border-t border-gray-50">
-                  <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
-                    <span>Played {stats.count}×</span>
-                    <span className="font-semibold" style={{ color: '#141c52' }}>Best: {stats.best}</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] text-gray-400">
+                      Played <strong className="text-gray-600">{stats.count}×</strong>
+                    </span>
+                    <span className="text-[10px] font-bold" style={{ color: '#141c52' }}>
+                      Best: {stats.best}
+                    </span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full"
                       style={{
                         width: `${Math.min(stats.best, 100)}%`,
-                        background: 'linear-gradient(to right,#FADB43,#fe9940)',
+                        background: `linear-gradient(to right, ${color.bg}, ${color.text})`,
                       }}
                     />
                   </div>
-                  <Link
-                    href={`/practice/history?game=${game.gameKey}`}
-                    className="relative z-10 text-[10px] font-semibold text-gray-400 hover:text-gray-600 hover:underline"
-                  >
-                    View history →
-                  </Link>
                 </div>
               ) : (
-                <p className="mt-3 text-[10px] text-gray-300">Not played yet</p>
+                <div className="mt-3 pt-3 border-t border-gray-50">
+                  <span className="text-[10px] text-gray-300 italic">Not played yet</span>
+                </div>
               )}
             </div>
-          </div>
+
+            {/* Footer */}
+            <div
+              className="px-4 py-2.5 flex items-center justify-between border-t"
+              style={{ borderColor: `${color.border}88`, background: `${color.bg}44` }}
+            >
+              {played ? (
+                <Link
+                  href={`/practice/history?game=${game.gameKey}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[10px] font-semibold hover:underline"
+                  style={{ color: color.text, opacity: 0.65 }}
+                >
+                  View history →
+                </Link>
+              ) : (
+                <span className="text-[10px] text-gray-300">New game</span>
+              )}
+              <span
+                className="text-xs font-bold px-3.5 py-1.5 rounded-full transition-all group-hover:scale-105"
+                style={{ background: color.bg, color: color.text, border: `1.5px solid ${color.border}` }}
+              >
+                Play →
+              </span>
+            </div>
+          </Link>
         );
       })}
     </div>

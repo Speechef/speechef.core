@@ -13,11 +13,7 @@ const GAME_DURATION = 60; // seconds
 interface Question {
   id: number;
   word: string;
-  correct_meaning: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
+  options: string[];
 }
 
 type AnswerState = 'idle' | 'correct' | 'wrong';
@@ -28,9 +24,9 @@ async function fetchQuestion(): Promise<Question> {
   return data;
 }
 
-async function checkAnswer(questionId: number, answer: string): Promise<boolean> {
+async function checkAnswer(questionId: number, answer: string): Promise<{ correct: boolean; correct_meaning: string }> {
   const { data } = await api.post('/practice/guess/', { question_id: questionId, answer });
-  return data.correct;
+  return { correct: data.correct, correct_meaning: data.correct_meaning };
 }
 
 export default function VocabularyBlitzPage() {
@@ -42,6 +38,7 @@ export default function VocabularyBlitzPage() {
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [correctMeaning, setCorrectMeaning] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loadingRef = useRef(false);
 
@@ -57,6 +54,7 @@ export default function VocabularyBlitzPage() {
       const q = await fetchQuestion();
       setQuestion(q);
       setAnswerState('idle');
+      setCorrectMeaning(null);
     } catch {
       // ignore
     } finally {
@@ -102,7 +100,8 @@ export default function VocabularyBlitzPage() {
   async function handleAnswer(option: string) {
     if (!question || answerState !== 'idle' || stage !== 'playing') return;
 
-    const correct = await checkAnswer(question.id, option);
+    const { correct, correct_meaning } = await checkAnswer(question.id, option);
+    setCorrectMeaning(correct_meaning);
     setQuestionsAnswered((q) => q + 1);
 
     if (correct) {
@@ -121,9 +120,7 @@ export default function VocabularyBlitzPage() {
     }
   }
 
-  const options = question
-    ? [question.option_a, question.option_b, question.option_c, question.option_d]
-    : [];
+  const options = question?.options ?? [];
 
   const timerColor = timeLeft <= 10 ? '#ef4444' : timeLeft <= 20 ? '#f59e0b' : BRAND.primary;
   const timerBg    = timeLeft <= 10 ? '#fee2e2' : timeLeft <= 20 ? '#fef3c7' : '#dbeafe';
@@ -298,7 +295,7 @@ export default function VocabularyBlitzPage() {
         {/* Options */}
         <div className="grid grid-cols-2 gap-3">
           {options.map((opt, i) => {
-            const isCorrect = opt === question?.correct_meaning;
+            const isCorrect = opt === correctMeaning;
             const btnStyle =
               answerState === 'correct' && isCorrect
                 ? { backgroundColor: '#22c55e', color: 'white', borderColor: '#22c55e' }

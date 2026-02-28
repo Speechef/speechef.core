@@ -14,4 +14,8 @@ urlpatterns = [
     path('daily/', api_views.daily_challenge, name='practice-daily'),
     path('sentence-check/', api_views.sentence_check, name='practice-sentence-check'),
     path('pronunciation-check/', api_views.pronunciation_check, name='practice-pronunciation-check'),
+    # Vocabulary tracker
+    path('vocab/', api_views.vocab_list, name='practice-vocab-list'),
+    path('vocab/stats/', api_views.vocab_stats, name='practice-vocab-stats'),
+    path('vocab/<int:word_id>/mark/', api_views.vocab_mark, name='practice-vocab-mark'),
 ]

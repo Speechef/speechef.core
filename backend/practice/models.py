@@ -56,3 +56,36 @@ class MemoryMatch(models.Model):
 
     def __str__(self):
         return self.description
+
+
+class VocabWord(models.Model):
+    DIFFICULTY_CHOICES = [
+        ("basic", "Basic"),
+        ("intermediate", "Intermediate"),
+        ("advanced", "Advanced"),
+    ]
+    word = models.CharField(max_length=100, unique=True)
+    definition = models.TextField()
+    example = models.TextField(blank=True)
+    exam_tags = models.JSONField(default=list)  # e.g. ["ielts", "toefl"]
+    difficulty = models.CharField(max_length=15, choices=DIFFICULTY_CHOICES)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+
+    def __str__(self):
+        return self.word
+
+
+class UserVocabProgress(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='vocab_progress')
+    word = models.ForeignKey(VocabWord, on_delete=models.CASCADE, related_name='user_progress')
+    known = models.BooleanField(default=False)
+    reviewed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ["user", "word"]
+
+    def __str__(self):
+        return f"{self.user.username} — {self.word.word} — {'known' if self.known else 'learning'}"
