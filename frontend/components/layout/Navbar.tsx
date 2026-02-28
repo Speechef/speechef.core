@@ -9,12 +9,12 @@ import NotificationBell from './NotificationBell';
 import api from '@/lib/api';
 
 const NAV_LINKS = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/learn',     label: 'Learn' },
-  { href: '/practice',  label: 'Practice' },
-  { href: '/progress',  label: 'Progress' },
-  { href: '/jobs',      label: 'Jobs' },
-  { href: '/mentors',   label: 'Mentors' },
+  { href: '/dashboard',  label: 'Dashboard' },
+  { href: '/learn',      label: 'Learn' },
+  { href: '/practice',   label: 'Practice' },
+  { href: '/mentors',    label: 'Mentors' },
+  { href: '/jobs',       label: 'Jobs' },
+  { href: '/community',  label: 'Community' },
 ];
 
 export default function Navbar() {
@@ -137,6 +137,13 @@ export default function Navbar() {
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <span>👤</span> My Profile
+                    </Link>
+                    <Link
+                      href="/progress"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <span>📈</span> My Progress
                     </Link>
                     <Link
                       href="/analyze/history"

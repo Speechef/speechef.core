@@ -70,4 +70,7 @@ urlpatterns = [
     path('testprep/', include('testprep.api_urls')),
     path('mentors/', include('mentorship.api_urls')),
     path('roleplay/', include('roleplay.api_urls')),
+    path('writing/', include('writing.api_urls')),
+    path('interview/', include('interview.api_urls')),
+    path('community/', include('community.api_urls')),
 ]

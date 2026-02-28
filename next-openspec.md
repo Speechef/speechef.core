@@ -1,7 +1,7 @@
 # Speechef OpenSpec — Feature Proposal Tracker
 
 > Tracks all feature proposals, bug fixes, and improvements using the OpenSpec workflow.
-> Last updated: 2026-02-28 (Phase 48 — Bug sweep: profile href, application statuses, session cap, cancelled_at, day_of_week in sessions)
+> Last updated: 2026-02-28 (Phase 53 — Fix vocabulary-blitz 400: align Question interface with API response)
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Status    | Count | Proposals |
 |-----------|-------|-----------|
-| Done      | 37    | MM2.1, MM2.2, MM2.3, MM3.1, MM3.2, MM3.3, MM4.1, MM4.2, MM5.1, MM6.1, MM6.2, MM7.1, MM8.1, MM9.1, MM9.2, MM10.1, PG1.1, AN3.1, MM11.1, MM12.1, FIX2.1, ACC1.1, MM14.1, MM15.1, MM16.1, FIX3.1, FIX4.1, FIX5.1, FIX6.1, FIX7.1, FIX9.1, FIX10.1, FIX11.1, FIX12.1, FIX13.1, FIX14.1, FIX15.1 |
+| Done      | 44    |MM2.1, MM2.2, MM2.3, MM3.1, MM3.2, MM3.3, MM4.1, MM4.2, MM5.1, MM6.1, MM6.2, MM7.1, MM8.1, MM9.1, MM9.2, MM10.1, PG1.1, AN3.1, MM11.1, MM12.1, FIX2.1, ACC1.1, MM14.1, MM15.1, MM16.1, FIX3.1, FIX4.1, FIX5.1, FIX6.1, FIX7.1, FIX9.1, FIX10.1, FIX11.1, FIX12.1, FIX13.1, FIX14.1, FIX15.1, FIX16.1, FIX17.1, FIX18.1, FIX19.1, SEED1.1, SEED2.1 |
 | Unblocked | 0     | — |
 | Blocked   | 0     | — |
 | Archived  | 165   | B1.1, B1.2, B1.3, I1.1, I1.2, I1.3, I1.4, I1.5, I1.6, I1.7, I1.8, I1.9, I2.1, G1.1, G1.2, G2.1, G2.2, U1.1, U1.2, A1.1, A1.2, A1.3, L1.1, L1.2, F1.1, F1.2, F1.3, F1.4, F1.5, LP1.1, LP1.2, LP1.3, LP1.4, LP1.5, LP1.6, ER1.1, ER1.2, ER1.3, ER1.4, J2.1, J2.2, MM1.1, MM1.2, MM1.3, TP1.1, TP1.2, TP1.3, AI1.1, AI1.2, AI1.3, AI1.4, UG1.1, RP1.1, RP1.2, J2.3, G3.1, G3.2, N1.1, AC1.1, INT1.1, G3.3, L2.1, MY1.1, DB1.1, L2.2, G3.4, G4.1, L3.1, PR1.1, RP1.3, AN1.1, SC1.1, G5.1, ST1.1, J3.1, RP2.1, PR1.2, WL1.1, RP3.1, G7.1, G8.1, L4.1, RP4.1, J5.1, DB2.1, L5.1, M2.1, RP5.1, AN2.1, PR3.1, J6.1, SC2.1, LB2.1, DB3.1, J7.1, RP8.1, G10.1, WL2.1, N3.1, RS1.1, RP9.1, MS2.1, JB2.1, LB4.1, AN4.1, PR5.1, LN1.1, MD1.1, RP10.1, PF1.1, TP-BE1, TP-BE2, TP-BE3, TP-FE1, TP-FE2, TP-FE3, MN1.1, PH2.1, DB5.1, AN5.1, SET1.1, FT1.1, EP1.1, PW1.1, LN3.1, TP-FE6, AN6.1, DB8.1, FP1.1, LD2.1, LB1.1, JB3.1, PH3.1, MN2.1, JB4.1, RG1.1, LN4.1, RP11.1, ST2.1, DB9.1, SET3.1, PR6.1, RP12.1, AN7.1, JB5.1, L6.1, L7.1, L8.1, L9.1, L10.1 |
@@ -19,6 +19,23 @@
 ## Dependency Graph
 
 ```
+── PHASE 53: Bug fix ─────────────────────────────────────────────────────────
+FIX20.1 ✅ (vocab-blitz 400: Question interface → options:string[] + correctMeaning state) → no dependencies
+
+── PHASE 52: Bug fix ─────────────────────────────────────────────────────────
+FIX19.1 ✅ (learn/[id] body-anim invisible: add post?.id to observer deps)     → no dependencies
+
+── PHASE 51: Bug fix ─────────────────────────────────────────────────────────
+FIX18.1 ✅ (mentors/[id] StarRating: Number() coerce rating_avg DecimalField)  → no dependencies
+
+── PHASE 50: Grammar curriculum seed ────────────────────────────────────────
+SEED2.1 ✅ (seed_grammar mgmt cmd: 24-lesson Zero-to-Hero curriculum)         → no dependencies
+
+── PHASE 49: Bug sweep + seed data ─────────────────────────────────────────
+FIX16.1 ✅ (mentor StarRating + sort: Number() coercion for DecimalField)    → no dependencies
+FIX17.1 ✅ (review/page Expert.rating_avg: number|string + Number() coerce)  → no dependencies
+SEED1.1 ✅ (seed_mentors mgmt cmd: gagandeep, hariom, darshika profiles)     → no dependencies
+
 ── PHASE 48: Bug sweep ──────────────────────────────────────────────────────
 FIX11.1 ✅ (profile score history href → /analyze?session=id)  → no dependencies
 FIX12.1 ✅ (job application withdrawn→viewed in both pages)    → no dependencies

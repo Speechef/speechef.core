@@ -17,6 +17,7 @@ export default function PracticeStatsBanner() {
   const { data: sessions = [] } = useQuery<GameSession[]>({
     queryKey: ['practice-stats-banner'],
     enabled: isLoggedIn,
+    staleTime: 0,
     queryFn: () => api.get('/practice/sessions/?limit=200').then((r) => r.data).catch(() => []),
   });
 

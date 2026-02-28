@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
 const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
@@ -11,11 +11,7 @@ const GAME_COLOR = { bg: '#fef3c7', text: '#78350f', border: '#fde68a' };
 interface DailyQuestion {
   id: number;
   word: string;
-  correct_meaning: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
+  options: string[];
   date: string;
 }
 
@@ -37,11 +33,13 @@ const todaySeed = parseInt(TODAY.replace(/-/g, ''), 10) % ROLEPLAY_SUGGESTIONS.l
 const todayRolePlay = ROLEPLAY_SUGGESTIONS[todaySeed];
 
 export default function DailyChallengePage() {
+  const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
   const [alreadyDone, setAlreadyDone] = useState(false);
   const [storedResult, setStoredResult] = useState<{ correct: boolean; word: string } | null>(null);
+  const [correctMeaning, setCorrectMeaning] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -73,11 +71,16 @@ export default function DailyChallengePage() {
     },
     onSuccess: (data) => {
       const correct: boolean = data.correct;
+      setCorrectMeaning(data.correct_meaning ?? null);
       setWasCorrect(correct);
       setSubmitted(true);
-      if (correct) {
-        api.post('/practice/guess/complete/', { score: 5 }).catch(() => {});
-      }
+      // Always record the session so stats/streak stay accurate
+      api.post('/practice/guess/complete/', { score: correct ? 5 : 0, game: 'daily' })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['practice-stats-banner'] });
+          queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        })
+        .catch(() => {});
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({ correct, word: question?.word ?? '' })
@@ -85,9 +88,7 @@ export default function DailyChallengePage() {
     },
   });
 
-  const options = question
-    ? [question.option_a, question.option_b, question.option_c, question.option_d]
-    : [];
+  const options = question?.options ?? [];
 
   // ── Already completed today ────────────────────────────────────────────────
   if (alreadyDone && storedResult) {
@@ -125,7 +126,7 @@ export default function DailyChallengePage() {
               {wasCorrect ? 'Correct!' : 'Not quite!'}
             </h2>
             <p className="text-sm text-gray-600">
-              <strong>{question.word}</strong> means: <em>{question.correct_meaning}</em>
+              <strong>{question.word}</strong> means: <em>{correctMeaning}</em>
             </p>
             {wasCorrect && (
               <p className="text-green-600 font-bold text-sm mt-2">+5 XP earned!</p>

@@ -497,6 +497,12 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
 
   const isLoggedIn = !!Cookies.get('access_token');
 
+  // ── Queries ────────────────────────────────────────────────────────────────
+  const { data: post, isLoading } = useQuery<Post>({
+    queryKey: ['learn-post', id],
+    queryFn: () => api.get(`/learn/posts/${id}/`).then((r) => r.data),
+  });
+
   // ── Reading progress + sticky bar ─────────────────────────────────────────
   useEffect(() => {
     const onScroll = () => {
@@ -510,10 +516,13 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
   }, []);
 
   // ── Scroll-entrance animations ─────────────────────────────────────────────
+  // Depends on post?.id so this re-runs after async data loads (uncached lessons
+  // render the body AFTER the initial effect, so elements would stay opacity:0)
   useEffect(() => {
     const container = bodyRef.current;
     if (!container) return;
     const elements = container.querySelectorAll('.body-anim');
+    if (!elements.length) return;
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -527,13 +536,7 @@ export default function LearnDetailPage({ params }: { params: Promise<{ id: stri
     );
     elements.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [id]);
-
-  // ── Queries ────────────────────────────────────────────────────────────────
-  const { data: post, isLoading } = useQuery<Post>({
-    queryKey: ['learn-post', id],
-    queryFn: () => api.get(`/learn/posts/${id}/`).then((r) => r.data),
-  });
+  }, [id, post?.id]);
 
   const firstCatName = post?.categories?.[0]?.name;
   const { data: relatedPosts = [] } = useQuery<Post[]>({
