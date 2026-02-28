@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from .models import (
     MentorProfile, MentorAvailability, MentorBundle, MentorSession,
     MentorUnavailability, UserBundle, MentorStudentNote,
+    MentorFollow, MentorApplication,
 )
 from .serializers import (
     MentorListSerializer, MentorDetailSerializer,
@@ -841,3 +842,90 @@ def student_note(request, student_id):
         defaults={"note": note_text},
     )
     return Response({"saved": True})
+
+
+# ── Follow / Unfollow ─────────────────────────────────────────────────────
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def follow_mentor(request, pk):
+    """Toggle follow/unfollow a mentor."""
+    try:
+        mentor = MentorProfile.objects.get(pk=pk, is_active=True)
+    except MentorProfile.DoesNotExist:
+        return Response({"detail": "Mentor not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if mentor.user == request.user:
+        return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+
+    follow, created = MentorFollow.objects.get_or_create(user=request.user, mentor=mentor)
+    if not created:
+        follow.delete()
+        return Response({"following": False, "follower_count": mentor.followers.count()})
+    return Response({"following": True, "follower_count": mentor.followers.count()})
+
+
+# ── Mentor Applications ───────────────────────────────────────────────────
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def apply_mentor(request):
+    """Submit a mentor application."""
+    # Already applied?
+    if MentorApplication.objects.filter(user=request.user).exists():
+        app = MentorApplication.objects.get(user=request.user)
+        return Response({
+            "detail": "You have already submitted an application.",
+            "status": app.status,
+            "created_at": app.created_at,
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Already a mentor?
+    if MentorProfile.objects.filter(user=request.user, is_active=True).exists():
+        return Response({"detail": "You are already an active mentor."}, status=status.HTTP_400_BAD_REQUEST)
+
+    required = ["name", "email", "bio", "credentials", "specialties", "languages", "hourly_rate", "experience_years", "why_mentor"]
+    for field in required:
+        if not request.data.get(field) and request.data.get(field) != 0:
+            return Response({"detail": f"{field} is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        hourly_rate = float(request.data["hourly_rate"])
+        experience_years = int(request.data["experience_years"])
+    except (ValueError, TypeError):
+        return Response({"detail": "hourly_rate and experience_years must be numbers."}, status=status.HTTP_400_BAD_REQUEST)
+
+    app = MentorApplication.objects.create(
+        user=request.user,
+        name=request.data["name"],
+        email=request.data["email"],
+        bio=request.data["bio"],
+        credentials=request.data["credentials"],
+        specialties=request.data.get("specialties", []),
+        languages=request.data.get("languages", []),
+        hourly_rate=hourly_rate,
+        experience_years=experience_years,
+        why_mentor=request.data["why_mentor"],
+    )
+    return Response({
+        "message": "Application submitted successfully. We will review it and get back to you.",
+        "application_id": app.id,
+        "status": app.status,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def apply_mentor_status(request):
+    """Check the status of the current user's mentor application."""
+    try:
+        app = MentorApplication.objects.get(user=request.user)
+    except MentorApplication.DoesNotExist:
+        return Response({"has_applied": False})
+    return Response({
+        "has_applied": True,
+        "status": app.status,
+        "created_at": app.created_at,
+        "reviewed_at": app.reviewed_at,
+        "reviewer_notes": app.reviewer_notes if app.status != "pending" else "",
+    })

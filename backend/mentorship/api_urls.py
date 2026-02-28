@@ -39,6 +39,13 @@ urlpatterns = [
     path("students/<int:student_id>/progress/", api_views.student_progress, name="mentor-student-progress"),  # MM10.1
     path("students/<int:student_id>/note/", api_views.student_note, name="mentor-student-note"),
 
+    # Follow / unfollow
+    path("<int:pk>/follow/", api_views.follow_mentor, name="mentor-follow"),
+
+    # Applications
+    path("apply/", api_views.apply_mentor, name="mentor-apply"),
+    path("apply/status/", api_views.apply_mentor_status, name="mentor-apply-status"),
+
     # Webhooks
     path("daily-webhook/", api_views.daily_webhook, name="mentor-daily-webhook"),  # MM3.1
 ]

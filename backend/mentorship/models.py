@@ -142,3 +142,48 @@ class MentorStudentNote(models.Model):
 
     def __str__(self):
         return f"{self.mentor.user.username} note for {self.student.username}"
+
+
+class MentorFollow(models.Model):
+    """A user following a mentor."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mentor_follows")
+    mentor = models.ForeignKey(MentorProfile, on_delete=models.CASCADE, related_name="followers")
+    followed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [["user", "mentor"]]
+        ordering = ["-followed_at"]
+
+    def __str__(self):
+        return f"{self.user.username} follows {self.mentor.user.username}"
+
+
+class MentorApplication(models.Model):
+    """Application to become a mentor — manually reviewed before MentorProfile is created."""
+    STATUS_CHOICES = [
+        ("pending", "Pending Review"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="mentor_application")
+    name = models.CharField(max_length=150)
+    email = models.EmailField()
+    bio = models.TextField()
+    credentials = models.TextField()
+    specialties = models.JSONField(default=list)
+    languages = models.JSONField(default=list)
+    hourly_rate = models.DecimalField(max_digits=8, decimal_places=2)
+    experience_years = models.IntegerField(default=0)
+    why_mentor = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    reviewer_notes = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} application ({self.status})"

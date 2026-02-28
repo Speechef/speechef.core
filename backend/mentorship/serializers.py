@@ -41,10 +41,11 @@ class MentorListSerializer(serializers.ModelSerializer):
     top_badge = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
     member_since_days = serializers.SerializerMethodField()
+    follower_count = serializers.SerializerMethodField()
 
     class Meta:
         model = MentorProfile
-        fields = ["id", "name", "bio", "specialties", "languages", "hourly_rate", "rating_avg", "session_count", "review_count", "top_badge", "member_since_days"]
+        fields = ["id", "name", "bio", "specialties", "languages", "hourly_rate", "rating_avg", "session_count", "review_count", "top_badge", "member_since_days", "follower_count"]
 
     def get_name(self, obj):
         u = obj.user
@@ -60,6 +61,9 @@ class MentorListSerializer(serializers.ModelSerializer):
         from django.utils import timezone
         return (timezone.now() - obj.created_at).days
 
+    def get_follower_count(self, obj):
+        return obj.followers.count()
+
 
 class MentorDetailSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -69,6 +73,8 @@ class MentorDetailSerializer(serializers.ModelSerializer):
     top_badge = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
     member_since_days = serializers.SerializerMethodField()
+    follower_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = MentorProfile
@@ -77,6 +83,7 @@ class MentorDetailSerializer(serializers.ModelSerializer):
             "hourly_rate", "rating_avg", "session_count", "review_count", "timezone",
             "intro_video_key", "availability", "bundles",
             "offers_intro_call", "intro_available", "top_badge", "member_since_days",
+            "follower_count", "is_following",
         ]
 
     def get_name(self, obj):
@@ -100,6 +107,16 @@ class MentorDetailSerializer(serializers.ModelSerializer):
     def get_member_since_days(self, obj):
         from django.utils import timezone
         return (timezone.now() - obj.created_at).days
+
+    def get_follower_count(self, obj):
+        return obj.followers.count()
+
+    def get_is_following(self, obj):
+        from .models import MentorFollow
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return MentorFollow.objects.filter(user=request.user, mentor=obj).exists()
 
 
 class MentorSessionSerializer(serializers.ModelSerializer):
