@@ -81,6 +81,8 @@ def start_session(request):
         return Response({"detail": "role is required."}, status=status.HTTP_400_BAD_REQUEST)
     if mode not in dict(InterviewSession.MODE_CHOICES):
         return Response({"detail": "Invalid mode."}, status=status.HTTP_400_BAD_REQUEST)
+    if difficulty not in DIFF_LABELS:
+        return Response({"detail": "Invalid difficulty. Choose easy, medium, or hard."}, status=status.HTTP_400_BAD_REQUEST)
 
     company_ctx = f" at {company_type}" if company_type else ""
     system = INTERVIEW_SYSTEM.format(

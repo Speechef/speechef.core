@@ -180,15 +180,6 @@ function LearnContent() {
     router.push(`/learn${p.size ? `?${p}` : ''}`);
   }
 
-  function selectCourse(catName: string) {
-    setSearchInput('');
-    pushParams(catName, false, sortBy, '');
-    setTimeout(
-      () => articlesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-      80,
-    );
-  }
-
   // ─── Queries ───────────────────────────────────────────────────────────────
 
   const { data: categories = [] } = useQuery<Category[]>({
@@ -284,8 +275,10 @@ function LearnContent() {
           borderBottom: '1px solid #e8eaf0',
         }}
       >
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="max-w-5xl mx-auto px-6 py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+
+            {/* Left: title + description */}
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-2xl">📚</span>
@@ -296,139 +289,61 @@ function LearnContent() {
               </p>
             </div>
 
-            {/* Stats chips */}
+            {/* Right: progress card */}
             {allPosts.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                <StatChip icon="📖" value={allPosts.length} label="articles" />
-                <StatChip icon="🗂️" value={categories.length} label="topics" />
-                {isLoggedIn && <StatChip icon="✅" value={`${completionPct}%`} label="complete" accent />}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 shrink-0 w-full sm:w-auto sm:min-w-[280px]">
+                {/* Stat numbers */}
+                <div className="flex items-center gap-5 mb-4">
+                  <div>
+                    <p className="text-2xl font-black text-[#141c52] leading-none">{allPosts.length}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Articles</p>
+                  </div>
+                  <div className="w-px h-10 bg-gray-100" />
+                  <div>
+                    <p className="text-2xl font-black text-[#141c52] leading-none">{categories.length}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Topics</p>
+                  </div>
+                  {isLoggedIn && (
+                    <>
+                      <div className="w-px h-10 bg-gray-100" />
+                      <div>
+                        <p
+                          className="text-2xl font-black leading-none"
+                          style={{ color: completionPct === 100 ? '#16a34a' : '#141c52' }}
+                        >
+                          {completionPct}%
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Complete</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Brand progress bar */}
+                {isLoggedIn ? (
+                  <>
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <span className="text-gray-400">Overall progress</span>
+                      <span className="font-semibold text-[#141c52]">{completedCount} / {allPosts.length} done</span>
+                    </div>
+                    <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${completionPct}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400 text-center">Log in to track your progress</p>
+                )}
               </div>
             )}
-          </div>
 
-          {/* Progress bar for logged-in users */}
-          {isLoggedIn && allPosts.length > 0 && (
-            <div className="mt-4 max-w-xs">
-              <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>Overall progress</span>
-                <span className="font-semibold text-[#141c52]">{completedCount} / {allPosts.length} done</span>
-              </div>
-              <div className="h-2 bg-white rounded-full overflow-hidden shadow-inner">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${completionPct}%`, background: 'linear-gradient(to right, #4ade80, #22c55e)' }}
-                />
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6">
-
-        {/* ── LEARNING PATHS ─────────────────────────────────────────────── */}
-        <section className="pt-8 pb-6">
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="text-base font-bold text-[#141c52]">Learning Paths</h2>
-            <span className="text-xs text-gray-400">Choose a course to study</span>
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-            {COURSES.map((course) => {
-              const meta = CATEGORY_META[course.category];
-              const total = catPostCount(course.category);
-              const done = catCompletedCount(course.category);
-              const chapters = catChapterCount(course.category);
-              const pct = total > 0 && isLoggedIn ? Math.round((done / total) * 100) : 0;
-              const isActive = activeCategory === course.category;
-
-              return (
-                <button
-                  key={course.id}
-                  onClick={() => selectCourse(course.category)}
-                  className="flex-shrink-0 w-[200px] text-left group"
-                >
-                  <div
-                    className="rounded-2xl overflow-hidden transition-all duration-200"
-                    style={{
-                      boxShadow: isActive
-                        ? `0 0 0 2px ${meta?.text ?? '#141c52'}, 0 8px 24px rgba(0,0,0,0.12)`
-                        : '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
-                      transform: isActive ? 'translateY(-2px)' : undefined,
-                    }}
-                  >
-                    {/* Coloured top */}
-                    <div
-                      className="h-[88px] flex items-center justify-center relative overflow-hidden"
-                      style={{ backgroundColor: meta?.bg ?? '#f9fafb' }}
-                    >
-                      {/* Decorative blobs */}
-                      <div
-                        className="absolute -right-5 -top-5 w-20 h-20 rounded-full opacity-20"
-                        style={{ backgroundColor: meta?.text ?? '#141c52' }}
-                      />
-                      <div
-                        className="absolute left-3 bottom-2 w-10 h-10 rounded-full opacity-10"
-                        style={{ backgroundColor: meta?.text ?? '#141c52' }}
-                      />
-                      <span className="text-4xl relative z-10">{course.emoji}</span>
-                      {course.featured && (
-                        <span
-                          className="absolute top-2 left-2 text-xs font-bold px-1.5 py-0.5 rounded-full leading-none"
-                          style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#78350f' }}
-                        >
-                          ★ Featured
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Card body */}
-                    <div className="bg-white px-3 pb-3 pt-2.5">
-                      <span
-                        className="text-xs font-semibold px-1.5 py-0.5 rounded-full inline-block mb-1.5"
-                        style={{ backgroundColor: meta?.bg ?? '#f9fafb', color: meta?.text ?? '#141c52' }}
-                      >
-                        {course.level}
-                      </span>
-                      <p
-                        className="text-[13.5px] font-bold leading-tight tracking-tight mb-1 group-hover:underline"
-                        style={{ color: meta?.text ?? '#141c52' }}
-                      >
-                        {course.name}
-                      </p>
-                      <p className="text-[12px] text-gray-400 leading-[1.55] mb-2.5 line-clamp-2">
-                        {course.description}
-                      </p>
-
-                      {/* Lesson count + progress */}
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-400">
-                            {chapters > 0 && <>{chapters} ch · </>}{total} lesson{total !== 1 ? 's' : ''}
-                          </span>
-                          {isLoggedIn && total > 0 && (
-                            <span className="font-semibold" style={{ color: meta?.text ?? '#141c52' }}>
-                              {pct}%
-                            </span>
-                          )}
-                        </div>
-                        <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: meta?.border ?? '#e5e7eb' }}>
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${isLoggedIn ? pct : 0}%`,
-                              backgroundColor: meta?.text ?? '#141c52',
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </section>
 
         {/* ── SEARCH + CATEGORY TABS ────────────────────────────────────────── */}
         <div ref={articlesRef} className="pb-6">
@@ -520,7 +435,7 @@ function LearnContent() {
         )}
 
         {/* ── SORT ROW ──────────────────────────────────────────────────────── */}
-        {!isLoading && posts.length > 0 && (
+        {!isLoading && posts.length > 0 && !activeCourse && (
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-gray-400">
               {posts.length} {activeCourse ? 'lesson' : 'article'}{posts.length !== 1 ? 's' : ''}
@@ -587,14 +502,14 @@ function LearnContent() {
             )}
           </div>
         ) : activeCourse ? (
-          // ── COURSE MODE: chapter-grouped grid ──────────────────────────────
-          <ChapterGroupedGrid
+          // ── COURSE MODE: track panel with left filters + right list ─────────
+          <CourseTrackPanel
             posts={sortedPosts}
             catMeta={CATEGORY_META[activeCourse.category]}
             courseCategory={activeCourse.category}
             search={search}
             onBookmark={handleBookmark}
-            onCategoryClick={(name) => { setSearchInput(''); pushParams(name, false, sortBy, ''); }}
+            isLoggedIn={isLoggedIn}
           />
         ) : (
           // ── STANDARD MODE: flat 2-col grid ──────────────────────────────────
@@ -622,34 +537,6 @@ function LearnContent() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ─── StatChip ────────────────────────────────────────────────────────────────
-
-function StatChip({
-  icon,
-  value,
-  label,
-  accent,
-}: {
-  icon: string;
-  value: string | number;
-  label: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs shadow-sm"
-      style={{
-        backgroundColor: accent ? '#dcfce7' : '#fff',
-        border: `1px solid ${accent ? '#bbf7d0' : '#e5e7eb'}`,
-      }}
-    >
-      <span>{icon}</span>
-      <span className="font-bold text-[#141c52]">{value}</span>
-      <span className="text-gray-400">{label}</span>
     </div>
   );
 }
@@ -1032,108 +919,279 @@ function ArticleCard({
   );
 }
 
-// ─── ChapterGroupedGrid ───────────────────────────────────────────────────────
+// ─── CourseTrackPanel ─────────────────────────────────────────────────────────
 
-function ChapterGroupedGrid({
+const DIFF_MAP = {
+  Easy:   { bg: '#dcfce7', text: '#166534', border: '#bbf7d0', dot: '#22c55e' },
+  Medium: { bg: '#fef9c3', text: '#92400e', border: '#fde68a', dot: '#f59e0b' },
+  Hard:   { bg: '#fee2e2', text: '#991b1b', border: '#fecaca', dot: '#ef4444' },
+} as const;
+
+function CourseTrackPanel({
   posts,
   catMeta,
   courseCategory,
   search,
   onBookmark,
-  onCategoryClick,
+  isLoggedIn,
 }: {
   posts: Post[];
   catMeta: { bg: string; text: string; border: string; emoji: string } | undefined;
   courseCategory: string;
   search: string;
   onBookmark: (e: React.MouseEvent, id: number) => void;
-  onCategoryClick: (name: string) => void;
+  isLoggedIn: boolean;
 }) {
-  // Parse chapter for each post and group them
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [diffFilter, setDiffFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
+  const [chapterFilter, setChapterFilter] = useState<number | null>(null);
+
   const postsWithMeta = posts.map((p, idx) => ({
     post: p,
     lessonNum: idx + 1,
     ...parsePostMeta(p.body ?? ''),
   }));
 
-  const chapterMap = new Map<number, typeof postsWithMeta>();
-  for (const pm of postsWithMeta) {
-    const ch = pm.chapter ?? 0;
-    if (!chapterMap.has(ch)) chapterMap.set(ch, []);
-    chapterMap.get(ch)!.push(pm);
-  }
-  const sortedChapters = Array.from(chapterMap.entries()).sort(([a], [b]) => a - b);
+  const chapters = Array.from(
+    new Set(postsWithMeta.map((pm) => pm.chapter).filter((ch): ch is number => ch !== null)),
+  ).sort((a, b) => a - b);
+
+  const filtered = postsWithMeta.filter((pm) => {
+    if (hideCompleted && pm.post.is_completed) return false;
+    if (diffFilter !== 'All' && pm.difficulty !== diffFilter) return false;
+    if (chapterFilter !== null && pm.chapter !== chapterFilter) return false;
+    return true;
+  });
+
+  const completedCount = postsWithMeta.filter((pm) => pm.post.is_completed).length;
+  const pct = postsWithMeta.length > 0 && isLoggedIn
+    ? Math.round((completedCount / postsWithMeta.length) * 100)
+    : 0;
 
   return (
-    <div className="pb-12 space-y-8">
-      {sortedChapters.map(([chNum, items]) => (
-        <div key={chNum}>
-          {/* Chapter divider header */}
-          {chNum > 0 && (
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl"
-                style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', border: `1.5px solid ${catMeta?.border ?? '#e5e7eb'}` }}
-              >
-                <span className="text-xs font-black uppercase tracking-widest opacity-50" style={{ color: catMeta?.text ?? '#141c52' }}>
-                  Ch {chNum}
-                </span>
-                <span className="w-px h-3.5 opacity-20" style={{ backgroundColor: catMeta?.text ?? '#141c52' }} />
-                <span className="text-sm font-bold" style={{ color: catMeta?.text ?? '#141c52' }}>
-                  {CHAPTER_NAMES[courseCategory]?.[chNum] ?? `Chapter ${chNum}`}
-                </span>
-                <span className="text-xs opacity-50" style={{ color: catMeta?.text ?? '#141c52' }}>
-                  {items.length} lesson{items.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-              <div className="flex-1 h-px" style={{ backgroundColor: catMeta?.border ?? '#e5e7eb' }} />
-              {/* Difficulty distribution pills */}
-              {(['Easy', 'Medium', 'Hard'] as const).map((d) => {
-                const count = items.filter((i) => i.difficulty === d).length;
-                if (!count) return null;
-                const dMap = {
-                  Easy:   { bg: '#dcfce7', text: '#166534' },
-                  Medium: { bg: '#fef9c3', text: '#92400e' },
-                  Hard:   { bg: '#fee2e2', text: '#991b1b' },
-                };
-                const dm = dMap[d];
-                return (
-                  <span
-                    key={d}
-                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                    style={{ backgroundColor: dm.bg, color: dm.text }}
-                  >
-                    {count} {d}
-                  </span>
-                );
-              })}
-            </div>
-          )}
+    <div className="flex gap-4 pb-12 items-start">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {items.map(({ post, lessonNum }) => {
-              const isNew =
-                !post.is_completed &&
-                Date.now() - new Date(post.created_on).getTime() < 14 * 24 * 60 * 60 * 1000;
-              const primaryCat = post.categories[0];
-              const cardMeta = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
+      {/* ── Left: filter sidebar ── */}
+      <div className="flex-shrink-0 space-y-4" style={{ width: 172 }}>
 
+        {/* Progress mini-card */}
+        <div className="rounded-xl p-3.5 bg-white border border-gray-100 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Progress</p>
+          <div className="flex items-end gap-1 mb-2">
+            <span className="text-2xl font-black leading-none" style={{ color: '#141c52' }}>{completedCount}</span>
+            <span className="text-xs text-gray-400 pb-0.5">/ {postsWithMeta.length} done</span>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: catMeta?.border ? `${catMeta.border}55` : '#f3f4f6' }}>
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${pct}%`,
+                background: `linear-gradient(to right,${catMeta?.text ?? '#141c52'},${catMeta?.border ?? '#e5e7eb'})`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Visibility toggle */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">View</p>
+          <button
+            onClick={() => setHideCompleted((v) => !v)}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border"
+            style={
+              hideCompleted
+                ? { background: '#141c52', color: '#fff', borderColor: '#141c52' }
+                : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+            }
+          >
+            <span>{hideCompleted ? '🙈' : '👁️'}</span>
+            {hideCompleted ? 'Show all' : 'Hide done'}
+            {completedCount > 0 && (
+              <span className="ml-auto text-[10px] opacity-60">{completedCount}</span>
+            )}
+          </button>
+        </div>
+
+        {/* Difficulty filter */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Difficulty</p>
+          <div className="space-y-1.5">
+            {(['All', 'Easy', 'Medium', 'Hard'] as const).map((d) => {
+              const isAct = diffFilter === d;
+              const dm = d !== 'All' ? DIFF_MAP[d] : null;
               return (
-                <ArticleCard
-                  key={post.id}
-                  post={post}
-                  catMeta={cardMeta}
-                  isNew={isNew}
-                  lessonNum={lessonNum}
-                  search={search}
-                  onBookmark={onBookmark}
-                  onCategoryClick={onCategoryClick}
-                />
+                <button
+                  key={d}
+                  onClick={() => setDiffFilter(d)}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border text-left"
+                  style={
+                    isAct
+                      ? dm
+                        ? { background: dm.bg, color: dm.text, borderColor: dm.border }
+                        : { background: '#141c52', color: '#fff', borderColor: '#141c52' }
+                      : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+                  }
+                >
+                  {dm && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dm.dot }} />}
+                  {d}
+                  <span className="ml-auto text-[10px] opacity-55">
+                    {d === 'All'
+                      ? postsWithMeta.length
+                      : postsWithMeta.filter((pm) => pm.difficulty === d).length}
+                  </span>
+                </button>
               );
             })}
           </div>
         </div>
-      ))}
+
+        {/* Chapter filter */}
+        {chapters.length > 0 && (
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Chapter</p>
+            <div className="space-y-1.5">
+              <button
+                onClick={() => setChapterFilter(null)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border text-left"
+                style={
+                  chapterFilter === null
+                    ? { background: '#141c52', color: '#fff', borderColor: '#141c52' }
+                    : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+                }
+              >
+                All
+                <span className="ml-auto text-[10px] opacity-55">{postsWithMeta.length}</span>
+              </button>
+              {chapters.map((ch) => {
+                const isAct = chapterFilter === ch;
+                const name = CHAPTER_NAMES[courseCategory]?.[ch] ?? `Ch ${ch}`;
+                const count = postsWithMeta.filter((pm) => pm.chapter === ch).length;
+                return (
+                  <button
+                    key={ch}
+                    onClick={() => setChapterFilter(isAct ? null : ch)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border text-left"
+                    style={
+                      isAct
+                        ? { background: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', borderColor: catMeta?.border ?? '#e5e7eb' }
+                        : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+                    }
+                  >
+                    <span className="truncate flex-1">{name}</span>
+                    <span className="text-[10px] opacity-55 flex-shrink-0">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Right: lesson list ── */}
+      <div className="flex-1 min-w-0">
+        {/* List header */}
+        <div className="flex items-center justify-between mb-3 px-1">
+          <p className="text-xs text-gray-400">
+            <span className="font-semibold text-[#141c52]">{filtered.length}</span>
+            {' '}lesson{filtered.length !== 1 ? 's' : ''}
+            {hideCompleted && completedCount > 0 && (
+              <span className="ml-1 opacity-60">· {completedCount} hidden</span>
+            )}
+          </p>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">In order</span>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="text-center py-14 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <p className="text-3xl mb-2">🎉</p>
+            <p className="font-semibold text-gray-600 text-sm">
+              {hideCompleted && completedCount === postsWithMeta.length
+                ? 'All lessons complete!'
+                : 'No lessons match this filter'}
+            </p>
+            <button
+              onClick={() => { setHideCompleted(false); setDiffFilter('All'); setChapterFilter(null); }}
+              className="mt-3 text-xs font-semibold hover:underline"
+              style={{ color: '#141c52' }}
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {filtered.map(({ post, lessonNum, chapter, difficulty }, idx) => {
+              const isDone = post.is_completed;
+              const chName = chapter ? (CHAPTER_NAMES[courseCategory]?.[chapter] ?? `Ch ${chapter}`) : null;
+              const dm = difficulty ? DIFF_MAP[difficulty] : null;
+              const isLast = idx === filtered.length - 1;
+
+              return (
+                <div
+                  key={post.id}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${!isLast ? 'border-b border-gray-50' : ''} ${isDone ? 'opacity-40' : 'hover:bg-gray-50/70'}`}
+                >
+                  {/* Order badge */}
+                  <span
+                    className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
+                    style={
+                      isDone
+                        ? { background: '#dcfce7', color: '#166534' }
+                        : { background: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52' }
+                    }
+                  >
+                    {isDone ? '✓' : lessonNum}
+                  </span>
+
+                  {/* Bookmark star */}
+                  <button
+                    onClick={(e) => onBookmark(e, post.id)}
+                    className="flex-shrink-0 text-base leading-none transition-transform hover:scale-125"
+                    title={post.is_bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                  >
+                    {post.is_bookmarked ? '⭐' : '☆'}
+                  </button>
+
+                  {/* Title + chapter */}
+                  <Link href={`/learn/${post.id}`} className="flex-1 min-w-0 group">
+                    <p
+                      className={`text-sm font-semibold leading-snug group-hover:underline truncate ${
+                        isDone ? 'line-through text-gray-400' : 'text-[#141c52]'
+                      }`}
+                    >
+                      {search ? highlightMatch(post.title, search) : post.title}
+                    </p>
+                    {chName && (
+                      <p className="text-[10px] text-gray-400 mt-0.5 truncate">{chName}</p>
+                    )}
+                  </Link>
+
+                  {/* Difficulty */}
+                  {dm && (
+                    <span
+                      className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={{ background: dm.bg, color: dm.text, border: `1px solid ${dm.border}` }}
+                    >
+                      {difficulty}
+                    </span>
+                  )}
+
+                  {/* Status */}
+                  <span
+                    className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                    style={
+                      isDone
+                        ? { background: '#dcfce7', color: '#166534' }
+                        : { background: '#f3f4f6', color: '#9ca3af' }
+                    }
+                  >
+                    {isDone ? '✓ Done' : 'To do'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1179,10 +1237,204 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   );
 }
 
-export default function LearnPage() {
+// ─── Learn Hero ──────────────────────────────────────────────────────────────
+
+const LN_STYLES = `
+  @keyframes lnOrbDrift {
+    0%,100% { transform:translate(0,0) scale(1); }
+    33%      { transform:translate(-40px,30px) scale(1.08); }
+    66%      { transform:translate(30px,-22px) scale(0.94); }
+  }
+  @keyframes lnRise {
+    from { opacity:0; transform:translateY(48px) scale(0.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes lnChev {
+    0%,100% { transform:translateY(0); opacity:0.4; }
+    50%     { transform:translateY(10px); opacity:1; }
+  }
+  @keyframes lnCta {
+    0%,100% { box-shadow:0 8px 30px rgba(250,219,67,.28); }
+    50%     { box-shadow:0 8px 50px rgba(250,219,67,.55); }
+  }
+  @keyframes lnCount {
+    from { opacity:0; transform:scale(0.6) translateY(12px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+  }
+  .ln-orb-a { animation:lnOrbDrift 14s ease-in-out infinite; }
+  .ln-orb-b { animation:lnOrbDrift 19s ease-in-out infinite reverse; }
+  .ln-orb-c { animation:lnOrbDrift 11s ease-in-out infinite 3s; }
+  .ln-rise-1 { animation:lnRise .85s ease both; }
+  .ln-rise-2 { animation:lnRise .85s .18s ease both; }
+  .ln-rise-3 { animation:lnRise .85s .34s ease both; }
+  .ln-rise-4 { animation:lnRise .85s .52s ease both; }
+  .ln-chev   { animation:lnChev 1.9s ease-in-out infinite; }
+  .ln-cta    { animation:lnCta 3s ease-in-out infinite; }
+  .ln-stat   { animation:lnCount .6s ease both; }
+  .ln-stat-1 { animation-delay:.55s; }
+  .ln-stat-2 { animation-delay:.72s; }
+  .ln-stat-3 { animation-delay:.89s; }
+`;
+
+const LN_STATS = [
+  { value: '8',   label: 'Courses' },
+  { value: '8',   label: 'Categories' },
+  { value: 'AI',  label: 'Powered' },
+];
+
+const BRAND_LN = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+function LearnHero({ onScrollDown }: { onScrollDown: () => void }) {
+  const [p, setP] = useState(0);
+
+  useEffect(() => {
+    const update = () => setP(Math.min(1, window.scrollY / window.innerHeight));
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
+  // Ease-in-out cubic
+  const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+
+  // Background: upward curtain wipe (bottom inset grows)
+  const wipe = e * 110;
+
+  const textOpacity = Math.max(0, 1 - e * 1.9);
+  const textScale   = 1 - e * 0.07;
+  const chevOpacity = Math.max(0, 1 - e * 3.5);
+
   return (
-    <Suspense>
-      <LearnContent />
-    </Suspense>
+    <div className="relative overflow-hidden" style={{ height: '100vh' }}>
+      <style dangerouslySetInnerHTML={{ __html: LN_STYLES }} />
+
+      {/* Background — upward wipe */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(160deg,#080d26 0%,#141c52 48%,#1a2460 100%)',
+          clipPath: `inset(0 0 ${wipe}% 0)`,
+        }}
+      />
+
+      {/* Orbs */}
+      <div className="ln-orb-a absolute rounded-full pointer-events-none"
+        style={{ width: 540, height: 540, top: -150, right: -110,
+          background: 'radial-gradient(circle,rgba(250,219,67,.13) 0%,transparent 68%)',
+          clipPath: `inset(0 0 ${wipe}% 0)` }} />
+      <div className="ln-orb-b absolute rounded-full pointer-events-none"
+        style={{ width: 420, height: 420, bottom: -100, left: -120,
+          background: 'radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 68%)',
+          clipPath: `inset(0 0 ${wipe}% 0)` }} />
+      <div className="ln-orb-c absolute rounded-full pointer-events-none"
+        style={{ width: 290, height: 290, top: '30%', left: '14%',
+          background: 'radial-gradient(circle,rgba(167,139,250,.12) 0%,transparent 68%)',
+          clipPath: `inset(0 0 ${wipe}% 0)` }} />
+
+      {/* Fine grid */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)',
+          backgroundSize: '60px 60px',
+          opacity: Math.max(0, 0.035 - e * 0.035),
+          clipPath: `inset(0 0 ${wipe}% 0)`,
+        }} />
+
+      {/* Center content */}
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center"
+        style={{ opacity: textOpacity, transform: `scale(${textScale})` }}
+      >
+        {/* Label */}
+        <div className="ln-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-7 text-xs font-bold uppercase tracking-widest"
+          style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
+          Learning Hub
+        </div>
+
+        {/* Headline */}
+        <h1 className="ln-rise-2 font-black leading-[1.02] mb-4"
+          style={{ fontSize: 'clamp(2.8rem,8vw,5.5rem)' }}>
+          <span style={{ color: '#fff' }}>Read. Learn.</span>
+          <br />
+          <span style={{
+            backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
+            backgroundSize: '200%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
+            Level Up.
+          </span>
+        </h1>
+
+        {/* Sub */}
+        <p className="ln-rise-3 text-base font-medium mb-9 max-w-md mx-auto"
+          style={{ color: 'rgba(255,255,255,0.48)' }}>
+          Structured articles across grammar, vocabulary, pronunciation &amp; more — track your progress as you go.
+        </p>
+
+        {/* Stat row */}
+        <div className="ln-rise-3 flex items-center justify-center gap-10 mb-10">
+          {LN_STATS.map((s, i) => (
+            <div key={s.label} className={`ln-stat ln-stat-${i + 1} text-center`}>
+              <p className="text-3xl font-black text-white leading-none">{s.value}</p>
+              <p className="text-xs font-semibold mt-1.5 uppercase tracking-wide"
+                style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* CTAs */}
+        <div className="ln-rise-4 flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onClick={onScrollDown}
+            className="ln-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
+            style={{ background: BRAND_LN.gradient, color: BRAND_LN.primary }}
+          >
+            Browse Articles ↓
+          </button>
+          <Link
+            href="/learn?category=Grammar"
+            className="px-7 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-white/10"
+            style={{ borderColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.62)' }}
+          >
+            ✏️ Grammar →
+          </Link>
+        </div>
+      </div>
+
+      {/* Scroll chevron */}
+      <button
+        onClick={onScrollDown}
+        className="ln-chev absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-20"
+        style={{ opacity: chevOpacity }}
+        aria-label="Scroll down"
+      >
+        <span className="text-[0.58rem] font-bold uppercase tracking-widest"
+          style={{ color: 'rgba(255,255,255,0.32)' }}>Scroll</span>
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          style={{ color: 'rgba(255,255,255,0.38)' }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Gradient fade into content */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to bottom,transparent,#f8f9fb)' }} />
+    </div>
+  );
+}
+
+export default function LearnPage() {
+  const contentRef = useRef<HTMLDivElement>(null);
+  return (
+    <>
+      <LearnHero onScrollDown={() => contentRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <div ref={contentRef}>
+        <Suspense>
+          <LearnContent />
+        </Suspense>
+      </div>
+    </>
   );
 }

@@ -8,6 +8,85 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+const STYLES = `
+  @keyframes regOrbDrift {
+    0%,100% { transform:translate(0,0) scale(1); }
+    33%      { transform:translate(42px,-32px) scale(1.09); }
+    66%      { transform:translate(-30px,24px) scale(0.93); }
+  }
+  @keyframes regRise {
+    from { opacity:0; transform:translateY(36px) scale(0.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes regChipFloat {
+    0%,100% { transform:translateY(0) rotate(0deg); }
+    50%     { transform:translateY(-9px) rotate(1.1deg); }
+  }
+  @keyframes regChipFloatB {
+    0%,100% { transform:translateY(0) rotate(0deg); }
+    50%     { transform:translateY(-7px) rotate(-1deg); }
+  }
+  @keyframes regFormIn {
+    from { opacity:0; transform:translateX(22px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+  @keyframes regBulletPop {
+    from { opacity:0; transform:translateX(-14px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+  .reg-orb-a { animation:regOrbDrift 16s ease-in-out infinite; }
+  .reg-orb-b { animation:regOrbDrift 21s ease-in-out infinite reverse; }
+  .reg-orb-c { animation:regOrbDrift 13s ease-in-out infinite 2.5s; }
+  .reg-rise-1 { animation:regRise .8s ease both; }
+  .reg-rise-2 { animation:regRise .8s .14s ease both; }
+  .reg-rise-3 { animation:regRise .8s .28s ease both; }
+  .reg-rise-4 { animation:regRise .8s .42s ease both; }
+  .reg-rise-5 { animation:regRise .8s .56s ease both; }
+  .reg-chip-a { animation:regChipFloat 3.6s ease-in-out infinite; }
+  .reg-chip-b { animation:regChipFloatB 4.2s ease-in-out infinite .6s; }
+  .reg-chip-c { animation:regChipFloat 3.9s ease-in-out infinite 1.2s; }
+  .reg-chip-d { animation:regChipFloatB 4.5s ease-in-out infinite 1.8s; }
+  .reg-form-in { animation:regFormIn .7s .18s ease both; }
+  .reg-bullet-1 { animation:regBulletPop .5s .55s ease both; }
+  .reg-bullet-2 { animation:regBulletPop .5s .68s ease both; }
+  .reg-bullet-3 { animation:regBulletPop .5s .81s ease both; }
+`;
+
+// top pair (0,1) → top row; bottom pair (2,3) → bottom row
+// Mirrored arrangement vs login for visual variety
+const FEATURE_CHIPS = [
+  { emoji: '🎭', label: 'AI Roleplay', sub: '4 modes',      cls: 'reg-chip-a', bg: 'rgba(237,233,254,0.12)', border: 'rgba(196,181,253,0.45)' },
+  { emoji: '🎮', label: 'Word Games',  sub: '6 games',      cls: 'reg-chip-b', bg: 'rgba(209,250,229,0.12)', border: 'rgba(110,231,183,0.45)' },
+  { emoji: '🤖', label: 'AI Tools',   sub: '4 tools',       cls: 'reg-chip-c', bg: 'rgba(253,244,255,0.12)', border: 'rgba(233,213,255,0.45)' },
+  { emoji: '📝', label: 'Test Prep',   sub: 'IELTS + more', cls: 'reg-chip-d', bg: 'rgba(219,234,254,0.12)', border: 'rgba(147,197,253,0.45)' },
+];
+
+const BENEFITS = [
+  { text: 'Free to join — no credit card needed' },
+  { text: 'AI-graded feedback on every session' },
+  { text: 'Track progress across all practice modes' },
+];
+
+function Chip({ chip }: { chip: typeof FEATURE_CHIPS[number] }) {
+  return (
+    <div className={`${chip.cls} flex items-center gap-3 px-4 py-3 rounded-2xl select-none`}
+      style={{
+        background: chip.bg,
+        border: `1px solid ${chip.border}`,
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+      }}>
+      <span className="text-2xl leading-none">{chip.emoji}</span>
+      <div>
+        <p className="text-sm font-extrabold text-white leading-none">{chip.label}</p>
+        <p className="text-xs font-semibold mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{chip.sub}</p>
+      </div>
+    </div>
+  );
+}
+
 function getStrength(pw: string): { label: string; color: string; pct: number } | null {
   if (!pw) return null;
   let score = 0;
@@ -27,10 +106,10 @@ function getStrength(pw: string): { label: string; color: string; pct: number } 
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({ username: '', email: '', password: '', password2: '' });
-  const [errors, setErrors]       = useState<Record<string, string>>({});
-  const [loading, setLoading]     = useState(false);
-  const [showPw, setShowPw]       = useState(false);
-  const [showPw2, setShowPw2]     = useState(false);
+  const [errors, setErrors]   = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [showPw, setShowPw]   = useState(false);
+  const [showPw2, setShowPw2] = useState(false);
 
   const strength = getStrength(form.password);
 
@@ -63,114 +142,242 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold" style={{ color: '#141c52' }}>
-            Create an account
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">Start mastering communication today</p>
-        </div>
+    <div className="flex min-h-screen">
+      <style dangerouslySetInnerHTML={{ __html: STYLES }} />
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Username */}
-          <div className="space-y-1.5">
-            <Label htmlFor="username">Username</Label>
-            <Input id="username" type="text" required value={form.username} onChange={field('username')} />
-            {errors.username && <p className="text-xs text-red-600">{errors.username}</p>}
+      {/* ── Left panel — dark hero ──────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[58%] relative overflow-hidden flex-col">
+
+        {/* Background */}
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(160deg,#080d26 0%,#141c52 48%,#1a2460 100%)' }} />
+
+        {/* Orbs — mirrored positions vs login */}
+        <div className="reg-orb-a absolute rounded-full pointer-events-none"
+          style={{ width: 520, height: 520, top: -150, left: -110,
+            background: 'radial-gradient(circle,rgba(250,219,67,.12) 0%,transparent 68%)' }} />
+        <div className="reg-orb-b absolute rounded-full pointer-events-none"
+          style={{ width: 400, height: 400, bottom: -100, right: -110,
+            background: 'radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 68%)' }} />
+        <div className="reg-orb-c absolute rounded-full pointer-events-none"
+          style={{ width: 280, height: 280, top: '38%', right: '12%',
+            background: 'radial-gradient(circle,rgba(167,139,250,.11) 0%,transparent 68%)' }} />
+
+        {/* Subtle grid */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)',
+            backgroundSize: '60px 60px',
+            opacity: 0.03,
+          }} />
+
+        {/*
+          Three-zone flex layout — chips in their own rows, center content in flex-1.
+          [top chip row]    ← always above center content
+          [center content]  ← flex-1, vertically centered
+          [bottom chip row] ← always below center content
+        */}
+        <div className="relative z-10 flex flex-col flex-1">
+
+          {/* ── Top chip row ── */}
+          <div className="flex items-center justify-between px-12 pt-10 pb-0">
+            <Chip chip={FEATURE_CHIPS[0]} />
+            <Chip chip={FEATURE_CHIPS[1]} />
           </div>
 
-          {/* Email */}
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" required value={form.email} onChange={field('email')} />
-            {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
-          </div>
+          {/* ── Center content ── */}
+          <div className="flex-1 flex flex-col justify-center px-14 py-8">
 
-          {/* Password */}
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPw ? 'text' : 'password'}
-                required
-                autoComplete="new-password"
-                value={form.password}
-                onChange={field('password')}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
-                tabIndex={-1}
-              >
-                {showPw ? '🙈' : '👁️'}
-              </button>
-            </div>
-            {/* Strength bar */}
-            {strength && (
-              <div className="mt-1.5">
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{ width: `${strength.pct}%`, backgroundColor: strength.color }}
-                  />
-                </div>
-                <p className="text-xs mt-1" style={{ color: strength.color }}>{strength.label}</p>
+            {/* Brand */}
+            <div className="reg-rise-1 flex items-center gap-2.5 mb-10">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
+                style={{ background: BRAND.gradient }}>
+                <span className="text-xl font-black" style={{ color: BRAND.primary }}>S</span>
               </div>
-            )}
-            {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
-          </div>
-
-          {/* Confirm password */}
-          <div className="space-y-1.5">
-            <Label htmlFor="password2">Confirm password</Label>
-            <div className="relative">
-              <Input
-                id="password2"
-                type={showPw2 ? 'text' : 'password'}
-                required
-                autoComplete="new-password"
-                value={form.password2}
-                onChange={field('password2')}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw2((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
-                tabIndex={-1}
-              >
-                {showPw2 ? '🙈' : '👁️'}
-              </button>
+              <span className="text-xl font-extrabold text-white tracking-tight">Speechef</span>
             </div>
-            {errors.password2 && <p className="text-xs text-red-600">{errors.password2}</p>}
+
+            {/* Eyebrow */}
+            <div className="reg-rise-1 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5 text-xs font-bold uppercase tracking-widest w-fit"
+              style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
+              Free Account
+            </div>
+
+            {/* Headline */}
+            <h1 className="reg-rise-2 font-black leading-[1.05] mb-4"
+              style={{ fontSize: 'clamp(2rem,3.8vw,3.4rem)' }}>
+              <span style={{ color: '#fff' }}>Your English</span>
+              <br />
+              <span style={{
+                backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
+                backgroundSize: '200%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                Journey Starts Here.
+              </span>
+            </h1>
+
+            {/* Sub */}
+            <p className="reg-rise-3 text-[0.95rem] font-medium leading-relaxed mb-8 max-w-[340px]"
+              style={{ color: 'rgba(255,255,255,0.46)' }}>
+              Join thousands of learners using AI-powered tools to master English faster than ever.
+            </p>
+
+            {/* Benefits */}
+            <div className="reg-rise-4 space-y-3 mb-10">
+              {BENEFITS.map((b, i) => (
+                <div key={i} className={`reg-bullet-${i + 1} flex items-center gap-3`}>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: BRAND.gradient }}>
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4l3 3 5-6" stroke="#141c52" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.65)' }}>{b.text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Already have account */}
+            <div className="reg-rise-5">
+              <Link href="/login"
+                className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-full border transition-all hover:bg-white/10 active:scale-95"
+                style={{ borderColor: 'rgba(255,255,255,0.16)', color: 'rgba(255,255,255,0.58)' }}>
+                Already have an account? Log in →
+              </Link>
+            </div>
           </div>
 
-          {errors.non_field_errors && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
-              {errors.non_field_errors}
+          {/* ── Bottom chip row ── */}
+          <div className="flex items-center justify-between px-12 pb-8 pt-0">
+            <Chip chip={FEATURE_CHIPS[2]} />
+            <Chip chip={FEATURE_CHIPS[3]} />
+          </div>
+
+          {/* Footer */}
+          <div className="px-14 pb-6">
+            <p className="text-[0.7rem]" style={{ color: 'rgba(255,255,255,0.18)' }}>
+              © {new Date().getFullYear()} Speechef · Built for English learners worldwide
             </p>
-          )}
+          </div>
+        </div>
+      </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-full font-medium text-[#141c52]"
-            style={{ backgroundColor: '#FADB43' }}
-          >
-            {loading ? 'Creating account…' : 'Register'}
-          </Button>
-        </form>
+      {/* ── Right panel — form ─────────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center bg-white px-8 py-12">
+        <div className="reg-form-in w-full max-w-sm">
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Already have an account?{' '}
-          <Link href="/login" className="font-medium hover:underline" style={{ color: '#141c52' }}>
-            Log in
-          </Link>
-        </p>
+          {/* Mobile brand */}
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-8">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: BRAND.gradient }}>
+              <span className="text-lg font-black" style={{ color: BRAND.primary }}>S</span>
+            </div>
+            <span className="text-lg font-extrabold tracking-tight" style={{ color: BRAND.primary }}>
+              Speechef
+            </span>
+          </div>
+
+          {/* Heading */}
+          <div className="mb-7">
+            <h2 className="text-2xl font-bold" style={{ color: BRAND.primary }}>Create your account</h2>
+            <p className="text-gray-500 text-sm mt-1">Start mastering communication today — it&apos;s free</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            <div className="space-y-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" type="text" required autoComplete="username"
+                value={form.username} onChange={field('username')} />
+              {errors.username && <p className="text-xs text-red-600">{errors.username}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" required autoComplete="email"
+                value={form.email} onChange={field('email')} />
+              {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input id="password" type={showPw ? 'text' : 'password'} required
+                  autoComplete="new-password" value={form.password}
+                  onChange={field('password')} className="pr-10" />
+                <button type="button" tabIndex={-1}
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm">
+                  {showPw ? '🙈' : '👁️'}
+                </button>
+              </div>
+              {strength && (
+                <div className="mt-1.5">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-300"
+                      style={{ width: `${strength.pct}%`, backgroundColor: strength.color }} />
+                  </div>
+                  <p className="text-xs mt-1" style={{ color: strength.color }}>{strength.label}</p>
+                </div>
+              )}
+              {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password2">Confirm password</Label>
+              <div className="relative">
+                <Input id="password2" type={showPw2 ? 'text' : 'password'} required
+                  autoComplete="new-password" value={form.password2}
+                  onChange={field('password2')} className="pr-10" />
+                <button type="button" tabIndex={-1}
+                  onClick={() => setShowPw2((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm">
+                  {showPw2 ? '🙈' : '👁️'}
+                </button>
+              </div>
+              {errors.password2 && <p className="text-xs text-red-600">{errors.password2}</p>}
+            </div>
+
+            {errors.non_field_errors && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                {errors.non_field_errors}
+              </p>
+            )}
+
+            <Button type="submit" disabled={loading}
+              className="w-full rounded-full font-bold text-[#141c52] h-11 text-sm tracking-wide transition-opacity hover:opacity-90"
+              style={{ background: BRAND.gradient }}>
+              {loading ? 'Creating account…' : 'Create free account'}
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-5">
+            Already have an account?{' '}
+            <Link href="/login" className="font-semibold hover:underline" style={{ color: BRAND.primary }}>
+              Log in
+            </Link>
+          </p>
+
+          {/* Mobile benefits */}
+          <div className="lg:hidden mt-8 pt-7 border-t border-gray-100 space-y-2.5">
+            {BENEFITS.map((b, i) => (
+              <div key={i} className="flex items-center gap-2.5">
+                <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: BRAND.gradient }}>
+                  <svg width="8" height="6" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4l3 3 5-6" stroke="#141c52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <p className="text-xs text-gray-500">{b.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

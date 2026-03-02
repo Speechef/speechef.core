@@ -3,15 +3,15 @@ import { login as apiLogin, logout as apiLogout, isAuthenticated } from '@/lib/a
 
 interface AuthState {
   isLoggedIn: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, remember?: boolean) => Promise<void>;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: typeof window !== 'undefined' ? isAuthenticated() : false,
 
-  login: async (username, password) => {
-    await apiLogin(username, password);
+  login: async (username, password, remember = false) => {
+    await apiLogin(username, password, remember);
     set({ isLoggedIn: true });
   },
 

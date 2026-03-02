@@ -1,17 +1,17 @@
 import Cookies from 'js-cookie';
 import api from './api';
 
-const ACCESS_EXPIRY_DAYS = 1 / 24; // 1 hour, matches server ACCESS_TOKEN_LIFETIME
+const ACCESS_EXPIRY_DAYS  = 1 / 24; // 1 hour, matches server ACCESS_TOKEN_LIFETIME
 const REFRESH_EXPIRY_DAYS = 7;
+const REMEMBER_EXPIRY_DAYS = 30;
 
-export async function login(username: string, password: string): Promise<void> {
+export async function login(username: string, password: string, remember = false): Promise<void> {
   const { data } = await api.post('/token/', { username, password });
-  Cookies.set('access_token', data.access, {
-    expires: ACCESS_EXPIRY_DAYS,
-    sameSite: 'strict',
-  });
+  Cookies.set('access_token', data.access, { expires: ACCESS_EXPIRY_DAYS, sameSite: 'strict' });
+  // remember = true  → persistent 30-day cookie
+  // remember = false → session cookie (cleared when browser closes)
   Cookies.set('refresh_token', data.refresh, {
-    expires: REFRESH_EXPIRY_DAYS,
+    expires: remember ? REMEMBER_EXPIRY_DAYS : undefined,
     sameSite: 'strict',
   });
 }

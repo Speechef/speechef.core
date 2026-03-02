@@ -1,5 +1,5 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -7,6 +7,211 @@ import Link from 'next/link';
 import api from '@/lib/api';
 
 const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+// ── Hero styles ──────────────────────────────────────────────────────────────
+const TP_STYLES = `
+  @keyframes tpOrbDrift {
+    0%,100% { transform:translate(0,0) scale(1); }
+    33%      { transform:translate(40px,-30px) scale(1.08); }
+    66%      { transform:translate(-28px,22px) scale(0.94); }
+  }
+  @keyframes tpRise {
+    from { opacity:0; transform:translateY(48px) scale(0.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes tpFlagPop {
+    from { opacity:0; transform:scale(0.7) translateY(20px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+  }
+  @keyframes tpChev {
+    0%,100% { transform:translateY(0); opacity:0.4; }
+    50%     { transform:translateY(10px); opacity:1; }
+  }
+  @keyframes tpCta {
+    0%,100% { box-shadow:0 8px 30px rgba(250,219,67,.28); }
+    50%     { box-shadow:0 8px 50px rgba(250,219,67,.55); }
+  }
+  .tp-orb-a { animation:tpOrbDrift 15s ease-in-out infinite; }
+  .tp-orb-b { animation:tpOrbDrift 20s ease-in-out infinite reverse; }
+  .tp-orb-c { animation:tpOrbDrift 12s ease-in-out infinite 2.5s; }
+  .tp-rise-1 { animation:tpRise .85s ease both; }
+  .tp-rise-2 { animation:tpRise .85s .18s ease both; }
+  .tp-rise-3 { animation:tpRise .85s .34s ease both; }
+  .tp-rise-4 { animation:tpRise .85s .52s ease both; }
+  .tp-flag-1 { animation:tpFlagPop .6s .55s ease both; }
+  .tp-flag-2 { animation:tpFlagPop .6s .68s ease both; }
+  .tp-flag-3 { animation:tpFlagPop .6s .81s ease both; }
+  .tp-flag-4 { animation:tpFlagPop .6s .94s ease both; }
+  .tp-flag-5 { animation:tpFlagPop .6s 1.07s ease both; }
+  .tp-chev   { animation:tpChev 1.9s ease-in-out infinite; }
+  .tp-cta    { animation:tpCta 3s ease-in-out infinite; }
+`;
+
+const EXAM_FLAGS = [
+  { flag: '🇬🇧', exam: 'IELTS',  scale: '0–9 bands',  cls: 'tp-flag-1', accent: 'rgba(124,58,237,0.55)',  bg: 'rgba(237,233,254,0.14)', border: 'rgba(196,181,253,0.55)' },
+  { flag: '🇺🇸', exam: 'TOEFL',  scale: '0–120 pts',  cls: 'tp-flag-2', accent: 'rgba(29,78,216,0.55)',   bg: 'rgba(219,234,254,0.14)', border: 'rgba(147,197,253,0.55)' },
+  { flag: '🌐',  exam: 'PTE',    scale: '10–90 pts',  cls: 'tp-flag-3', accent: 'rgba(6,95,70,0.55)',    bg: 'rgba(209,250,229,0.14)', border: 'rgba(110,231,183,0.55)' },
+  { flag: '🇦🇺', exam: 'OET',    scale: 'Grade A–E',  cls: 'tp-flag-4', accent: 'rgba(154,52,18,0.55)',  bg: 'rgba(254,226,226,0.14)', border: 'rgba(252,165,165,0.55)' },
+  { flag: '🇨🇦', exam: 'CELPIP', scale: 'Level 1–12', cls: 'tp-flag-5', accent: 'rgba(146,64,14,0.55)',  bg: 'rgba(254,243,199,0.14)', border: 'rgba(253,224,71,0.55)' },
+];
+
+function TestPrepHero({ onScrollDown }: { onScrollDown: () => void }) {
+  const [p, setP] = useState(0);
+
+  useEffect(() => {
+    const update = () => setP(Math.min(1, window.scrollY / window.innerHeight));
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
+  // Ease-in-out cubic
+  const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+
+  // Background: wipes downward — top inset grows from 0% → 110%
+  const wipe = e * 110;
+
+  const textOpacity = Math.max(0, 1 - e * 1.9);
+  const textScale   = 1 - e * 0.07;
+  const chevOpacity = Math.max(0, 1 - e * 3.5);
+
+  return (
+    <div className="relative overflow-hidden" style={{ height: '100vh' }}>
+      <style dangerouslySetInnerHTML={{ __html: TP_STYLES }} />
+
+      {/* Background — top-down wipe */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(160deg,#080d26 0%,#141c52 48%,#1a2460 100%)',
+          clipPath: `inset(${wipe}% 0 0 0)`,
+        }}
+      />
+
+      {/* Orbs */}
+      <div className="tp-orb-a absolute rounded-full pointer-events-none"
+        style={{ width: 540, height: 540, top: -150, right: -110,
+          background: 'radial-gradient(circle,rgba(250,219,67,.12) 0%,transparent 68%)',
+          clipPath: `inset(${wipe}% 0 0 0)` }} />
+      <div className="tp-orb-b absolute rounded-full pointer-events-none"
+        style={{ width: 420, height: 420, bottom: -100, left: -120,
+          background: 'radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 68%)',
+          clipPath: `inset(${wipe}% 0 0 0)` }} />
+      <div className="tp-orb-c absolute rounded-full pointer-events-none"
+        style={{ width: 290, height: 290, top: '30%', left: '14%',
+          background: 'radial-gradient(circle,rgba(167,139,250,.11) 0%,transparent 68%)',
+          clipPath: `inset(${wipe}% 0 0 0)` }} />
+
+      {/* Fine grid */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)',
+          backgroundSize: '60px 60px',
+          opacity: Math.max(0, 0.035 - e * 0.035),
+          clipPath: `inset(${wipe}% 0 0 0)`,
+        }} />
+
+      {/* Center content */}
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center"
+        style={{ opacity: textOpacity, transform: `scale(${textScale})` }}
+      >
+        {/* Label */}
+        <div className="tp-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 text-xs font-bold uppercase tracking-widest"
+          style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
+          Test Prep Hub
+        </div>
+
+        {/* Headline */}
+        <h1 className="tp-rise-2 font-black leading-[1.02] mb-3"
+          style={{ fontSize: 'clamp(2.6rem,7.5vw,5rem)' }}>
+          <span style={{ color: '#fff' }}>Prepare for</span>
+          <br />
+          <span style={{
+            backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
+            backgroundSize: '200%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
+            Your Exam.
+          </span>
+        </h1>
+
+        {/* Sub */}
+        <p className="tp-rise-3 text-sm font-medium mb-8 max-w-sm mx-auto"
+          style={{ color: 'rgba(255,255,255,0.48)' }}>
+          AI-scored sessions for IELTS, TOEFL, PTE, OET &amp; CELPIP — timed and realistic.
+        </p>
+
+        {/* ── Flag cards — the centrepiece ── */}
+        <div className="flex items-stretch justify-center gap-3 mb-8 flex-wrap">
+          {EXAM_FLAGS.map((ef) => (
+            <div
+              key={ef.exam}
+              className={`${ef.cls} flex flex-col items-center gap-2 px-4 py-4 rounded-2xl select-none`}
+              style={{
+                background: ef.bg,
+                border: `1.5px solid ${ef.border}`,
+                backdropFilter: 'blur(12px)',
+                boxShadow: `0 8px 32px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.1)`,
+                minWidth: '76px',
+              }}
+            >
+              {/* Flag — the main star */}
+              <span style={{ fontSize: '3.25rem', lineHeight: 1, filter: `drop-shadow(0 4px 12px ${ef.accent})` }}>
+                {ef.flag}
+              </span>
+              <p className="text-xs font-extrabold text-white leading-none tracking-wide">{ef.exam}</p>
+              <p className="text-[10px] font-semibold leading-none" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                {ef.scale}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* CTAs */}
+        <div className="tp-rise-4 flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onClick={onScrollDown}
+            className="tp-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
+            style={{ background: BRAND.gradient, color: BRAND.primary }}
+          >
+            Start Practicing ↓
+          </button>
+          <Link
+            href="/practice/test-prep/ielts"
+            className="px-7 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-white/10"
+            style={{ borderColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.62)' }}
+          >
+            🇬🇧 IELTS →
+          </Link>
+        </div>
+      </div>
+
+      {/* Scroll chevron */}
+      <button
+        onClick={onScrollDown}
+        className="tp-chev absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-20"
+        style={{ opacity: chevOpacity }}
+        aria-label="Scroll down"
+      >
+        <span className="text-[0.58rem] font-bold uppercase tracking-widest"
+          style={{ color: 'rgba(255,255,255,0.32)' }}>Scroll</span>
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          style={{ color: 'rgba(255,255,255,0.38)' }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Gradient fade into content */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to bottom,transparent,#f9fafb)' }} />
+    </div>
+  );
+}
+
+// ── Existing constants ───────────────────────────────────────────────────────
 
 const SECTION_TYPE_META: Record<string, { bg: string; text: string; emoji: string }> = {
   Speaking:  { bg: '#ede9fe', text: '#6d28d9', emoji: '🎤' },
@@ -73,6 +278,8 @@ const SCORING_GUIDES = [
   { slug_key: 'celpip', label: 'CELPIP',  scale: 'Level 1–12', target: 'Level 7+' },
 ];
 
+// ── Hub content (needs Suspense for useSearchParams) ─────────────────────────
+
 function TestPrepHubContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -96,6 +303,9 @@ function TestPrepHubContent() {
     }))
     .filter((exam) => sectionFilter === 'all' || exam.sections.length > 0);
 
+  // Suppress unused import warning
+  void SECTION_TYPE_META;
+
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-4xl mx-auto">
@@ -108,7 +318,7 @@ function TestPrepHubContent() {
           <p className="text-gray-500 text-sm">Timed, distraction-free practice sessions for IELTS, TOEFL, PTE, OET, and CELPIP. Each attempt is scored by our AI.</p>
         </div>
 
-        {/* Scoring quick-reference — card style with colored header bands */}
+        {/* Scoring quick-reference */}
         <div className="grid grid-cols-5 gap-3 mb-8">
           {SCORING_GUIDES.map((g) => {
             const ec = EXAM_COLORS[g.slug_key] ?? { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' };
@@ -169,7 +379,6 @@ function TestPrepHubContent() {
               return (
                 <div key={exam.id} className="rounded-2xl border overflow-hidden hover:shadow-md transition-shadow"
                   style={{ borderColor: ec.border }}>
-                  {/* Colored card header */}
                   <div className="relative overflow-hidden p-6" style={{ background: ec.bg }}>
                     <div className="absolute top-[-20px] right-[-20px] w-20 h-20 rounded-full"
                       style={{ background: ec.text, opacity: 0.1 }} />
@@ -183,7 +392,6 @@ function TestPrepHubContent() {
                     <p className="relative text-sm text-gray-600 line-clamp-2">{exam.description}</p>
                   </div>
 
-                  {/* Sections list */}
                   <div className="bg-white p-5">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                       {sectionFilter === 'all' ? 'All Sections' : `${sectionFilter.charAt(0).toUpperCase() + sectionFilter.slice(1)} Sections`}
@@ -199,9 +407,7 @@ function TestPrepHubContent() {
                             <span className="text-sm font-medium" style={{ color: BRAND.primary }}>
                               {SECTION_TYPE_LABELS[section.section_type] ?? section.name}
                             </span>
-                            <span className="text-xs text-gray-400">
-                              {section.name}
-                            </span>
+                            <span className="text-xs text-gray-400">{section.name}</span>
                             {section.question_count > 0 && (
                               <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
                                 {section.question_count}q
@@ -295,9 +501,18 @@ function RecentAttempts() {
 }
 
 export default function TestPrepHubPage() {
+  const contentRef = useRef<HTMLDivElement>(null);
+
   return (
-    <Suspense>
-      <TestPrepHubContent />
-    </Suspense>
+    <>
+      <TestPrepHero
+        onScrollDown={() => contentRef.current?.scrollIntoView({ behavior: 'smooth' })}
+      />
+      <div ref={contentRef}>
+        <Suspense>
+          <TestPrepHubContent />
+        </Suspense>
+      </div>
+    </>
   );
 }

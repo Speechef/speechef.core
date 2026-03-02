@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 
 from .models import (
@@ -697,6 +697,7 @@ def recommended_mentors(request):
 # ── Recording (MM3.1) ─────────────────────────────────────────────────────
 
 @api_view(["POST"])
+@permission_classes([AllowAny])  # Security is handled by HMAC signature check below
 def daily_webhook(request):
     """Handle Daily.co webhook events (recording.ready). MM3.1"""
     secret = getattr(settings, "DAILY_WEBHOOK_HMAC_SECRET", "")
