@@ -7,12 +7,33 @@ from rest_framework import status
 from .models import Thread, Reply, ThreadVote
 
 
-def _thread_data(thread, user=None):
-    vote_count  = thread.votes.count()
-    reply_count = thread.replies.count()
-    is_voted    = False
+def _thread_qs(user=None):
+    """Return a queryset with counts pre-annotated to avoid N+1 queries."""
+    qs = Thread.objects.select_related('user').annotate(
+        vote_count_ann=Count('votes', distinct=True),
+        reply_count_ann=Count('replies', distinct=True),
+    )
     if user and user.is_authenticated:
-        is_voted = ThreadVote.objects.filter(user=user, thread=thread).exists()
+        qs = qs.annotate(
+            is_voted_ann=Exists(ThreadVote.objects.filter(user=user, thread=OuterRef('pk')))
+        )
+    return qs
+
+
+def _thread_data(thread, user=None):
+    # Use pre-annotated values when available (avoids N+1); fall back for
+    # freshly-created objects that haven't been fetched through _thread_qs().
+    vote_count  = getattr(thread, 'vote_count_ann',  None)
+    if vote_count is None:
+        vote_count = thread.votes.count()
+    reply_count = getattr(thread, 'reply_count_ann', None)
+    if reply_count is None:
+        reply_count = thread.replies.count()
+    is_voted = False
+    if user and user.is_authenticated:
+        is_voted_ann = getattr(thread, 'is_voted_ann', None)
+        is_voted = is_voted_ann if is_voted_ann is not None else \
+            ThreadVote.objects.filter(user=user, thread=thread).exists()
     return {
         "id":          thread.id,
         "title":       thread.title,
@@ -43,7 +64,7 @@ def _reply_data(reply, user=None):
 @permission_classes([AllowAny])
 def threads(request):
     if request.method == "GET":
-        qs = Thread.objects.all()
+        qs = _thread_qs(request.user)
         category = request.query_params.get("category")
         search   = request.query_params.get("search", "").strip()
         if category:
@@ -69,13 +90,14 @@ def threads(request):
 @permission_classes([AllowAny])
 def thread_detail(request, pk):
     try:
-        thread = Thread.objects.get(pk=pk)
+        thread = _thread_qs(request.user).get(pk=pk)
     except Thread.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
     thread.view_count += 1
     thread.save(update_fields=["view_count"])
     data = _thread_data(thread, request.user)
-    data["replies"] = [_reply_data(r, request.user) for r in thread.replies.all()]
+    # select_related('user') avoids 1 extra query per reply (N+1 fix)
+    data["replies"] = [_reply_data(r, request.user) for r in thread.replies.select_related('user').all()]
     return Response(data)
 
 

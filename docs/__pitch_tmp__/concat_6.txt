@@ -1,0 +1,3 @@
+file '/Users/gagandeep/Documents/Projects/speechef.core/docs/__pitch_tmp__/pre_6.wav'
+file '/Users/gagandeep/Documents/Projects/speechef.core/docs/__pitch_tmp__/slide_6.wav'
+file '/Users/gagandeep/Documents/Projects/speechef.core/docs/__pitch_tmp__/post_6.wav'

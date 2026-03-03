@@ -9,7 +9,7 @@ MENTORS = [
         'email': 'gagandeep@speechef.com',
         'password': 'mentor123',
         'first_name': 'Gagandeep',
-        'last_name': 'Singh',
+        'last_name': 'Manku',
         'profile': {
             'bio': (
                 "Hi! I'm Gagandeep, a communication coach with 6+ years of experience helping "
@@ -46,7 +46,7 @@ MENTORS = [
         'email': 'hariom@speechef.com',
         'password': 'mentor123',
         'first_name': 'Hariom',
-        'last_name': 'Sharma',
+        'last_name': 'Choudhary',
         'profile': {
             'bio': (
                 "I'm Hariom, a public speaking trainer and debate coach. I've trained 300+ speakers "
@@ -83,7 +83,7 @@ MENTORS = [
         'email': 'darshika@speechef.com',
         'password': 'mentor123',
         'first_name': 'Darshika',
-        'last_name': 'Patel',
+        'last_name': 'Tiwari',
         'profile': {
             'bio': (
                 "Hello! I'm Darshika, a language coach specializing in fluency, vocabulary, and the "
@@ -148,6 +148,10 @@ class Command(BaseCommand):
                 user.save()
                 self.stdout.write(f'  Created user: {username}')
             else:
+                # Update name in case it changed
+                user.first_name = data['first_name']
+                user.last_name = data['last_name']
+                user.save(update_fields=['first_name', 'last_name'])
                 self.stdout.write(f'  Using existing user: {username}')
 
             # Delete existing mentor profile if --reset

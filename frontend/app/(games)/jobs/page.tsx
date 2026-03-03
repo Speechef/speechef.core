@@ -38,6 +38,238 @@ interface Job {
   url: string;
 }
 
+// ─── Hero styles ───────────────────────────────────────────────────────────────
+
+const HERO_STYLES = `
+  @keyframes heroOrbDrift {
+    0%,100% { transform: translate(0,0) scale(1); }
+    30%      { transform: translate(45px,-35px) scale(1.1); }
+    65%      { transform: translate(-30px,28px) scale(0.93); }
+  }
+  @keyframes heroRise {
+    from { opacity:0; transform:translateY(50px) scale(0.96); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes heroChevron {
+    0%,100% { transform:translateY(0); opacity:0.45; }
+    50%     { transform:translateY(10px); opacity:1; }
+  }
+  @keyframes ctaGlow {
+    0%,100% { box-shadow:0 8px 30px rgba(250,219,67,.28); }
+    50%     { box-shadow:0 8px 48px rgba(250,219,67,.55); }
+  }
+  .hero-orb-a { animation: heroOrbDrift 14s ease-in-out infinite; }
+  .hero-orb-b { animation: heroOrbDrift 19s ease-in-out infinite reverse; }
+  .hero-orb-c { animation: heroOrbDrift 11s ease-in-out infinite 4s; }
+  .hero-orb-d { animation: heroOrbDrift 23s ease-in-out infinite 2s reverse; }
+  .hero-rise-1 { animation: heroRise .85s ease both; }
+  .hero-rise-2 { animation: heroRise .85s .18s ease both; }
+  .hero-rise-3 { animation: heroRise .85s .34s ease both; }
+  .hero-rise-4 { animation: heroRise .85s .52s ease both; }
+  .hero-chev  { animation: heroChevron 1.9s ease-in-out infinite; }
+  .hero-cta   { animation: ctaGlow 3s ease-in-out infinite; }
+`;
+
+// ─── Hero ──────────────────────────────────────────────────────────────────────
+
+function JobsHero({
+  onScrollDown,
+  totalJobs,
+  qualifyingCount,
+  latestScore,
+  isLoggedIn,
+  canForYou,
+}: {
+  onScrollDown: () => void;
+  totalJobs: number;
+  qualifyingCount: number;
+  latestScore: number | null | undefined;
+  isLoggedIn: boolean;
+  canForYou: boolean;
+}) {
+  const [p, setP] = useState(0);
+
+  useEffect(() => {
+    const update = () => setP(Math.min(1, window.scrollY / window.innerHeight));
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
+  const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  const circle         = Math.max(0, 150 - e * 158);
+  const contentOpacity = Math.max(0, 1 - e * 1.9);
+  const contentScale   = 1 + e * 0.12;
+  const chevOpacity    = Math.max(0, 1 - e * 3);
+
+  return (
+    <div className="relative overflow-hidden" style={{ height: '100vh' }}>
+      <style dangerouslySetInnerHTML={{ __html: HERO_STYLES }} />
+
+      {/* Dark background — clips to circle as scroll progresses */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(160deg,#080d26 0%,#141c52 48%,#1a2460 100%)',
+        clipPath: `circle(${circle}% at 50% 42%)`,
+      }} />
+
+      {/* Orbs */}
+      <div className="hero-orb-a absolute rounded-full pointer-events-none"
+        style={{ width: 560, height: 560, top: -160, right: -120,
+          background: 'radial-gradient(circle,rgba(250,219,67,.13) 0%,transparent 68%)',
+          clipPath: `circle(${circle}% at 50% 42%)` }} />
+      <div className="hero-orb-b absolute rounded-full pointer-events-none"
+        style={{ width: 440, height: 440, bottom: -110, left: -130,
+          background: 'radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 68%)',
+          clipPath: `circle(${circle}% at 50% 42%)` }} />
+      <div className="hero-orb-c absolute rounded-full pointer-events-none"
+        style={{ width: 310, height: 310, top: '32%', left: '12%',
+          background: 'radial-gradient(circle,rgba(167,139,250,.12) 0%,transparent 68%)',
+          clipPath: `circle(${circle}% at 50% 42%)` }} />
+      <div className="hero-orb-d absolute rounded-full pointer-events-none"
+        style={{ width: 250, height: 250, bottom: '22%', right: '15%',
+          background: 'radial-gradient(circle,rgba(96,165,250,.11) 0%,transparent 68%)',
+          clipPath: `circle(${circle}% at 50% 42%)` }} />
+
+      {/* Fine grid overlay */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)',
+        backgroundSize: '60px 60px',
+        opacity: Math.max(0, 0.035 - e * 0.035),
+        clipPath: `circle(${circle}% at 50% 42%)`,
+      }} />
+
+      {/* Two-column content */}
+      <div
+        className="absolute inset-0 flex items-center z-10"
+        style={{ opacity: contentOpacity, transform: `scale(${contentScale})`, transformOrigin: 'center center' }}
+      >
+        <div className="w-full max-w-6xl mx-auto px-8 flex items-center gap-12">
+
+          {/* Left: headline + CTAs */}
+          <div className="flex-1 text-left">
+            <div className="hero-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-7 text-xs font-bold uppercase tracking-widest"
+              style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
+              Speechef Jobs Board
+            </div>
+
+            <h1 className="hero-rise-2 font-black leading-[1.02] mb-4"
+              style={{ fontSize: 'clamp(2.4rem,5vw,4.5rem)' }}>
+              <span style={{ color: '#fff' }}>Land the Job</span>
+              <br />
+              <span style={{
+                backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
+                backgroundSize: '200%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                You Deserve.
+              </span>
+            </h1>
+
+            <p className="hero-rise-3 text-base font-medium mb-10 max-w-md"
+              style={{ color: 'rgba(255,255,255,0.48)' }}>
+              Companies that hire for communication excellence. Apply with your Speechef score and stand out.
+            </p>
+
+            <div className="hero-rise-4 flex items-center gap-3 flex-wrap">
+              <button
+                onClick={onScrollDown}
+                className="hero-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
+                style={{ background: BRAND.gradient, color: BRAND.primary }}
+              >
+                Browse Jobs ↓
+              </button>
+              <Link
+                href="/jobs/post"
+                className="px-7 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-white/10"
+                style={{ borderColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.62)' }}
+              >
+                Post a Job →
+              </Link>
+            </div>
+          </div>
+
+          {/* Right: stats glass card */}
+          <div className="hero-rise-4 w-72 shrink-0 hidden sm:block">
+            <div className="rounded-2xl p-6" style={{
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(12px)',
+            }}>
+              {/* Stats */}
+              <div className="flex items-center gap-4 mb-5">
+                <div>
+                  <p className="text-3xl font-black text-white leading-none">{totalJobs}</p>
+                  <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Jobs</p>
+                </div>
+                {canForYou && (
+                  <>
+                    <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                    <div>
+                      <p className="text-3xl font-black text-white leading-none">{qualifyingCount}</p>
+                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>For You</p>
+                    </div>
+                  </>
+                )}
+                {isLoggedIn && latestScore != null && (
+                  <>
+                    <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                    <div>
+                      <p className="text-3xl font-black text-white leading-none">{latestScore}</p>
+                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Score</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Speechef score bar */}
+              {isLoggedIn && latestScore != null ? (
+                <>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>Speechef score</span>
+                    <span className="font-semibold text-white">{latestScore} / 100</span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${latestScore}%`, background: BRAND.gradient }}
+                    />
+                  </div>
+                </>
+              ) : isLoggedIn ? (
+                <Link href="/analyze" className="text-xs font-semibold hover:underline" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  Get your Speechef score →
+                </Link>
+              ) : (
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Log in to see your score match</p>
+              )}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Scroll chevron */}
+      <button
+        onClick={onScrollDown}
+        className="hero-chev absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-20"
+        style={{ opacity: chevOpacity }}
+        aria-label="Scroll down"
+      >
+        <span className="text-[0.58rem] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.32)' }}>Scroll</span>
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'rgba(255,255,255,0.38)' }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Gradient fade-to-content */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to bottom,transparent,#f9fafb)' }} />
+    </div>
+  );
+}
+
 // ── Score badge ───────────────────────────────────────────────────────────────
 
 function ScoreMatchBadge({ required, userScore }: { required: number | null; userScore: number | null }) {
@@ -89,17 +321,11 @@ function BigJobCard({ job, userScore, active }: { job: Job; userScore: number | 
         className="relative px-6 pt-7 pb-6 shrink-0"
         style={{ background: ec.bg, minHeight: 180 }}
       >
-        {/* Decorative circle */}
-        <div
-          className="absolute top-[-30px] right-[-30px] w-28 h-28 rounded-full"
-          style={{ background: ec.text, opacity: 0.08 }}
-        />
-        <div
-          className="absolute bottom-[-20px] left-[-20px] w-20 h-20 rounded-full"
-          style={{ background: ec.text, opacity: 0.06 }}
-        />
+        <div className="absolute top-[-30px] right-[-30px] w-28 h-28 rounded-full"
+          style={{ background: ec.text, opacity: 0.08 }} />
+        <div className="absolute bottom-[-20px] left-[-20px] w-20 h-20 rounded-full"
+          style={{ background: ec.text, opacity: 0.06 }} />
 
-        {/* Featured badge */}
         {job.is_featured && (
           <span
             className="absolute top-4 right-4 text-[10px] px-2.5 py-1 rounded-full font-bold z-10"
@@ -109,7 +335,6 @@ function BigJobCard({ job, userScore, active }: { job: Job; userScore: number | 
           </span>
         )}
 
-        {/* Company avatar */}
         <div
           className="relative w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-extrabold text-white mb-4 shrink-0"
           style={{ background: 'linear-gradient(135deg,#141c52,#1e2d78)' }}
@@ -117,7 +342,6 @@ function BigJobCard({ job, userScore, active }: { job: Job; userScore: number | 
           {(job.company?.[0] ?? '?').toUpperCase()}
         </div>
 
-        {/* Title + company */}
         <h2
           className="relative text-lg font-extrabold leading-snug line-clamp-2"
           style={{ color: BRAND.primary }}
@@ -132,7 +356,6 @@ function BigJobCard({ job, userScore, active }: { job: Job; userScore: number | 
       {/* White body */}
       <div className="bg-white flex-1 px-6 py-5 flex flex-col justify-between">
         <div className="space-y-3">
-          {/* Location + type */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-gray-500">
               {job.remote ? '🌍 Remote' : `📍 ${job.location}`}
@@ -147,7 +370,6 @@ function BigJobCard({ job, userScore, active }: { job: Job; userScore: number | 
             )}
           </div>
 
-          {/* Salary */}
           {job.job_rate ? (
             <p className="text-2xl font-extrabold" style={{ color: BRAND.primary }}>
               ${job.job_rate.toLocaleString()}
@@ -157,11 +379,9 @@ function BigJobCard({ job, userScore, active }: { job: Job; userScore: number | 
             <p className="text-sm text-gray-400 italic">Salary not listed</p>
           )}
 
-          {/* Score match */}
           <ScoreMatchBadge required={job.min_speechef_score} userScore={userScore} />
         </div>
 
-        {/* CTA */}
         <Link
           href={`/jobs/${job.id}`}
           className="mt-4 block text-center py-3 rounded-xl font-bold text-sm transition-opacity hover:opacity-90"
@@ -183,7 +403,6 @@ function JobCarousel({ jobs, userScore }: { jobs: Job[]; userScore: number | nul
   const [wrapW, setWrapW] = useState(0);
   const touchX = useRef<number | null>(null);
 
-  // Measure container width
   useEffect(() => {
     const update = () => setWrapW(wrapRef.current?.offsetWidth ?? 0);
     update();
@@ -192,14 +411,12 @@ function JobCarousel({ jobs, userScore }: { jobs: Job[]; userScore: number | nul
     return () => ro.disconnect();
   }, []);
 
-  // Reset to first card when job list changes
   useEffect(() => { setActive(0); }, [jobs.length]);
 
   const clamp = useCallback((i: number) => Math.max(0, Math.min(jobs.length - 1, i)), [jobs.length]);
   const prev = useCallback(() => setActive((i) => clamp(i - 1)), [clamp]);
   const next = useCallback(() => setActive((i) => clamp(i + 1)), [clamp]);
 
-  // Keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft')  prev();
@@ -211,18 +428,15 @@ function JobCarousel({ jobs, userScore }: { jobs: Job[]; userScore: number | nul
 
   if (jobs.length === 0) return null;
 
-  // translateX so the active card is centered in wrapW
   const translateX = wrapW / 2 - active * (CARD_W + CARD_GAP) - CARD_W / 2;
 
   return (
     <div className="relative" ref={wrapRef}>
-      {/* Fade edges */}
       <div className="absolute inset-y-0 left-0 w-20 z-10 pointer-events-none"
         style={{ background: 'linear-gradient(to right, #f9fafb, transparent)' }} />
       <div className="absolute inset-y-0 right-0 w-20 z-10 pointer-events-none"
         style={{ background: 'linear-gradient(to left, #f9fafb, transparent)' }} />
 
-      {/* Card strip */}
       <div
         className="overflow-hidden py-10"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
@@ -268,7 +482,6 @@ function JobCarousel({ jobs, userScore }: { jobs: Job[]; userScore: number | nul
         </div>
       </div>
 
-      {/* Prev arrow */}
       {active > 0 && (
         <button
           onClick={prev}
@@ -280,7 +493,6 @@ function JobCarousel({ jobs, userScore }: { jobs: Job[]; userScore: number | nul
         </button>
       )}
 
-      {/* Next arrow */}
       {active < jobs.length - 1 && (
         <button
           onClick={next}
@@ -292,7 +504,6 @@ function JobCarousel({ jobs, userScore }: { jobs: Job[]; userScore: number | nul
         </button>
       )}
 
-      {/* Dots / counter */}
       <div className="flex items-center justify-center gap-1.5 mt-2 pb-2">
         {jobs.length <= 12 ? (
           jobs.map((_, i) => (
@@ -347,6 +558,7 @@ function JobsContent() {
   const { isLoggedIn } = useAuthStore();
   const router        = useRouter();
   const searchParams  = useSearchParams();
+  const contentRef    = useRef<HTMLDivElement>(null);
 
   const filterRemote = searchParams.get('remote') ?? '';
   const filterType   = searchParams.get('type') ?? '';
@@ -396,7 +608,6 @@ function JobsContent() {
     },
   });
 
-  // Client-side filtering
   const searchLower   = search.toLowerCase();
   const searchedJobs  = search
     ? jobs.filter((j) =>
@@ -409,7 +620,7 @@ function JobsContent() {
     (j) => !j.min_speechef_score ||
       (latestScore != null && latestScore >= j.min_speechef_score)
   );
-  const filteredJobs = forYou ? qualifyingJobs : searchedJobs;
+  const filteredJobs  = forYou ? qualifyingJobs : searchedJobs;
   const displayedJobs = [...filteredJobs].sort((a, b) => {
     if (sortBy === 'salary_desc') return (b.job_rate ?? 0) - (a.job_rate ?? 0);
     if (sortBy === 'score_asc')   return (a.min_speechef_score ?? 0) - (b.min_speechef_score ?? 0);
@@ -418,186 +629,160 @@ function JobsContent() {
   const canForYou = isLoggedIn && latestScore != null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-5xl mx-auto">
+    <>
+      {/* ── Hero ── */}
+      <JobsHero
+        onScrollDown={() => contentRef.current?.scrollIntoView({ behavior: 'smooth' })}
+        totalJobs={jobs.length}
+        qualifyingCount={qualifyingJobs.length}
+        latestScore={latestScore}
+        isLoggedIn={isLoggedIn}
+        canForYou={canForYou}
+      />
 
-        {/* Header */}
-        <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wide mb-1" style={{ color: '#fe9940' }}>Careers</p>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: BRAND.primary }}>Jobs Board</h1>
-          <p className="text-gray-500 text-sm">Companies that value communication skills. Apply with your Speechef score.</p>
-        </div>
+      {/* ── Content ── */}
+      <div ref={contentRef} className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="max-w-5xl mx-auto">
 
-        {/* Score banner */}
-        {isLoggedIn && latestScore != null && (
-          <div
-            className="rounded-xl p-4 mb-6 flex items-center justify-between"
-            style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}
-          >
-            <div>
-              <p className="text-sm font-semibold">Your Communication Score</p>
-              <p className="text-3xl font-extrabold">
-                {latestScore}
-                <span className="text-lg font-normal text-white/60"> / 100</span>
-              </p>
-            </div>
-            <Link
-              href="/analyze"
-              className="text-sm font-semibold px-4 py-2 rounded-full transition-opacity hover:opacity-90"
-              style={{ background: BRAND.gradient, color: BRAND.primary }}
-            >
-              Analyze Again →
-            </Link>
-          </div>
-        )}
-
-        {!isLoggedIn && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800 flex items-center justify-between">
-            <span>Log in to see your score match for each job.</span>
-            <Link href="/login" className="font-semibold underline">Log in →</Link>
-          </div>
-        )}
-
-        {/* For You tabs */}
-        {canForYou && (
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setForYou(false)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors border"
-              style={!forYou
-                ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
-                : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }}
-            >
-              All Jobs
-            </button>
-            <button
-              onClick={() => setForYou(true)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors border flex items-center gap-1.5"
-              style={forYou
-                ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
-                : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }}
-            >
-              ✓ For You
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                forYou ? 'bg-white/20' : 'bg-green-100 text-green-700'
-              }`}>
-                {qualifyingJobs.length}
-              </span>
-            </button>
-          </div>
-        )}
-
-        {/* Search */}
-        <form onSubmit={(e) => { e.preventDefault(); pushParams({ search }); }} className="relative mb-4">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">🔍</span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onBlur={() => pushParams({ search })}
-            placeholder="Search by title or company…"
-            className="w-full border border-gray-200 rounded-xl pl-10 pr-10 py-2.5 text-sm bg-white focus:outline-none focus:border-indigo-400 transition-colors"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => { setSearch(''); pushParams({ search: '' }); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-            >
-              ✕
-            </button>
-          )}
-        </form>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <select
-            value={filterRemote}
-            onChange={(e) => setFilterRemote(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600"
-          >
-            <option value="">All Locations</option>
-            <option value="true">Remote Only</option>
-            <option value="false">On-site Only</option>
-          </select>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600"
-          >
-            <option value="">All Types</option>
-            <option value="full_time">Full Time</option>
-            <option value="part_time">Part Time</option>
-            <option value="contract">Contract</option>
-            <option value="freelance">Freelance</option>
-          </select>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600"
-          >
-            <option value="newest">Newest First</option>
-            <option value="salary_desc">Highest Salary</option>
-            <option value="score_asc">Score: Low to High</option>
-          </select>
-          <div className="ml-auto">
-            <Link
-              href="/jobs/post"
-              className="text-sm font-medium px-4 py-2 rounded-lg border-2 transition-colors hover:bg-gray-50"
-              style={{ borderColor: '#141c52', color: '#141c52' }}
-            >
-              + Post a Job
-            </Link>
-          </div>
-        </div>
-
-        {/* Result count */}
-        {search && !isLoading && (
-          <p className="text-sm text-gray-500 mb-2 text-center">
-            {displayedJobs.length} result{displayedJobs.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
-          </p>
-        )}
-
-        {/* Carousel / loading / empty */}
-        {isLoading ? (
-          <CarouselSkeleton />
-        ) : displayedJobs.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-4xl mb-3">💼</p>
-            <p className="font-semibold">{forYou ? 'No qualifying jobs right now' : 'No jobs found'}</p>
-            <p className="text-sm mt-1">
-              {forYou
-                ? 'Improve your score or check All Jobs to see more opportunities.'
-                : 'Try changing your filters or check back later.'}
-            </p>
-            {forYou && (
+          {/* For You tabs */}
+          {canForYou && (
+            <div className="flex gap-2 mb-4">
               <button
                 onClick={() => setForYou(false)}
-                className="mt-3 text-sm font-semibold underline"
-                style={{ color: BRAND.primary }}
+                className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors border"
+                style={!forYou
+                  ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
+                  : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }}
               >
-                View All Jobs
+                All Jobs
+              </button>
+              <button
+                onClick={() => setForYou(true)}
+                className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors border flex items-center gap-1.5"
+                style={forYou
+                  ? { backgroundColor: BRAND.primary, color: '#fff', borderColor: BRAND.primary }
+                  : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }}
+              >
+                ✓ For You
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                  forYou ? 'bg-white/20' : 'bg-green-100 text-green-700'
+                }`}>
+                  {qualifyingJobs.length}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Search */}
+          <form onSubmit={(e) => { e.preventDefault(); pushParams({ search }); }} className="relative mb-4">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">🔍</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onBlur={() => pushParams({ search })}
+              placeholder="Search by title or company…"
+              className="w-full border border-gray-200 rounded-xl pl-10 pr-10 py-2.5 text-sm bg-white focus:outline-none focus:border-indigo-400 transition-colors"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => { setSearch(''); pushParams({ search: '' }); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+              >
+                ✕
               </button>
             )}
+          </form>
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <select
+              value={filterRemote}
+              onChange={(e) => setFilterRemote(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600"
+            >
+              <option value="">All Locations</option>
+              <option value="true">Remote Only</option>
+              <option value="false">On-site Only</option>
+            </select>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600"
+            >
+              <option value="">All Types</option>
+              <option value="full_time">Full Time</option>
+              <option value="part_time">Part Time</option>
+              <option value="contract">Contract</option>
+              <option value="freelance">Freelance</option>
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600"
+            >
+              <option value="newest">Newest First</option>
+              <option value="salary_desc">Highest Salary</option>
+              <option value="score_asc">Score: Low to High</option>
+            </select>
+            <div className="ml-auto">
+              <Link
+                href="/jobs/post"
+                className="text-sm font-medium px-4 py-2 rounded-lg border-2 transition-colors hover:bg-gray-50"
+                style={{ borderColor: '#141c52', color: '#141c52' }}
+              >
+                + Post a Job
+              </Link>
+            </div>
           </div>
-        ) : (
-          <JobCarousel jobs={displayedJobs} userScore={latestScore ?? null} />
-        )}
 
-        {/* Employer CTA */}
-        <div className="mt-10 text-center border-t border-gray-200 pt-8">
-          <p className="text-gray-500 text-sm mb-2">Looking to hire great communicators?</p>
-          <Link
-            href="/jobs/post"
-            className="inline-block text-sm font-semibold px-6 py-2.5 rounded-full transition-opacity hover:opacity-90"
-            style={{ background: BRAND.gradient, color: BRAND.primary }}
-          >
-            Post a Job Free →
-          </Link>
+          {search && !isLoading && (
+            <p className="text-sm text-gray-500 mb-2 text-center">
+              {displayedJobs.length} result{displayedJobs.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
+            </p>
+          )}
+
+          {isLoading ? (
+            <CarouselSkeleton />
+          ) : displayedJobs.length === 0 ? (
+            <div className="text-center py-20 text-gray-400">
+              <p className="text-4xl mb-3">💼</p>
+              <p className="font-semibold">{forYou ? 'No qualifying jobs right now' : 'No jobs found'}</p>
+              <p className="text-sm mt-1">
+                {forYou
+                  ? 'Improve your score or check All Jobs to see more opportunities.'
+                  : 'Try changing your filters or check back later.'}
+              </p>
+              {forYou && (
+                <button
+                  onClick={() => setForYou(false)}
+                  className="mt-3 text-sm font-semibold underline"
+                  style={{ color: BRAND.primary }}
+                >
+                  View All Jobs
+                </button>
+              )}
+            </div>
+          ) : (
+            <JobCarousel jobs={displayedJobs} userScore={latestScore ?? null} />
+          )}
+
+          {/* Employer CTA */}
+          <div className="mt-10 text-center border-t border-gray-200 pt-8">
+            <p className="text-gray-500 text-sm mb-2">Looking to hire great communicators?</p>
+            <Link
+              href="/jobs/post"
+              className="inline-block text-sm font-semibold px-6 py-2.5 rounded-full transition-opacity hover:opacity-90"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
+            >
+              Post a Job Free →
+            </Link>
+          </div>
+
         </div>
-
       </div>
-    </div>
+    </>
   );
 }
 

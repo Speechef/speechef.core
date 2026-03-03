@@ -1,8 +1,10 @@
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, status
@@ -103,12 +105,52 @@ def forgot_password(request):
             pass
 
     if user:
-        uid   = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
+        uid       = urlsafe_base64_encode(force_bytes(user.pk))
+        token     = default_token_generator.make_token(user)
         reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
-        # In development: log the link to stdout/server log for easy access.
-        logger.info('[PASSWORD RESET] %s', reset_url)
-        print(f'\n[PASSWORD RESET] {reset_url}\n', flush=True)
+
+        subject   = 'Reset your Speechef password'
+        plain_msg = (
+            f"Hi {user.username},\n\n"
+            f"We received a request to reset your Speechef password.\n"
+            f"Click the link below to choose a new password (valid for 1 hour):\n\n"
+            f"{reset_url}\n\n"
+            f"If you didn't request this, you can safely ignore this email.\n\n"
+            f"— The Speechef Team"
+        )
+        html_msg = (
+            f"<div style='font-family:sans-serif;max-width:520px;margin:auto'>"
+            f"<div style='background:linear-gradient(135deg,#141c52,#1a2460);padding:32px 40px;border-radius:16px 16px 0 0'>"
+            f"<p style='color:#FADB43;font-size:22px;font-weight:900;margin:0'>Speechef</p>"
+            f"</div>"
+            f"<div style='background:#ffffff;padding:32px 40px;border-radius:0 0 16px 16px;border:1px solid #e5e7eb'>"
+            f"<h2 style='color:#141c52;margin-top:0'>Reset your password</h2>"
+            f"<p style='color:#6b7280'>Hi <strong>{user.username}</strong>,</p>"
+            f"<p style='color:#6b7280'>We received a request to reset your Speechef password. "
+            f"Click the button below to choose a new one. This link expires in <strong>1 hour</strong>.</p>"
+            f"<a href='{reset_url}' style='display:inline-block;margin:20px 0;padding:14px 28px;"
+            f"background:linear-gradient(to right,#FADB43,#fe9940);color:#141c52;"
+            f"font-weight:700;border-radius:50px;text-decoration:none;font-size:15px'>"
+            f"Reset my password →</a>"
+            f"<p style='color:#9ca3af;font-size:12px;margin-top:24px'>If you didn't request this, "
+            f"you can safely ignore this email. The link will expire automatically.</p>"
+            f"</div></div>"
+        )
+
+        try:
+            send_mail(
+                subject=subject,
+                message=plain_msg,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_msg,
+                fail_silently=False,
+            )
+        except Exception as e:
+            # Log the error but still return success to prevent user enumeration
+            logger.error('Password reset email failed for user %s: %s', user.pk, e)
+            # Fall back to console log so the link isn't lost in dev
+            logger.info('[PASSWORD RESET FALLBACK] %s', reset_url)
 
     # Always return success to prevent user enumeration.
     return Response({'ok': True})
@@ -237,4 +279,84 @@ def public_profile(request, username):
         'longest_streak': (profile.longest_streak if profile else 0) if show_streak else None,
         'latest_score': latest_score,
         'badges': UserBadgeSerializer(badges, many=True).data,
+    })
+
+
+# ── Google OAuth ──────────────────────────────────────────────────────────────
+
+def _unique_username(email: str, name: str) -> str:
+    """Generate a unique username derived from the user's Google name or email."""
+    import re
+    base = (name or email.split('@')[0]).lower()
+    base = re.sub(r'[^a-z0-9_]', '_', base)[:20].strip('_') or 'user'
+    if not User.objects.filter(username=base).exists():
+        return base
+    i = 1
+    while User.objects.filter(username=f'{base}{i}').exists():
+        i += 1
+    return f'{base}{i}'
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_auth(request):
+    """
+    POST /auth/google/
+    Body: { "credential": "<Google ID token>" }
+    Verifies the Google ID token, finds or creates a local user, and returns JWT tokens.
+    """
+    import requests as http_requests
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    credential = request.data.get('credential', '').strip()
+    if not credential:
+        return Response({'detail': 'credential is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify the Google ID token via Google's tokeninfo endpoint
+    try:
+        resp = http_requests.get(
+            'https://oauth2.googleapis.com/tokeninfo',
+            params={'id_token': credential},
+            timeout=5,
+        )
+        payload = resp.json()
+    except Exception as e:
+        logger.error('Google tokeninfo request failed: %s', e)
+        return Response({'detail': 'Google verification failed. Please try again.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    if 'error' in payload or resp.status_code != 200:
+        return Response({'detail': 'Invalid Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Validate the audience matches our client ID
+    google_client_id = settings.GOOGLE_CLIENT_ID
+    if google_client_id and payload.get('aud') != google_client_id:
+        return Response({'detail': 'Token audience mismatch.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    email = payload.get('email', '').lower().strip()
+    name  = payload.get('name', '')
+
+    if not email:
+        return Response({'detail': 'No email returned from Google.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Find existing user by email (case-insensitive) or create a new one
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        user = User.objects.create_user(
+            username=_unique_username(email, name),
+            email=email,
+            password=None,  # No password — Google-only account
+        )
+        # Sync the display name if available
+        if name:
+            parts = name.split(' ', 1)
+            user.first_name = parts[0]
+            user.last_name  = parts[1] if len(parts) > 1 else ''
+            user.save(update_fields=['first_name', 'last_name'])
+
+    # Issue JWT tokens
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'access':  str(refresh.access_token),
+        'refresh': str(refresh),
     })

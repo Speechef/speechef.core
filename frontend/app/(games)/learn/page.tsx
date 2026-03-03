@@ -22,6 +22,7 @@ interface Post {
   categories: Category[];
   is_bookmarked: boolean;
   is_completed: boolean;
+  completion_rate?: number;
 }
 
 interface CourseInfo {
@@ -45,60 +46,35 @@ const CATEGORY_META: Record<string, { bg: string; text: string; border: string; 
   'Listening':        { bg: '#fce7f3', text: '#9d174d', border: '#fbcfe8', emoji: '🎧' },
   'Interview Skills': { bg: '#fef3c7', text: '#78350f', border: '#fde68a', emoji: '💼' },
   'Writing':          { bg: '#f0fdf4', text: '#166534', border: '#bbf7d0', emoji: '✍️' },
+  'Tests':            { bg: '#f5f3ff', text: '#5b21b6', border: '#ddd6fe', emoji: '📝' },
+  'PTE Academic':     { bg: '#dcfce7', text: '#166534', border: '#86efac', emoji: '🌏' },
+  'IELTS Academic':   { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', emoji: '🇬🇧' },
+  'IELTS':            { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', emoji: '🇬🇧' },
+  'TOEFL iBT':        { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4', emoji: '🇺🇸' },
+  'TOEFL':            { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4', emoji: '🇺🇸' },
+  'CELPIP':           { bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd', emoji: '🍁' },
+  'OET':              { bg: '#fef3c7', text: '#78350f', border: '#fcd34d', emoji: '🏥' },
 };
 
 // ─── Static course catalogue ─────────────────────────────────────────────────
 
 const COURSES: CourseInfo[] = [
-  {
-    id: 'grammar',
-    name: 'Grammar Fundamentals',
-    description: 'Articles, tenses, conditionals, passive voice — the backbone of English',
-    emoji: '✏️',
-    category: 'Grammar',
-    level: 'Foundation',
-    featured: true,
-  },
-  {
-    id: 'pronunciation',
-    name: 'Pronunciation Mastery',
-    description: 'Sound clear, natural and confident in every conversation',
-    emoji: '🗣️',
-    category: 'Pronunciation',
-    level: 'Intermediate',
-  },
-  {
-    id: 'fluency',
-    name: 'Fluency Builder',
-    description: 'Speak smoothly, drop filler words, command the pause',
-    emoji: '🌊',
-    category: 'Fluency',
-    level: 'Intermediate',
-  },
-  {
-    id: 'vocabulary',
-    name: 'Vocabulary Expansion',
-    description: 'Build a rich, precise word bank for any situation',
-    emoji: '📚',
-    category: 'Vocabulary',
-    level: 'All levels',
-  },
-  {
-    id: 'communication',
-    name: 'Communication Skills',
-    description: 'Listen actively and express ideas with impact',
-    emoji: '💬',
-    category: 'Communication',
-    level: 'Advanced',
-  },
-  {
-    id: 'writing',
-    name: 'Professional Writing',
-    description: 'Craft clear, compelling emails and documents',
-    emoji: '✍️',
-    category: 'Writing',
-    level: 'Intermediate',
-  },
+  { id: 'grammar',          name: 'Grammar Fundamentals',  description: 'The backbone of the kitchen — articles, tenses, conditionals and passive voice',            emoji: '✏️',  category: 'Grammar',          level: 'Foundation',   featured: true },
+  { id: 'pronunciation',    name: 'Pronunciation Mastery', description: 'Sound clear and natural — season every word with the right accent and rhythm',                 emoji: '🗣️', category: 'Pronunciation',    level: 'Intermediate' },
+  { id: 'fluency',          name: 'Fluency Builder',        description: 'Keep the service flowing — drop filler words and command the pause',                          emoji: '🌊', category: 'Fluency',          level: 'Intermediate' },
+  { id: 'vocabulary',       name: 'Vocabulary Expansion',   description: 'Stock your pantry with a rich, precise word bank for any situation',                          emoji: '📚', category: 'Vocabulary',       level: 'All levels'   },
+  { id: 'communication',    name: 'Communication Skills',   description: 'Plate your ideas with impact — listen actively and express with confidence',                  emoji: '💬', category: 'Communication',    level: 'Advanced'     },
+  { id: 'writing',          name: 'Professional Writing',   description: 'Craft clear, compelling written dishes — emails, reports and cover letters',                  emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
+  { id: 'listening',        name: 'Listening Skills',       description: 'Train your ear — comprehend accents, follow conversations and catch every word',              emoji: '🎧', category: 'Listening',        level: 'All levels'   },
+  { id: 'interview-skills', name: 'Interview Skills',       description: 'Ace the service — craft compelling answers and handle tough interview questions',             emoji: '💼', category: 'Interview Skills', level: 'Intermediate' },
+  { id: 'pte-academic',     name: 'PTE Academic',           description: 'Computer-based PTE preparation with AI-scored speaking and writing practice',                 emoji: '🌏', category: 'PTE Academic',     level: 'All levels'   },
+  { id: 'ielts-academic',   name: 'IELTS Academic',         description: 'Earn your stripes — reading, writing, listening and speaking for IELTS mastery.',              emoji: '🇬🇧', category: 'IELTS Academic',  level: 'All levels'   },
+  { id: 'ielts',            name: 'IELTS',                  description: 'English for international opportunities — practise all four IELTS skills.',                    emoji: '🇬🇧', category: 'IELTS',           level: 'All levels'   },
+  { id: 'toefl-ibt',        name: 'TOEFL iBT',              description: 'Build integrated academic English skills — reading, listening, speaking and writing.',          emoji: '🇺🇸', category: 'TOEFL iBT',      level: 'All levels'   },
+  { id: 'toefl',            name: 'TOEFL',                  description: 'Build integrated academic English skills for TOEFL success.',                                   emoji: '🇺🇸', category: 'TOEFL',          level: 'All levels'   },
+  { id: 'celpip',           name: 'CELPIP',                 description: 'Canadian English Language Proficiency — listening, reading, writing and speaking practice.',    emoji: '🍁', category: 'CELPIP',          level: 'All levels'   },
+  { id: 'oet',              name: 'OET',                    description: 'Occupational English Test — medical communication scenarios for healthcare professionals.',      emoji: '🏥', category: 'OET',             level: 'All levels'   },
+  { id: 'tests',            name: 'Tests & Exercises',       description: 'Put your skills to the test — practice exercises and self-assessment quizzes',                  emoji: '📝', category: 'Tests',            level: 'All levels'   },
 ];
 
 // ─── Chapter names ────────────────────────────────────────────────────────────
@@ -109,9 +85,17 @@ const CHAPTER_NAMES: Record<string, Record<number, string>> = {
   'Fluency':          { 1: 'Building Flow', 2: 'Mastering Pace' },
   'Vocabulary':       { 1: 'Core Vocabulary', 2: 'Advanced Usage' },
   'Communication':    { 1: 'Verbal Foundations', 2: 'Active Communication', 3: 'Non-Verbal Presence' },
-  'Listening':        { 1: 'Foundations' },
-  'Interview Skills': { 1: 'Interview Essentials' },
+  'Listening':        { 1: 'Foundations', 2: 'Advanced Listening' },
+  'Interview Skills': { 1: 'Interview Essentials', 2: 'Advanced Interviews' },
   'Writing':          { 1: 'Professional Writing' },
+  'Tests':            { 1: 'Practice Tests', 2: 'Advanced Tests' },
+  'PTE Academic':     { 1: 'Speaking & Writing', 2: 'Reading & Listening' },
+  'IELTS Academic':   { 1: 'Reading', 2: 'Writing', 3: 'Listening', 4: 'Speaking' },
+  'IELTS':            { 1: 'Reading', 2: 'Writing', 3: 'Listening', 4: 'Speaking' },
+  'TOEFL iBT':        { 1: 'Reading & Listening', 2: 'Speaking & Writing' },
+  'TOEFL':            { 1: 'Reading & Listening', 2: 'Speaking & Writing' },
+  'CELPIP':           { 1: 'Listening & Reading', 2: 'Writing & Speaking' },
+  'OET':              { 1: 'Listening & Reading', 2: 'Writing & Speaking' },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -156,6 +140,30 @@ function useDebounce<T>(value: T, delay: number): T {
   return dv;
 }
 
+// ─── User difficulty ratings (localStorage) ──────────────────────────────────
+
+type UserRating = 'Easy' | 'Medium' | 'Hard';
+
+function useUserRatings() {
+  const [ratings, setRatings] = useState<Record<number, UserRating>>(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem('speechef_user_ratings') ?? '{}'); }
+    catch { return {}; }
+  });
+
+  const setRating = (postId: number, rating: UserRating | null) => {
+    setRatings((prev) => {
+      const next = { ...prev };
+      if (rating === null) delete next[postId];
+      else next[postId] = rating;
+      try { localStorage.setItem('speechef_user_ratings', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  return { ratings, setRating };
+}
+
 // ─── Main page ───────────────────────────────────────────────────────────────
 
 function LearnContent() {
@@ -164,6 +172,7 @@ function LearnContent() {
   const { isLoggedIn } = useAuthStore();
   const queryClient = useQueryClient();
   const articlesRef = useRef<HTMLDivElement>(null);
+  const { ratings, setRating } = useUserRatings();
 
   const activeCategory = searchParams.get('category') || null;
   const showBookmarks = searchParams.get('bookmarks') === '1';
@@ -177,16 +186,7 @@ function LearnContent() {
     if (bm) p.set('bookmarks', '1');
     if (sort && sort !== 'newest') p.set('sort', sort);
     if (q) p.set('search', q);
-    router.push(`/learn${p.size ? `?${p}` : ''}`);
-  }
-
-  function selectCourse(catName: string) {
-    setSearchInput('');
-    pushParams(catName, false, sortBy, '');
-    setTimeout(
-      () => articlesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-      80,
-    );
+    router.push(`/learn${p.size ? `?${p}` : ''}`, { scroll: false });
   }
 
   // ─── Queries ───────────────────────────────────────────────────────────────
@@ -231,7 +231,18 @@ function LearnContent() {
 
   // activeCourse must be declared before sortedPosts because the sort callback
   // reads it synchronously — accessing a const before its declaration is TDZ.
-  const activeCourse = COURSES.find((c) => c.category === activeCategory);
+  // Dynamic fallback: any backend category gets the structured course view even if
+  // it has no explicit COURSES entry (e.g. future exam categories).
+  const activeCourse = activeCategory
+    ? (COURSES.find((c) => c.category === activeCategory) ?? {
+        id: activeCategory.toLowerCase().replace(/\s+/g, '-'),
+        name: activeCategory,
+        description: `Explore all ${activeCategory} articles and lessons.`,
+        emoji: CATEGORY_META[activeCategory]?.emoji ?? '📖',
+        category: activeCategory,
+        level: 'All levels' as const,
+      })
+    : undefined;
 
   const sortedPosts = [...posts].sort((a, b) => {
     // In course mode lessons must always appear chronologically (oldest → newest)
@@ -284,151 +295,82 @@ function LearnContent() {
           borderBottom: '1px solid #e8eaf0',
         }}
       >
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="max-w-5xl mx-auto px-6 py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+
+            {/* Left: title + description */}
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-2xl">📚</span>
-                <h1 className="text-[1.75rem] font-bold text-[#141c52] tracking-tight">Learn</h1>
+                <span className="text-2xl">📖</span>
+                <h1 className="text-[1.75rem] font-bold text-[#141c52] tracking-tight">Recipe Book</h1>
               </div>
               <p className="text-[14px] text-gray-500 leading-relaxed max-w-md">
-                Structured courses and articles to sharpen your English — from grammar foundations to fluency.
+                Structured recipes to sharpen your English — taste grammar foundations, vocabulary and fluency, one dish at a time.
               </p>
             </div>
 
-            {/* Stats chips */}
-            {allPosts.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                <StatChip icon="📖" value={allPosts.length} label="articles" />
-                <StatChip icon="🗂️" value={categories.length} label="topics" />
-                {isLoggedIn && <StatChip icon="✅" value={`${completionPct}%`} label="complete" accent />}
-              </div>
-            )}
-          </div>
+            {/* Right: Speechef meter — horizontal */}
+            {allPosts.length > 0 && (() => {
+              const lnR = 54, lnCx = 68, lnCy = 68;
+              const lnCirc = 2 * Math.PI * lnR;
+              const lnPct  = isLoggedIn ? completionPct : 0;
+              const lnDash = (lnPct / 100) * lnCirc;
+              return (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 shrink-0 flex items-center gap-5 w-full sm:w-auto">
+                  {/* Ring */}
+                  <svg width={96} height={96} viewBox="0 0 136 136" className="shrink-0">
+                    <defs>
+                      <linearGradient id="learnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%"   stopColor="#FADB43" />
+                        <stop offset="100%" stopColor="#fe9940" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx={lnCx} cy={lnCy} r={lnR} fill="none" stroke="#f3f4f6" strokeWidth={10} />
+                    <circle cx={lnCx} cy={lnCy} r={lnR} fill="none" stroke="url(#learnGrad)" strokeWidth={10}
+                      strokeLinecap="round"
+                      strokeDasharray={`${lnDash} ${lnCirc}`}
+                      transform={`rotate(-90 ${lnCx} ${lnCy})`}
+                      style={{ transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }}
+                    />
+                    <text x={lnCx} y={lnCy - 8}  textAnchor="middle" fill="#141c52" fontSize={22} fontWeight={900} fontFamily="inherit">{lnPct}%</text>
+                    <text x={lnCx} y={lnCy + 12} textAnchor="middle" fill="#9ca3af"  fontSize={10} fontWeight={600} fontFamily="inherit">COMPLETE</text>
+                  </svg>
 
-          {/* Progress bar for logged-in users */}
-          {isLoggedIn && allPosts.length > 0 && (
-            <div className="mt-4 max-w-xs">
-              <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>Overall progress</span>
-                <span className="font-semibold text-[#141c52]">{completedCount} / {allPosts.length} done</span>
-              </div>
-              <div className="h-2 bg-white rounded-full overflow-hidden shadow-inner">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${completionPct}%`, background: 'linear-gradient(to right, #4ade80, #22c55e)' }}
-                />
-              </div>
-            </div>
-          )}
+                  {/* Stats */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-3">Speechef Meter</p>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div>
+                        <p className="text-xl font-black leading-none" style={{ color: '#141c52' }}>{allPosts.length}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Articles</p>
+                      </div>
+                      <div className="w-px h-8 bg-gray-100" />
+                      <div>
+                        <p className="text-xl font-black leading-none" style={{ color: '#141c52' }}>{categories.length}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Topics</p>
+                      </div>
+                    </div>
+                    {isLoggedIn ? (
+                      <>
+                        <div className="h-1.5 rounded-full overflow-hidden mb-1" style={{ backgroundColor: '#f3f4f6' }}>
+                          <div className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${completionPct}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }} />
+                        </div>
+                        <p className="text-[11px] text-gray-400">{completedCount} / {allPosts.length} done</p>
+                      </>
+                    ) : (
+                      <p className="text-[11px] text-gray-400">Log in to track progress</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+          </div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6">
-
-        {/* ── LEARNING PATHS ─────────────────────────────────────────────── */}
-        <section className="pt-8 pb-6">
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="text-base font-bold text-[#141c52]">Learning Paths</h2>
-            <span className="text-xs text-gray-400">Choose a course to study</span>
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-            {COURSES.map((course) => {
-              const meta = CATEGORY_META[course.category];
-              const total = catPostCount(course.category);
-              const done = catCompletedCount(course.category);
-              const chapters = catChapterCount(course.category);
-              const pct = total > 0 && isLoggedIn ? Math.round((done / total) * 100) : 0;
-              const isActive = activeCategory === course.category;
-
-              return (
-                <button
-                  key={course.id}
-                  onClick={() => selectCourse(course.category)}
-                  className="flex-shrink-0 w-[200px] text-left group"
-                >
-                  <div
-                    className="rounded-2xl overflow-hidden transition-all duration-200"
-                    style={{
-                      boxShadow: isActive
-                        ? `0 0 0 2px ${meta?.text ?? '#141c52'}, 0 8px 24px rgba(0,0,0,0.12)`
-                        : '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
-                      transform: isActive ? 'translateY(-2px)' : undefined,
-                    }}
-                  >
-                    {/* Coloured top */}
-                    <div
-                      className="h-[88px] flex items-center justify-center relative overflow-hidden"
-                      style={{ backgroundColor: meta?.bg ?? '#f9fafb' }}
-                    >
-                      {/* Decorative blobs */}
-                      <div
-                        className="absolute -right-5 -top-5 w-20 h-20 rounded-full opacity-20"
-                        style={{ backgroundColor: meta?.text ?? '#141c52' }}
-                      />
-                      <div
-                        className="absolute left-3 bottom-2 w-10 h-10 rounded-full opacity-10"
-                        style={{ backgroundColor: meta?.text ?? '#141c52' }}
-                      />
-                      <span className="text-4xl relative z-10">{course.emoji}</span>
-                      {course.featured && (
-                        <span
-                          className="absolute top-2 left-2 text-xs font-bold px-1.5 py-0.5 rounded-full leading-none"
-                          style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#78350f' }}
-                        >
-                          ★ Featured
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Card body */}
-                    <div className="bg-white px-3 pb-3 pt-2.5">
-                      <span
-                        className="text-xs font-semibold px-1.5 py-0.5 rounded-full inline-block mb-1.5"
-                        style={{ backgroundColor: meta?.bg ?? '#f9fafb', color: meta?.text ?? '#141c52' }}
-                      >
-                        {course.level}
-                      </span>
-                      <p
-                        className="text-[13.5px] font-bold leading-tight tracking-tight mb-1 group-hover:underline"
-                        style={{ color: meta?.text ?? '#141c52' }}
-                      >
-                        {course.name}
-                      </p>
-                      <p className="text-[12px] text-gray-400 leading-[1.55] mb-2.5 line-clamp-2">
-                        {course.description}
-                      </p>
-
-                      {/* Lesson count + progress */}
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-400">
-                            {chapters > 0 && <>{chapters} ch · </>}{total} lesson{total !== 1 ? 's' : ''}
-                          </span>
-                          {isLoggedIn && total > 0 && (
-                            <span className="font-semibold" style={{ color: meta?.text ?? '#141c52' }}>
-                              {pct}%
-                            </span>
-                          )}
-                        </div>
-                        <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: meta?.border ?? '#e5e7eb' }}>
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${isLoggedIn ? pct : 0}%`,
-                              backgroundColor: meta?.text ?? '#141c52',
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </section>
 
         {/* ── SEARCH + CATEGORY TABS ────────────────────────────────────────── */}
         <div ref={articlesRef} className="pb-6">
@@ -514,13 +456,8 @@ function LearnContent() {
           />
         )}
 
-        {/* ── FEATURED HERO (no filter active) ─────────────────────────────── */}
-        {featuredPost && !activeCourse && (
-          <FeaturedHero post={featuredPost} onBookmark={handleBookmark} />
-        )}
-
         {/* ── SORT ROW ──────────────────────────────────────────────────────── */}
-        {!isLoading && posts.length > 0 && (
+        {!isLoading && posts.length > 0 && !activeCourse && (
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-gray-400">
               {posts.length} {activeCourse ? 'lesson' : 'article'}{posts.length !== 1 ? 's' : ''}
@@ -587,17 +524,29 @@ function LearnContent() {
             )}
           </div>
         ) : activeCourse ? (
-          // ── COURSE MODE: chapter-grouped grid ──────────────────────────────
-          <ChapterGroupedGrid
+          // ── COURSE MODE: track panel with left filters + right list ─────────
+          <CourseTrackPanel
             posts={sortedPosts}
             catMeta={CATEGORY_META[activeCourse.category]}
             courseCategory={activeCourse.category}
             search={search}
             onBookmark={handleBookmark}
-            onCategoryClick={(name) => { setSearchInput(''); pushParams(name, false, sortBy, ''); }}
+            isLoggedIn={isLoggedIn}
+            ratings={ratings}
+            setRating={setRating}
+          />
+        ) : noFilter ? (
+          // ── ALL TAB: ordered tracks (Grammar first) ──────────────────────────
+          <OrderedTracksView
+            allPosts={allPosts}
+            search={search}
+            onBookmark={handleBookmark}
+            isLoggedIn={isLoggedIn}
+            ratings={ratings}
+            setRating={setRating}
           />
         ) : (
-          // ── STANDARD MODE: flat 2-col grid ──────────────────────────────────
+          // ── FILTERED GRID: flat 2-col grid ───────────────────────────────────
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
             {sortedPosts.map((post) => {
               const isNew =
@@ -605,7 +554,6 @@ function LearnContent() {
                 Date.now() - new Date(post.created_on).getTime() < 14 * 24 * 60 * 60 * 1000;
               const primaryCat = post.categories[0];
               const catMeta = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
-
               return (
                 <ArticleCard
                   key={post.id}
@@ -622,34 +570,6 @@ function LearnContent() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ─── StatChip ────────────────────────────────────────────────────────────────
-
-function StatChip({
-  icon,
-  value,
-  label,
-  accent,
-}: {
-  icon: string;
-  value: string | number;
-  label: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs shadow-sm"
-      style={{
-        backgroundColor: accent ? '#dcfce7' : '#fff',
-        border: `1px solid ${accent ? '#bbf7d0' : '#e5e7eb'}`,
-      }}
-    >
-      <span>{icon}</span>
-      <span className="font-bold text-[#141c52]">{value}</span>
-      <span className="text-gray-400">{label}</span>
     </div>
   );
 }
@@ -1032,108 +952,460 @@ function ArticleCard({
   );
 }
 
-// ─── ChapterGroupedGrid ───────────────────────────────────────────────────────
+// ─── OrderedTracksView ────────────────────────────────────────────────────────
 
-function ChapterGroupedGrid({
+function OrderedTracksView({
+  allPosts,
+  search,
+  onBookmark,
+  isLoggedIn,
+  ratings,
+  setRating,
+}: {
+  allPosts: Post[];
+  search: string;
+  onBookmark: (e: React.MouseEvent, id: number) => void;
+  isLoggedIn: boolean;
+  ratings: Record<number, UserRating>;
+  setRating: (id: number, r: UserRating | null) => void;
+}) {
+  const [openTracks, setOpenTracks] = useState<Set<string>>(() => new Set(['Grammar']));
+
+  const toggleTrack = (category: string) => {
+    setOpenTracks((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category); else next.add(category);
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-3 pb-12">
+      {COURSES.map((course) => {
+        const coursePosts = allPosts
+          .filter((p) => p.categories.some((c) => c.name === course.category))
+          .filter((p) => !search || p.title.toLowerCase().includes(search.toLowerCase()))
+          .sort((a, b) => new Date(a.created_on).getTime() - new Date(b.created_on).getTime());
+        // Skip tracks with no content so empty exam categories don't clutter the view
+        if (coursePosts.length === 0 && !search) return null;
+        const isOpen = openTracks.has(course.category);
+        const catMeta = CATEGORY_META[course.category];
+        const completedCount = coursePosts.filter((p) => p.is_completed).length;
+        const pct = coursePosts.length > 0 && isLoggedIn
+          ? Math.round((completedCount / coursePosts.length) * 100) : 0;
+
+        return (
+          <div key={course.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Track header */}
+            <button
+              onClick={() => toggleTrack(course.category)}
+              className="w-full flex items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-gray-50/60"
+            >
+              <span className="text-xl flex-shrink-0">{course.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-[#141c52] leading-none">{course.name}</p>
+                <p className="text-[11px] text-gray-400 mt-0.5 truncate">{course.description}</p>
+              </div>
+              {isLoggedIn && coursePosts.length > 0 && (
+                <div className="flex-shrink-0 flex items-center gap-2 mr-2">
+                  <span className="text-xs font-semibold" style={{ color: catMeta?.text ?? '#141c52' }}>
+                    {completedCount}/{coursePosts.length}
+                  </span>
+                  <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: catMeta?.border ? `${catMeta.border}55` : '#f3f4f6' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, background: `linear-gradient(to right,${catMeta?.text ?? '#141c52'},${catMeta?.border ?? '#e5e7eb'})` }}
+                    />
+                  </div>
+                </div>
+              )}
+              <span className="flex-shrink-0 text-gray-400 transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </button>
+
+            {/* Lesson rows */}
+            {isOpen && coursePosts.length > 0 && (
+              <div className="border-t border-gray-50">
+                {coursePosts.map((post, idx) => {
+                  const { difficulty } = parsePostMeta(post.body ?? '');
+                  const dm = difficulty ? DIFF_MAP[difficulty] : null;
+                  const isDone = post.is_completed;
+                  const isLast = idx === coursePosts.length - 1;
+                  const userRating = ratings[post.id];
+
+                  return (
+                    <div
+                      key={post.id}
+                      className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${!isLast ? 'border-b border-gray-50' : ''} ${isDone ? 'opacity-40' : 'hover:bg-gray-50/70'}`}
+                    >
+                      <span
+                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                        style={isDone ? { background: '#dcfce7', color: '#166534' } : { background: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52' }}
+                      >
+                        {isDone ? '✓' : idx + 1}
+                      </span>
+                      <button
+                        onClick={(e) => onBookmark(e, post.id)}
+                        className="flex-shrink-0 text-sm leading-none transition-transform hover:scale-125"
+                        title={post.is_bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                      >
+                        {post.is_bookmarked ? '⭐' : '☆'}
+                      </button>
+                      <Link href={`/learn/${post.id}`} className="flex-1 min-w-0 group">
+                        <p className={`text-sm font-semibold leading-snug group-hover:underline truncate ${isDone ? 'line-through text-gray-400' : 'text-[#141c52]'}`}>
+                          {search ? highlightMatch(post.title, search) : post.title}
+                        </p>
+                      </Link>
+                      {dm && (
+                        <span
+                          className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                          style={{ background: dm.bg, color: dm.text, border: `1px solid ${dm.border}` }}
+                        >
+                          {difficulty}
+                        </span>
+                      )}
+                      <div className="flex-shrink-0 flex items-center gap-0.5" title="Rate your difficulty">
+                        {(['Easy', 'Medium', 'Hard'] as const).map((lvl) => {
+                          const rdm = DIFF_MAP[lvl];
+                          const isActive = userRating === lvl;
+                          return (
+                            <button
+                              key={lvl}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRating(post.id, isActive ? null : lvl); }}
+                              className="w-5 h-5 rounded-full text-[9px] font-bold transition-all"
+                              style={isActive ? { background: rdm.bg, color: rdm.text, border: `1px solid ${rdm.border}` } : { background: '#f3f4f6', color: '#9ca3af', border: '1px solid #e5e7eb' }}
+                              title={`Rate as ${lvl}`}
+                            >
+                              {lvl[0]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <span className="flex-shrink-0 text-[10px] font-semibold text-gray-400 w-9 text-right">
+                        {post.completion_rate != null ? `${post.completion_rate}%` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {isOpen && coursePosts.length === 0 && (
+              <div className="border-t border-gray-50 py-8 text-center text-sm text-gray-400">
+                {search ? 'No matching recipes' : 'No recipes yet — coming soon'}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── CourseTrackPanel ─────────────────────────────────────────────────────────
+
+const DIFF_MAP = {
+  Easy:   { bg: '#dcfce7', text: '#166534', border: '#bbf7d0', dot: '#22c55e' },
+  Medium: { bg: '#fef9c3', text: '#92400e', border: '#fde68a', dot: '#f59e0b' },
+  Hard:   { bg: '#fee2e2', text: '#991b1b', border: '#fecaca', dot: '#ef4444' },
+} as const;
+
+function CourseTrackPanel({
   posts,
   catMeta,
   courseCategory,
   search,
   onBookmark,
-  onCategoryClick,
+  isLoggedIn,
+  ratings,
+  setRating,
 }: {
   posts: Post[];
   catMeta: { bg: string; text: string; border: string; emoji: string } | undefined;
   courseCategory: string;
   search: string;
   onBookmark: (e: React.MouseEvent, id: number) => void;
-  onCategoryClick: (name: string) => void;
+  isLoggedIn: boolean;
+  ratings: Record<number, UserRating>;
+  setRating: (id: number, r: UserRating | null) => void;
 }) {
-  // Parse chapter for each post and group them
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [diffFilter, setDiffFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
+  const [chapterFilter, setChapterFilter] = useState<number | null>(null);
+
   const postsWithMeta = posts.map((p, idx) => ({
     post: p,
     lessonNum: idx + 1,
     ...parsePostMeta(p.body ?? ''),
   }));
 
-  const chapterMap = new Map<number, typeof postsWithMeta>();
-  for (const pm of postsWithMeta) {
-    const ch = pm.chapter ?? 0;
-    if (!chapterMap.has(ch)) chapterMap.set(ch, []);
-    chapterMap.get(ch)!.push(pm);
-  }
-  const sortedChapters = Array.from(chapterMap.entries()).sort(([a], [b]) => a - b);
+  const chapters = Array.from(
+    new Set(postsWithMeta.map((pm) => pm.chapter).filter((ch): ch is number => ch !== null)),
+  ).sort((a, b) => a - b);
+
+  const filtered = postsWithMeta.filter((pm) => {
+    if (hideCompleted && pm.post.is_completed) return false;
+    if (diffFilter !== 'All' && pm.difficulty !== diffFilter) return false;
+    if (chapterFilter !== null && pm.chapter !== chapterFilter) return false;
+    return true;
+  });
+
+  const completedCount = postsWithMeta.filter((pm) => pm.post.is_completed).length;
+  const pct = postsWithMeta.length > 0 && isLoggedIn
+    ? Math.round((completedCount / postsWithMeta.length) * 100)
+    : 0;
 
   return (
-    <div className="pb-12 space-y-8">
-      {sortedChapters.map(([chNum, items]) => (
-        <div key={chNum}>
-          {/* Chapter divider header */}
-          {chNum > 0 && (
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl"
-                style={{ backgroundColor: catMeta?.bg ?? '#f9fafb', border: `1.5px solid ${catMeta?.border ?? '#e5e7eb'}` }}
-              >
-                <span className="text-xs font-black uppercase tracking-widest opacity-50" style={{ color: catMeta?.text ?? '#141c52' }}>
-                  Ch {chNum}
-                </span>
-                <span className="w-px h-3.5 opacity-20" style={{ backgroundColor: catMeta?.text ?? '#141c52' }} />
-                <span className="text-sm font-bold" style={{ color: catMeta?.text ?? '#141c52' }}>
-                  {CHAPTER_NAMES[courseCategory]?.[chNum] ?? `Chapter ${chNum}`}
-                </span>
-                <span className="text-xs opacity-50" style={{ color: catMeta?.text ?? '#141c52' }}>
-                  {items.length} lesson{items.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-              <div className="flex-1 h-px" style={{ backgroundColor: catMeta?.border ?? '#e5e7eb' }} />
-              {/* Difficulty distribution pills */}
-              {(['Easy', 'Medium', 'Hard'] as const).map((d) => {
-                const count = items.filter((i) => i.difficulty === d).length;
-                if (!count) return null;
-                const dMap = {
-                  Easy:   { bg: '#dcfce7', text: '#166534' },
-                  Medium: { bg: '#fef9c3', text: '#92400e' },
-                  Hard:   { bg: '#fee2e2', text: '#991b1b' },
-                };
-                const dm = dMap[d];
-                return (
-                  <span
-                    key={d}
-                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                    style={{ backgroundColor: dm.bg, color: dm.text }}
-                  >
-                    {count} {d}
-                  </span>
-                );
-              })}
-            </div>
-          )}
+    <div className="flex gap-4 pb-12 items-start">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {items.map(({ post, lessonNum }) => {
-              const isNew =
-                !post.is_completed &&
-                Date.now() - new Date(post.created_on).getTime() < 14 * 24 * 60 * 60 * 1000;
-              const primaryCat = post.categories[0];
-              const cardMeta = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
+      {/* ── Left: filter sidebar ── */}
+      <div className="flex-shrink-0 space-y-4" style={{ width: 172 }}>
 
+        {/* Progress mini-card */}
+        <div className="rounded-xl p-3.5 bg-white border border-gray-100 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Progress</p>
+          <div className="flex items-end gap-1 mb-2">
+            <span className="text-2xl font-black leading-none" style={{ color: '#141c52' }}>{completedCount}</span>
+            <span className="text-xs text-gray-400 pb-0.5">/ {postsWithMeta.length} done</span>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: catMeta?.border ? `${catMeta.border}55` : '#f3f4f6' }}>
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${pct}%`,
+                background: `linear-gradient(to right,${catMeta?.text ?? '#141c52'},${catMeta?.border ?? '#e5e7eb'})`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Visibility toggle */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">View</p>
+          <button
+            onClick={() => setHideCompleted((v) => !v)}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border"
+            style={
+              hideCompleted
+                ? { background: '#141c52', color: '#fff', borderColor: '#141c52' }
+                : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+            }
+          >
+            <span>{hideCompleted ? '🙈' : '👁️'}</span>
+            {hideCompleted ? 'Show all' : 'Hide done'}
+            {completedCount > 0 && (
+              <span className="ml-auto text-[10px] opacity-60">{completedCount}</span>
+            )}
+          </button>
+        </div>
+
+        {/* Difficulty filter */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Difficulty</p>
+          <div className="space-y-1.5">
+            {(['All', 'Easy', 'Medium', 'Hard'] as const).map((d) => {
+              const isAct = diffFilter === d;
+              const dm = d !== 'All' ? DIFF_MAP[d] : null;
               return (
-                <ArticleCard
-                  key={post.id}
-                  post={post}
-                  catMeta={cardMeta}
-                  isNew={isNew}
-                  lessonNum={lessonNum}
-                  search={search}
-                  onBookmark={onBookmark}
-                  onCategoryClick={onCategoryClick}
-                />
+                <button
+                  key={d}
+                  onClick={() => setDiffFilter(d)}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border text-left"
+                  style={
+                    isAct
+                      ? dm
+                        ? { background: dm.bg, color: dm.text, borderColor: dm.border }
+                        : { background: '#141c52', color: '#fff', borderColor: '#141c52' }
+                      : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+                  }
+                >
+                  {dm && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dm.dot }} />}
+                  {d}
+                  <span className="ml-auto text-[10px] opacity-55">
+                    {d === 'All'
+                      ? postsWithMeta.length
+                      : postsWithMeta.filter((pm) => pm.difficulty === d).length}
+                  </span>
+                </button>
               );
             })}
           </div>
         </div>
-      ))}
+
+        {/* Chapter filter */}
+        {chapters.length > 0 && (
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Chapter</p>
+            <div className="space-y-1.5">
+              <button
+                onClick={() => setChapterFilter(null)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border text-left"
+                style={
+                  chapterFilter === null
+                    ? { background: '#141c52', color: '#fff', borderColor: '#141c52' }
+                    : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+                }
+              >
+                All
+                <span className="ml-auto text-[10px] opacity-55">{postsWithMeta.length}</span>
+              </button>
+              {chapters.map((ch) => {
+                const isAct = chapterFilter === ch;
+                const name = CHAPTER_NAMES[courseCategory]?.[ch] ?? `Ch ${ch}`;
+                const count = postsWithMeta.filter((pm) => pm.chapter === ch).length;
+                return (
+                  <button
+                    key={ch}
+                    onClick={() => setChapterFilter(isAct ? null : ch)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border text-left"
+                    style={
+                      isAct
+                        ? { background: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52', borderColor: catMeta?.border ?? '#e5e7eb' }
+                        : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }
+                    }
+                  >
+                    <span className="truncate flex-1">{name}</span>
+                    <span className="text-[10px] opacity-55 flex-shrink-0">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Right: lesson list ── */}
+      <div className="flex-1 min-w-0">
+        {/* List header */}
+        <div className="flex items-center justify-between mb-3 px-1">
+          <p className="text-xs text-gray-400">
+            <span className="font-semibold text-[#141c52]">{filtered.length}</span>
+            {' '}lesson{filtered.length !== 1 ? 's' : ''}
+            {hideCompleted && completedCount > 0 && (
+              <span className="ml-1 opacity-60">· {completedCount} hidden</span>
+            )}
+          </p>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">In order</span>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="text-center py-14 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <p className="text-3xl mb-2">🎉</p>
+            <p className="font-semibold text-gray-600 text-sm">
+              {hideCompleted && completedCount === postsWithMeta.length
+                ? 'All lessons complete!'
+                : 'No lessons match this filter'}
+            </p>
+            <button
+              onClick={() => { setHideCompleted(false); setDiffFilter('All'); setChapterFilter(null); }}
+              className="mt-3 text-xs font-semibold hover:underline"
+              style={{ color: '#141c52' }}
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {filtered.map(({ post, lessonNum, chapter, difficulty }, idx) => {
+              const isDone = post.is_completed;
+              const chName = chapter ? (CHAPTER_NAMES[courseCategory]?.[chapter] ?? `Ch ${chapter}`) : null;
+              const dm = difficulty ? DIFF_MAP[difficulty] : null;
+              const isLast = idx === filtered.length - 1;
+              const userRating = ratings[post.id];
+
+              return (
+                <div
+                  key={post.id}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${!isLast ? 'border-b border-gray-50' : ''} ${isDone ? 'opacity-40' : 'hover:bg-gray-50/70'}`}
+                >
+                  {/* Order badge */}
+                  <span
+                    className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
+                    style={
+                      isDone
+                        ? { background: '#dcfce7', color: '#166534' }
+                        : { background: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52' }
+                    }
+                  >
+                    {isDone ? '✓' : lessonNum}
+                  </span>
+
+                  {/* Bookmark star */}
+                  <button
+                    onClick={(e) => onBookmark(e, post.id)}
+                    className="flex-shrink-0 text-base leading-none transition-transform hover:scale-125"
+                    title={post.is_bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                  >
+                    {post.is_bookmarked ? '⭐' : '☆'}
+                  </button>
+
+                  {/* Title + chapter */}
+                  <Link href={`/learn/${post.id}`} className="flex-1 min-w-0 group">
+                    <p
+                      className={`text-sm font-semibold leading-snug group-hover:underline truncate ${
+                        isDone ? 'line-through text-gray-400' : 'text-[#141c52]'
+                      }`}
+                    >
+                      {search ? highlightMatch(post.title, search) : post.title}
+                    </p>
+                    {chName && (
+                      <p className="text-[10px] text-gray-400 mt-0.5 truncate">{chName}</p>
+                    )}
+                  </Link>
+
+                  {/* Difficulty */}
+                  {dm && (
+                    <span
+                      className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={{ background: dm.bg, color: dm.text, border: `1px solid ${dm.border}` }}
+                    >
+                      {difficulty}
+                    </span>
+                  )}
+
+                  {/* User rating pills */}
+                  <div className="flex-shrink-0 flex items-center gap-0.5" title="Rate your difficulty">
+                    {(['Easy', 'Medium', 'Hard'] as const).map((lvl) => {
+                      const rdm = DIFF_MAP[lvl];
+                      const isActive = userRating === lvl;
+                      return (
+                        <button
+                          key={lvl}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRating(post.id, isActive ? null : lvl); }}
+                          className="w-5 h-5 rounded-full text-[9px] font-bold transition-all"
+                          style={isActive ? { background: rdm.bg, color: rdm.text, border: `1px solid ${rdm.border}` } : { background: '#f3f4f6', color: '#9ca3af', border: '1px solid #e5e7eb' }}
+                          title={`Rate as ${lvl}`}
+                        >
+                          {lvl[0]}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Success % */}
+                  <span className="flex-shrink-0 text-[10px] font-semibold text-gray-400 w-9 text-right">
+                    {post.completion_rate != null ? `${post.completion_rate}%` : '—'}
+                  </span>
+
+                  {/* Status */}
+                  <span
+                    className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                    style={
+                      isDone
+                        ? { background: '#dcfce7', color: '#166534' }
+                        : { background: '#f3f4f6', color: '#9ca3af' }
+                    }
+                  >
+                    {isDone ? '✓ Done' : 'To do'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1179,10 +1451,188 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   );
 }
 
-export default function LearnPage() {
+// ─── Learn Hero ──────────────────────────────────────────────────────────────
+
+const LN_STYLES = `
+  @keyframes lnOrbDrift {
+    0%,100% { transform:translate(0,0) scale(1); }
+    33%      { transform:translate(-40px,30px) scale(1.08); }
+    66%      { transform:translate(30px,-22px) scale(0.94); }
+  }
+  @keyframes lnRise {
+    from { opacity:0; transform:translateY(48px) scale(0.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes lnChev {
+    0%,100% { transform:translateY(0); opacity:0.4; }
+    50%     { transform:translateY(10px); opacity:1; }
+  }
+  @keyframes lnCta {
+    0%,100% { box-shadow:0 8px 30px rgba(250,219,67,.28); }
+    50%     { box-shadow:0 8px 50px rgba(250,219,67,.55); }
+  }
+  @keyframes lnCount {
+    from { opacity:0; transform:scale(0.6) translateY(12px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+  }
+  .ln-orb-a { animation:lnOrbDrift 14s ease-in-out infinite; }
+  .ln-orb-b { animation:lnOrbDrift 19s ease-in-out infinite reverse; }
+  .ln-orb-c { animation:lnOrbDrift 11s ease-in-out infinite 3s; }
+  .ln-rise-1 { animation:lnRise .85s ease both; }
+  .ln-rise-2 { animation:lnRise .85s .18s ease both; }
+  .ln-rise-3 { animation:lnRise .85s .34s ease both; }
+  .ln-rise-4 { animation:lnRise .85s .52s ease both; }
+  .ln-chev   { animation:lnChev 1.9s ease-in-out infinite; }
+  .ln-cta    { animation:lnCta 3s ease-in-out infinite; }
+  .ln-stat   { animation:lnCount .6s ease both; }
+  .ln-stat-1 { animation-delay:.55s; }
+  .ln-stat-2 { animation-delay:.72s; }
+  .ln-stat-3 { animation-delay:.89s; }
+`;
+
+
+const BRAND_LN = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+
+function LearnHero({ onScrollDown }: { onScrollDown: () => void }) {
+  const [p, setP] = useState(0);
+
+  useEffect(() => {
+    const update = () => setP(Math.min(1, window.scrollY / window.innerHeight));
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
+  // Ease-in-out cubic
+  const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+
+  // Background: upward curtain wipe (bottom inset grows)
+  const wipe = e * 110;
+
+  const textOpacity = Math.max(0, 1 - e * 1.9);
+  const textScale   = 1 - e * 0.07;
+  const chevOpacity = Math.max(0, 1 - e * 3.5);
+
   return (
-    <Suspense>
-      <LearnContent />
-    </Suspense>
+    <div className="relative overflow-hidden" style={{ height: '100vh' }}>
+      <style dangerouslySetInnerHTML={{ __html: LN_STYLES }} />
+
+      {/* Background — upward wipe */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(160deg,#080d26 0%,#141c52 48%,#1a2460 100%)',
+          clipPath: `inset(0 0 ${wipe}% 0)`,
+        }}
+      />
+
+      {/* Orbs */}
+      <div className="ln-orb-a absolute rounded-full pointer-events-none"
+        style={{ width: 540, height: 540, top: -150, right: -110,
+          background: 'radial-gradient(circle,rgba(250,219,67,.13) 0%,transparent 68%)',
+          clipPath: `inset(0 0 ${wipe}% 0)` }} />
+      <div className="ln-orb-b absolute rounded-full pointer-events-none"
+        style={{ width: 420, height: 420, bottom: -100, left: -120,
+          background: 'radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 68%)',
+          clipPath: `inset(0 0 ${wipe}% 0)` }} />
+      <div className="ln-orb-c absolute rounded-full pointer-events-none"
+        style={{ width: 290, height: 290, top: '30%', left: '14%',
+          background: 'radial-gradient(circle,rgba(167,139,250,.12) 0%,transparent 68%)',
+          clipPath: `inset(0 0 ${wipe}% 0)` }} />
+
+      {/* Fine grid */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)',
+          backgroundSize: '60px 60px',
+          opacity: Math.max(0, 0.035 - e * 0.035),
+          clipPath: `inset(0 0 ${wipe}% 0)`,
+        }} />
+
+      {/* Center content */}
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center"
+        style={{ opacity: textOpacity, transform: `scale(${textScale})` }}
+      >
+        {/* Label */}
+        <div className="ln-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-7 text-xs font-bold uppercase tracking-widest"
+          style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
+          Recipe Book
+        </div>
+
+        {/* Headline */}
+        <h1 className="ln-rise-2 font-black leading-[1.02] mb-4"
+          style={{ fontSize: 'clamp(2.8rem,8vw,5.5rem)' }}>
+          <span style={{ color: '#fff' }}>Taste. Learn.</span>
+          <br />
+          <span style={{
+            backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
+            backgroundSize: '200%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
+            Master the Menu.
+          </span>
+        </h1>
+
+        {/* Sub */}
+        <p className="ln-rise-3 text-base font-medium mb-9 max-w-md mx-auto"
+          style={{ color: 'rgba(255,255,255,0.48)' }}>
+          Structured recipes across grammar, vocabulary, pronunciation &amp; more — taste every lesson and track your progress as you go.
+        </p>
+
+        {/* CTAs */}
+        <div className="ln-rise-4 flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onClick={onScrollDown}
+            className="ln-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
+            style={{ background: BRAND_LN.gradient, color: BRAND_LN.primary }}
+          >
+            Browse Recipes ↓
+          </button>
+          <Link
+            href="/learn?category=Grammar"
+            className="px-7 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-white/10"
+            style={{ borderColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.62)' }}
+          >
+            ✏️ Grammar →
+          </Link>
+        </div>
+      </div>
+
+      {/* Scroll chevron */}
+      <button
+        onClick={onScrollDown}
+        className="ln-chev absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-20"
+        style={{ opacity: chevOpacity }}
+        aria-label="Scroll down"
+      >
+        <span className="text-[0.58rem] font-bold uppercase tracking-widest"
+          style={{ color: 'rgba(255,255,255,0.32)' }}>Scroll</span>
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          style={{ color: 'rgba(255,255,255,0.38)' }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Gradient fade into content */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to bottom,transparent,#f8f9fb)' }} />
+    </div>
+  );
+}
+
+export default function LearnPage() {
+  const contentRef = useRef<HTMLDivElement>(null);
+  return (
+    <>
+      <LearnHero onScrollDown={() => contentRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <div ref={contentRef}>
+        <Suspense>
+          <LearnContent />
+        </Suspense>
+      </div>
+    </>
   );
 }

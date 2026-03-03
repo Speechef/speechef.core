@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(say --voice='?')",
+      "Bash(/tmp/ffmpeg -i /Users/gagandeep/Documents/Projects/speechef.core/docs/speechef-pitch.mp4)",
+      "Bash(/tmp/ffmpeg -v error -i /Users/gagandeep/Documents/Projects/speechef.core/docs/speechef-pitch.mp4 -f null -)",
+      "Bash(/tmp/ffmpeg -y -i /Users/gagandeep/Documents/Projects/speechef.core/docs/speechef-pitch.mp4 -c:v copy -an /Users/gagandeep/Documents/Projects/speechef.core/docs/speechef-pitch-silent.mp4)"
+    ]
+  }
+}

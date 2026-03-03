@@ -1,3 +1,4 @@
+import logging
 import random
 from django.db.models import Sum, Count
 from rest_framework import status
@@ -5,6 +6,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Max
+
+logger = logging.getLogger(__name__)
 
 from .models import WordQuestion, GameSession, VocabWord, UserVocabProgress, SavedWord
 from .serializers import (
@@ -191,12 +194,11 @@ def sentence_check(request):
             'score': min(10, max(0, int(result.get('score', 5)))),
         })
     except Exception as e:
-        # Fallback: basic keyword check
-        return Response({
-            'correct': True,
-            'feedback': 'Good attempt! Keep practising.',
-            'score': 5,
-        })
+        logger.error("sentence_check OpenAI call failed: %s", e, exc_info=True)
+        return Response(
+            {'detail': 'Sentence evaluation is temporarily unavailable. Please try again.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
 
 
 @api_view(['GET'])
@@ -321,7 +323,7 @@ def vocab_list(request):
 
     exam_tag = request.query_params.get('exam_tag')
     if exam_tag:
-        qs = qs.filter(exam_tags__contains=exam_tag)
+        qs = qs.filter(exam_tags__contains=[exam_tag])
 
     # Build known map for authenticated users
     known_ids = set()
@@ -418,8 +420,8 @@ def vocab_stats(request):
 
     by_exam = {}
     for tag in sorted(all_tags):
-        tag_total = VocabWord.objects.filter(exam_tags__contains=tag).count()
-        tag_known = VocabWord.objects.filter(exam_tags__contains=tag, id__in=known_word_ids).count()
+        tag_total = VocabWord.objects.filter(exam_tags__contains=[tag]).count()
+        tag_known = VocabWord.objects.filter(exam_tags__contains=[tag], id__in=known_word_ids).count()
         by_exam[tag] = {'total': tag_total, 'known': tag_known}
 
     return Response({
