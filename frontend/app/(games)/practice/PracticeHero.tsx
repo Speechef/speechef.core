@@ -61,6 +61,11 @@ export default function PracticeHero({
   const contentScale   = 1 - e * 0.07;
   const chevOpacity    = Math.max(0, 1 - e * 3.5);
 
+  const meterScore = isLoggedIn && totalGames > 0 ? bestScore : 0;
+  const meterR = 54, meterCx = 68, meterCy = 68;
+  const meterCirc = 2 * Math.PI * meterR;
+  const meterDash = (meterScore / 100) * meterCirc;
+
   return (
     <div className="relative overflow-hidden" style={{ height: '100vh' }}>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
@@ -146,64 +151,54 @@ export default function PracticeHero({
             </div>
           </div>
 
-          {/* Right: stats glass card */}
-          <div className="p-rise-4 w-72 shrink-0 hidden sm:block">
-            <div className="rounded-2xl p-6" style={{
+          {/* Right: Speechef meter */}
+          <div className="p-rise-4 w-64 shrink-0 hidden sm:block">
+            <div className="rounded-2xl p-6 flex flex-col items-center gap-4" style={{
               background: 'rgba(255,255,255,0.07)',
               border: '1px solid rgba(255,255,255,0.12)',
               backdropFilter: 'blur(12px)',
             }}>
-              {isLoggedIn && totalGames > 0 ? (
-                <>
-                  <div className="flex items-center gap-4 mb-5">
-                    <div>
-                      <p className="text-3xl font-black text-white leading-none">{totalGames}</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Dishes</p>
-                    </div>
-                    <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
-                    <div>
-                      <p className="text-3xl font-black text-white leading-none">{bestScore}</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Best Score</p>
-                    </div>
-                    <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
-                    <div>
-                      <p className="text-3xl font-black leading-none" style={{ color: streak > 0 ? '#fb923c' : '#fff' }}>{streak}</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Streak</p>
-                    </div>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Speechef Meter</p>
+
+              {/* Circular ring */}
+              <svg width={136} height={136} viewBox="0 0 136 136">
+                <defs>
+                  <linearGradient id="practiceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%"   stopColor="#FADB43" />
+                    <stop offset="100%" stopColor="#fe9940" />
+                  </linearGradient>
+                </defs>
+                <circle cx={meterCx} cy={meterCy} r={meterR} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={10} />
+                <circle cx={meterCx} cy={meterCy} r={meterR} fill="none" stroke="url(#practiceGrad)" strokeWidth={10}
+                  strokeLinecap="round"
+                  strokeDasharray={`${meterDash} ${meterCirc}`}
+                  transform={`rotate(-90 ${meterCx} ${meterCy})`}
+                  style={{ transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }}
+                />
+                <text x={meterCx} y={meterCy - 8}  textAnchor="middle" fill="#fff"                   fontSize={22} fontWeight={900} fontFamily="inherit">{meterScore}</text>
+                <text x={meterCx} y={meterCy + 12} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize={10} fontWeight={600} fontFamily="inherit">KITCHEN SCORE</text>
+              </svg>
+
+              {/* Stat chips */}
+              <div className="w-full grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Dishes',     value: isLoggedIn ? totalGames : 6 },
+                  { label: 'Best',       value: isLoggedIn && totalGames > 0 ? bestScore : '—' },
+                  { label: 'Streak',     value: isLoggedIn ? streak    : 0  },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex flex-col items-center py-2 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <p className="text-base font-black text-white leading-none">{value}</p>
+                    <p className="text-[9px] font-bold mt-1 uppercase tracking-wide text-center"
+                      style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
                   </div>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>Best score</span>
-                    <span className="font-semibold text-white">{bestScore} / 100</span>
-                  </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${bestScore}%`, background: BRAND.gradient }}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4 mb-5">
-                    <div>
-                      <p className="text-3xl font-black text-white leading-none">6</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Kitchen Drills</p>
-                    </div>
-                    <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
-                    <div>
-                      <p className="text-3xl font-black text-white leading-none">4</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Service Sims</p>
-                    </div>
-                    <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
-                    <div>
-                      <p className="text-3xl font-black text-white leading-none">4</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Chef&apos;s Tools</p>
-                    </div>
-                  </div>
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {isLoggedIn ? 'Play a game to track your stats' : 'Log in to track your progress'}
-                  </p>
-                </>
+                ))}
+              </div>
+
+              {!isLoggedIn && (
+                <p className="text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  Log in to track your progress
+                </p>
               )}
             </div>
           </div>

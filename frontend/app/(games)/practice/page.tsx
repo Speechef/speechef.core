@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import ActiveSessionBanner from './ActiveSessionBanner';
 import { type GameConfig } from './WordGamesSection';
 import WordGamesHero from './WordGamesHero';
@@ -109,20 +110,6 @@ const AI_TOOLS: ToolConfig[] = [
     badge: 'GPT-4o',
     color: { bg: '#f0fdf4', text: '#166534', border: '#bbf7d0' },
   },
-  {
-    href: '/practice/interview',
-    emoji: '🎯', title: 'Interview Simulation',
-    description: 'Text-based mock interviews with per-answer scoring and final report — run a full service.',
-    badge: 'Fresh',
-    color: { bg: '#fff7ed', text: '#9a3412', border: '#fed7aa' },
-  },
-  {
-    href: '/practice/vocab-list',
-    emoji: '🔖', title: 'Saved Words',
-    description: 'Stock your personal pantry — save and review any word you want to master.',
-    badge: null,
-    color: { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe' },
-  },
 ];
 
 // ─── Chef's exam prep ──────────────────────────────────────────────────────────
@@ -161,13 +148,6 @@ const TEST_PREP_EXAMS: ExamConfig[] = [
     description: 'Canadian English Language Proficiency Index Program — listening and reading practice.',
     badge: null,
     color: { bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd' },
-  },
-  {
-    href: '/practice/vocab-list',
-    emoji: '📖', title: 'Vocabulary Tracker',
-    description: 'Stock your pantry — 150 academic words for IELTS, TOEFL & more.',
-    badge: null,
-    color: { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe' },
   },
 ];
 
@@ -228,6 +208,46 @@ export default function PracticePage() {
 
             <section>
               <TestPrepHero exams={TEST_PREP_EXAMS} />
+            </section>
+
+            {/* ── Vocabulary Hub ── */}
+            <section>
+              <div className="rounded-3xl overflow-hidden border border-gray-100" style={{ background: 'white', boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                  {/* Left: heading */}
+                  <div className="p-8 flex flex-col justify-center" style={{ background: 'linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%)' }}>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4 self-start"
+                      style={{ background: '#1e40af', color: 'white' }}>
+                      📚 Your Pantry
+                    </div>
+                    <h2 className="text-2xl font-black mb-2" style={{ color: '#141c52' }}>Vocabulary Hub</h2>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      Track, save and master every word in your English arsenal — from academic lists to your personal collection.
+                    </p>
+                  </div>
+                  {/* Right: cards */}
+                  <div className="p-6 flex flex-col gap-3 justify-center">
+                    <Link href="/practice/vocab-list"
+                      className="flex items-start gap-4 p-4 rounded-2xl border transition-all hover:scale-[1.01] hover:shadow-sm"
+                      style={{ background: '#eff6ff', borderColor: '#bfdbfe' }}>
+                      <span className="text-3xl leading-none">📖</span>
+                      <div>
+                        <p className="font-bold text-sm" style={{ color: '#1e40af' }}>Academic Vocabulary Tracker</p>
+                        <p className="text-xs text-gray-500 mt-0.5 leading-snug">550+ academic words for IELTS, TOEFL & more — track your progress word by word</p>
+                      </div>
+                    </Link>
+                    <Link href="/practice/saved-words"
+                      className="flex items-start gap-4 p-4 rounded-2xl border transition-all hover:scale-[1.01] hover:shadow-sm"
+                      style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
+                      <span className="text-3xl leading-none">🔖</span>
+                      <div>
+                        <p className="font-bold text-sm" style={{ color: '#166534' }}>My Saved Words</p>
+                        <p className="text-xs text-gray-500 mt-0.5 leading-snug">Your personal word collection — save any word you want to master</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </section>
 
             <section>

@@ -250,7 +250,8 @@ function WeeklyGoals({ sessions }: { sessions: { played_at: string }[] }) {
   const done  = count >= WEEKLY_GOAL;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+      style={{ backgroundImage: done ? 'linear-gradient(to right,#22c55e,#16a34a)' : 'linear-gradient(to right,#FADB43,#fe9940)', backgroundSize: '100% 3px', backgroundRepeat: 'no-repeat', backgroundPosition: 'top' }}>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Weekly Goal</p>
         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
@@ -334,8 +335,13 @@ function ScoreTrend({ sessions }: { sessions: AnalysisSession[] }) {
 
 // ── Word of the Day ───────────────────────────────────────────────────────────
 function WordOfDay() {
-  const todayWord = WORD_BANK[Math.floor(Date.now() / 86400000) % WORD_BANK.length];
+  const [todayWord, setTodayWord] = useState(WORD_BANK[0]);
+  const [dateStr, setDateStr] = useState('');
   const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    setTodayWord(WORD_BANK[Math.floor(Date.now() / 86400000) % WORD_BANK.length]);
+    setDateStr(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  }, []);
 
   const { mutate: saveWord, isPending } = useMutation({
     mutationFn: () => api.post('/practice/saved-words/', { word: todayWord.word, definition: todayWord.def }),
@@ -358,9 +364,7 @@ function WordOfDay() {
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Word of the Day</span>
-          <span className="text-[11px] text-gray-400">
-            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
+          <span className="text-[11px] text-gray-400">{dateStr}</span>
         </div>
 
         {/* Word + POS + Pronunciation */}
@@ -477,6 +481,9 @@ function OnboardingCard({ hasGames, hasAnalysis, hasRoleplay }: {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const { data: user } = useQuery<UserProfile>({
     queryKey: ['profile'],
     queryFn: () => api.get('/auth/profile/').then((r) => r.data),
@@ -571,10 +578,10 @@ export default function DashboardPage() {
         <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
           <div>
             <p className="text-sm mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              {mounted ? new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : ''}
             </p>
             <h1 className="text-3xl font-extrabold text-white leading-tight">
-              {greeting()}{user ? `, ${user.username}` : ''} 👋
+              {mounted ? greeting() : 'Welcome'}{user ? `, ${user.username}` : ''} 👋
             </h1>
             <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
               {streakAtRisk
@@ -741,7 +748,8 @@ export default function DashboardPage() {
                 { icon: '🔥', value: currentStreak,               label: 'Day Streak',   sub: `Best: ${longestStreak}`                                 },
                 { icon: '🎭', value: roleplayCount,               label: 'Roleplay',     sub: roleplayAvgScore > 0 ? `Avg: ${roleplayAvgScore}` : 'sessions' },
               ].map(({ icon, value, label, sub }) => (
-                <div key={label} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 shadow-sm">
+                <div key={label} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 shadow-sm"
+                  style={{ backgroundImage: 'linear-gradient(to right,#FADB43,#fe9940)', backgroundSize: '100% 3px', backgroundRepeat: 'no-repeat', backgroundPosition: 'top' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-lg">{icon}</span>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{label}</p>
@@ -753,7 +761,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Skill breakdown */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+              style={{ backgroundImage: 'linear-gradient(to right,#FADB43,#fe9940)', backgroundSize: '100% 3px', backgroundRepeat: 'no-repeat', backgroundPosition: 'top' }}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold" style={{ color: '#141c52' }}>Skill Breakdown</h2>
                 {skills.some((s) => s.score > 0) && (
@@ -781,15 +790,6 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               )}
-            </div>
-
-            {/* Weekly Goal + Score Trend */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <WeeklyGoals sessions={sessions} />
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h2 className="font-bold mb-3" style={{ color: '#141c52' }}>Score Trend</h2>
-                <ScoreTrend sessions={analysisSessions} />
-              </div>
             </div>
 
             {/* Test Prep — all tracks */}
@@ -833,7 +833,8 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Quick Play ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+              style={{ backgroundImage: 'linear-gradient(to right,#FADB43,#fe9940)', backgroundSize: '100% 3px', backgroundRepeat: 'no-repeat', backgroundPosition: 'top' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="font-bold" style={{ color: '#141c52' }}>Quick Play</h2>
@@ -870,7 +871,8 @@ export default function DashboardPage() {
             </div>
 
             {/* ── AI Roleplay ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+              style={{ backgroundImage: 'linear-gradient(to right,#FADB43,#fe9940)', backgroundSize: '100% 3px', backgroundRepeat: 'no-repeat', backgroundPosition: 'top' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="font-bold" style={{ color: '#141c52' }}>AI Roleplay</h2>
@@ -911,12 +913,10 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-400 mt-0.5">Powered by GPT-4o</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5">
                 {[
                   { href: '/practice/writing-coach',   emoji: '✍️', label: 'Writing Coach',   desc: 'Grammar, vocabulary & structure feedback',  bg: '#fdf4ff', text: '#7c3aed', border: '#e9d5ff', badge: 'GPT-4o' },
                   { href: '/practice/resume-analyzer', emoji: '📄', label: 'Resume Analyzer', desc: 'ATS score, phrases & keyword suggestions',  bg: '#f0fdf4', text: '#166534', border: '#bbf7d0', badge: 'GPT-4o' },
-                  { href: '/practice/interview',       emoji: '🎯', label: 'Interview Sim',   desc: 'Mock interviews with full scoring report',  bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', badge: 'Fresh' },
-                  { href: '/practice/vocab-list',      emoji: '🔖', label: 'Saved Words',     desc: 'Stock your personal vocabulary pantry',     bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', badge: null },
                 ].map(({ href, emoji, label, desc, bg, text, border, badge }) => (
                   <Link key={href} href={href}
                     className="relative flex flex-col gap-1.5 p-3.5 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-sm"
@@ -928,6 +928,33 @@ export default function DashboardPage() {
                     <span className="text-2xl leading-none">{emoji}</span>
                     <p className="text-xs font-bold leading-tight pr-8" style={{ color: text }}>{label}</p>
                     <p className="text-[10px] leading-tight" style={{ color: text, opacity: 0.65 }}>{desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Vocabulary ── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold" style={{ color: '#141c52' }}>Vocabulary Hub</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Track and grow your word arsenal</p>
+                </div>
+                <span className="text-2xl">📚</span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {[
+                  { href: '/practice/vocab-list',    emoji: '📖', label: 'Academic Vocab Tracker', desc: '550+ academic words for IELTS, TOEFL & more', bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe' },
+                  { href: '/practice/saved-words',   emoji: '🔖', label: 'My Saved Words',          desc: 'Your personal word collection',               bg: '#f0fdf4', text: '#166534', border: '#bbf7d0' },
+                ].map(({ href, emoji, label, desc, bg, text, border }) => (
+                  <Link key={href} href={href}
+                    className="flex items-center gap-3 p-3.5 rounded-xl border transition-all hover:scale-[1.01] hover:shadow-sm"
+                    style={{ background: bg, borderColor: border }}>
+                    <span className="text-2xl leading-none shrink-0">{emoji}</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold leading-tight truncate" style={{ color: text }}>{label}</p>
+                      <p className="text-[10px] leading-tight text-gray-500 truncate">{desc}</p>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -958,47 +985,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* ── Leaderboard ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="font-bold" style={{ color: '#141c52' }}>Leaderboard</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Kitchen Brigade rankings</p>
-                </div>
-                <span className="text-2xl">🏆</span>
-              </div>
-              <div className="space-y-2">
-                {[
-                  { rank: 1, label: 'Head Chef',      emoji: '👨‍🍳', desc: 'Top scorer', color: '#f59e0b' },
-                  { rank: 2, label: 'Sous Chef',       emoji: '🥈',   desc: '2nd place',  color: '#94a3b8' },
-                  { rank: 3, label: 'Chef de Partie',  emoji: '🥉',   desc: '3rd place',  color: '#b45309' },
-                ].map(({ rank, label, emoji, desc, color }) => (
-                  <div key={rank} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50">
-                    <span className="text-lg shrink-0">{emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate" style={{ color: '#141c52' }}>{label}</p>
-                      <p className="text-[10px] text-gray-400">{desc}</p>
-                    </div>
-                    <span className="text-[11px] font-extrabold" style={{ color }}># {rank}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 space-y-2">
-                {totalGames > 0 && (
-                  <div className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: '#fef9c3' }}>
-                    <p className="text-xs font-semibold" style={{ color: '#92400e' }}>Your score</p>
-                    <p className="text-xs font-extrabold" style={{ color: '#78350f' }}>{totalScore.toLocaleString()} pts</p>
-                  </div>
-                )}
-                <Link
-                  href="/practice/leaderboard"
-                  className="block text-center py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition-all hover:scale-[1.02]"
-                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
-                >
-                  See full brigade →
-                </Link>
-              </div>
-            </div>
 
           </div>
 
@@ -1048,7 +1034,8 @@ export default function DashboardPage() {
             </Link>
 
             {/* Streak — 7-day strip */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+              style={{ backgroundImage: 'linear-gradient(to right,#FADB43,#fe9940)', backgroundSize: '100% 3px', backgroundRepeat: 'no-repeat', backgroundPosition: 'top' }}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold" style={{ color: '#141c52' }}>Streak</h2>
                 {currentStreak > 0 && (
@@ -1056,6 +1043,16 @@ export default function DashboardPage() {
                 )}
               </div>
               <ActivityHeatmap sessions={sessions} />
+            </div>
+
+            {/* Weekly Goal */}
+            <WeeklyGoals sessions={sessions} />
+
+            {/* Score Trend */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+              style={{ backgroundImage: 'linear-gradient(to right,#FADB43,#fe9940)', backgroundSize: '100% 3px', backgroundRepeat: 'no-repeat', backgroundPosition: 'top' }}>
+              <h2 className="font-bold mb-3" style={{ color: '#141c52' }}>Score Trend</h2>
+              <ScoreTrend sessions={analysisSessions} />
             </div>
 
             {/* Recent Activity with green +pts */}
@@ -1105,6 +1102,49 @@ export default function DashboardPage() {
                     </Link>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Leaderboard — navy themed */}
+            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+              {/* Navy header */}
+              <div className="px-5 py-4" style={{ background: 'linear-gradient(135deg,#0c1338 0%,#141c52 100%)' }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(250,219,67,0.55)' }}>Kitchen Rankings</p>
+                    <h2 className="font-bold text-white">Leaderboard</h2>
+                  </div>
+                  <span className="text-2xl">🏆</span>
+                </div>
+              </div>
+              {/* Rank rows */}
+              <div className="bg-white p-4 space-y-2">
+                {[
+                  { rank: 1, label: 'Head Chef',      emoji: '👨‍🍳', color: '#f59e0b', bg: 'linear-gradient(to right,#fef9c3,#fff7ed)', border: '#fde68a' },
+                  { rank: 2, label: 'Sous Chef',       emoji: '🥈',   color: '#94a3b8', bg: '#f9fafb',                                   border: 'transparent' },
+                  { rank: 3, label: 'Chef de Partie',  emoji: '🥉',   color: '#b45309', bg: '#f9fafb',                                   border: 'transparent' },
+                ].map(({ rank, label, emoji, color, bg, border }) => (
+                  <div key={rank} className="flex items-center gap-3 px-3 py-2.5 rounded-xl border"
+                    style={{ background: bg, borderColor: border }}>
+                    <span className="text-lg shrink-0">{emoji}</span>
+                    <p className="text-xs font-bold flex-1 truncate" style={{ color: '#141c52' }}>{label}</p>
+                    <span className="text-[11px] font-extrabold" style={{ color }}># {rank}</span>
+                  </div>
+                ))}
+                {totalGames > 0 && (
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-blue-100" style={{ background: '#eff6ff' }}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">⭐</span>
+                      <p className="text-xs font-semibold" style={{ color: '#1e40af' }}>Your score</p>
+                    </div>
+                    <p className="text-xs font-extrabold" style={{ color: '#141c52' }}>{totalScore.toLocaleString()} pts</p>
+                  </div>
+                )}
+                <Link href="/practice/leaderboard"
+                  className="block text-center py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition-all hover:scale-[1.02] mt-1"
+                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
+                  See full brigade →
+                </Link>
               </div>
             </div>
 

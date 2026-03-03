@@ -47,8 +47,13 @@ const CATEGORY_META: Record<string, { bg: string; text: string; border: string; 
   'Interview Skills': { bg: '#fef3c7', text: '#78350f', border: '#fde68a', emoji: '💼' },
   'Writing':          { bg: '#f0fdf4', text: '#166534', border: '#bbf7d0', emoji: '✍️' },
   'Tests':            { bg: '#f5f3ff', text: '#5b21b6', border: '#ddd6fe', emoji: '📝' },
-  'PTE':              { bg: '#dcfce7', text: '#166534', border: '#86efac', emoji: '🌏' },
   'PTE Academic':     { bg: '#dcfce7', text: '#166534', border: '#86efac', emoji: '🌏' },
+  'IELTS Academic':   { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', emoji: '🇬🇧' },
+  'IELTS':            { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', emoji: '🇬🇧' },
+  'TOEFL iBT':        { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4', emoji: '🇺🇸' },
+  'TOEFL':            { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4', emoji: '🇺🇸' },
+  'CELPIP':           { bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd', emoji: '🍁' },
+  'OET':              { bg: '#fef3c7', text: '#78350f', border: '#fcd34d', emoji: '🏥' },
 };
 
 // ─── Static course catalogue ─────────────────────────────────────────────────
@@ -62,8 +67,13 @@ const COURSES: CourseInfo[] = [
   { id: 'writing',          name: 'Professional Writing',   description: 'Craft clear, compelling written dishes — emails, reports and cover letters',                  emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
   { id: 'listening',        name: 'Listening Skills',       description: 'Train your ear — comprehend accents, follow conversations and catch every word',              emoji: '🎧', category: 'Listening',        level: 'All levels'   },
   { id: 'interview-skills', name: 'Interview Skills',       description: 'Ace the service — craft compelling answers and handle tough interview questions',             emoji: '💼', category: 'Interview Skills', level: 'Intermediate' },
-  { id: 'pte',              name: 'PTE Academic',           description: 'Computer-based PTE preparation with AI-scored speaking and writing practice',                 emoji: '🌏', category: 'PTE',              level: 'All levels'   },
   { id: 'pte-academic',     name: 'PTE Academic',           description: 'Computer-based PTE preparation with AI-scored speaking and writing practice',                 emoji: '🌏', category: 'PTE Academic',     level: 'All levels'   },
+  { id: 'ielts-academic',   name: 'IELTS Academic',         description: 'Earn your stripes — reading, writing, listening and speaking for IELTS mastery.',              emoji: '🇬🇧', category: 'IELTS Academic',  level: 'All levels'   },
+  { id: 'ielts',            name: 'IELTS',                  description: 'English for international opportunities — practise all four IELTS skills.',                    emoji: '🇬🇧', category: 'IELTS',           level: 'All levels'   },
+  { id: 'toefl-ibt',        name: 'TOEFL iBT',              description: 'Build integrated academic English skills — reading, listening, speaking and writing.',          emoji: '🇺🇸', category: 'TOEFL iBT',      level: 'All levels'   },
+  { id: 'toefl',            name: 'TOEFL',                  description: 'Build integrated academic English skills for TOEFL success.',                                   emoji: '🇺🇸', category: 'TOEFL',          level: 'All levels'   },
+  { id: 'celpip',           name: 'CELPIP',                 description: 'Canadian English Language Proficiency — listening, reading, writing and speaking practice.',    emoji: '🍁', category: 'CELPIP',          level: 'All levels'   },
+  { id: 'oet',              name: 'OET',                    description: 'Occupational English Test — medical communication scenarios for healthcare professionals.',      emoji: '🏥', category: 'OET',             level: 'All levels'   },
   { id: 'tests',            name: 'Tests & Exercises',       description: 'Put your skills to the test — practice exercises and self-assessment quizzes',                  emoji: '📝', category: 'Tests',            level: 'All levels'   },
 ];
 
@@ -79,8 +89,13 @@ const CHAPTER_NAMES: Record<string, Record<number, string>> = {
   'Interview Skills': { 1: 'Interview Essentials', 2: 'Advanced Interviews' },
   'Writing':          { 1: 'Professional Writing' },
   'Tests':            { 1: 'Practice Tests', 2: 'Advanced Tests' },
-  'PTE':              { 1: 'Speaking & Writing', 2: 'Reading & Listening' },
   'PTE Academic':     { 1: 'Speaking & Writing', 2: 'Reading & Listening' },
+  'IELTS Academic':   { 1: 'Reading', 2: 'Writing', 3: 'Listening', 4: 'Speaking' },
+  'IELTS':            { 1: 'Reading', 2: 'Writing', 3: 'Listening', 4: 'Speaking' },
+  'TOEFL iBT':        { 1: 'Reading & Listening', 2: 'Speaking & Writing' },
+  'TOEFL':            { 1: 'Reading & Listening', 2: 'Speaking & Writing' },
+  'CELPIP':           { 1: 'Listening & Reading', 2: 'Writing & Speaking' },
+  'OET':              { 1: 'Listening & Reading', 2: 'Writing & Speaking' },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -216,7 +231,18 @@ function LearnContent() {
 
   // activeCourse must be declared before sortedPosts because the sort callback
   // reads it synchronously — accessing a const before its declaration is TDZ.
-  const activeCourse = COURSES.find((c) => c.category === activeCategory);
+  // Dynamic fallback: any backend category gets the structured course view even if
+  // it has no explicit COURSES entry (e.g. future exam categories).
+  const activeCourse = activeCategory
+    ? (COURSES.find((c) => c.category === activeCategory) ?? {
+        id: activeCategory.toLowerCase().replace(/\s+/g, '-'),
+        name: activeCategory,
+        description: `Explore all ${activeCategory} articles and lessons.`,
+        emoji: CATEGORY_META[activeCategory]?.emoji ?? '📖',
+        category: activeCategory,
+        level: 'All levels' as const,
+      })
+    : undefined;
 
   const sortedPosts = [...posts].sort((a, b) => {
     // In course mode lessons must always appear chronologically (oldest → newest)
@@ -283,55 +309,62 @@ function LearnContent() {
               </p>
             </div>
 
-            {/* Right: progress card */}
-            {allPosts.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 shrink-0 w-full sm:w-auto sm:min-w-[280px]">
-                {/* Stat numbers */}
-                <div className="flex items-center gap-5 mb-4">
-                  <div>
-                    <p className="text-2xl font-black text-[#141c52] leading-none">{allPosts.length}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Articles</p>
-                  </div>
-                  <div className="w-px h-10 bg-gray-100" />
-                  <div>
-                    <p className="text-2xl font-black text-[#141c52] leading-none">{categories.length}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Topics</p>
-                  </div>
-                  {isLoggedIn && (
-                    <>
-                      <div className="w-px h-10 bg-gray-100" />
-                      <div>
-                        <p
-                          className="text-2xl font-black leading-none"
-                          style={{ color: completionPct === 100 ? '#16a34a' : '#141c52' }}
-                        >
-                          {completionPct}%
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Complete</p>
-                      </div>
-                    </>
-                  )}
-                </div>
+            {/* Right: Speechef meter — horizontal */}
+            {allPosts.length > 0 && (() => {
+              const lnR = 54, lnCx = 68, lnCy = 68;
+              const lnCirc = 2 * Math.PI * lnR;
+              const lnPct  = isLoggedIn ? completionPct : 0;
+              const lnDash = (lnPct / 100) * lnCirc;
+              return (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 shrink-0 flex items-center gap-5 w-full sm:w-auto">
+                  {/* Ring */}
+                  <svg width={96} height={96} viewBox="0 0 136 136" className="shrink-0">
+                    <defs>
+                      <linearGradient id="learnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%"   stopColor="#FADB43" />
+                        <stop offset="100%" stopColor="#fe9940" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx={lnCx} cy={lnCy} r={lnR} fill="none" stroke="#f3f4f6" strokeWidth={10} />
+                    <circle cx={lnCx} cy={lnCy} r={lnR} fill="none" stroke="url(#learnGrad)" strokeWidth={10}
+                      strokeLinecap="round"
+                      strokeDasharray={`${lnDash} ${lnCirc}`}
+                      transform={`rotate(-90 ${lnCx} ${lnCy})`}
+                      style={{ transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }}
+                    />
+                    <text x={lnCx} y={lnCy - 8}  textAnchor="middle" fill="#141c52" fontSize={22} fontWeight={900} fontFamily="inherit">{lnPct}%</text>
+                    <text x={lnCx} y={lnCy + 12} textAnchor="middle" fill="#9ca3af"  fontSize={10} fontWeight={600} fontFamily="inherit">COMPLETE</text>
+                  </svg>
 
-                {/* Brand progress bar */}
-                {isLoggedIn ? (
-                  <>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-gray-400">Overall progress</span>
-                      <span className="font-semibold text-[#141c52]">{completedCount} / {allPosts.length} done</span>
+                  {/* Stats */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-3">Speechef Meter</p>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div>
+                        <p className="text-xl font-black leading-none" style={{ color: '#141c52' }}>{allPosts.length}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Articles</p>
+                      </div>
+                      <div className="w-px h-8 bg-gray-100" />
+                      <div>
+                        <p className="text-xl font-black leading-none" style={{ color: '#141c52' }}>{categories.length}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">Topics</p>
+                      </div>
                     </div>
-                    <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${completionPct}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-xs text-gray-400 text-center">Log in to track your progress</p>
-                )}
-              </div>
-            )}
+                    {isLoggedIn ? (
+                      <>
+                        <div className="h-1.5 rounded-full overflow-hidden mb-1" style={{ backgroundColor: '#f3f4f6' }}>
+                          <div className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${completionPct}%`, background: 'linear-gradient(to right,#FADB43,#fe9940)' }} />
+                        </div>
+                        <p className="text-[11px] text-gray-400">{completedCount} / {allPosts.length} done</p>
+                      </>
+                    ) : (
+                      <p className="text-[11px] text-gray-400">Log in to track progress</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
           </div>
         </div>
@@ -953,6 +986,8 @@ function OrderedTracksView({
           .filter((p) => p.categories.some((c) => c.name === course.category))
           .filter((p) => !search || p.title.toLowerCase().includes(search.toLowerCase()))
           .sort((a, b) => new Date(a.created_on).getTime() - new Date(b.created_on).getTime());
+        // Skip tracks with no content so empty exam categories don't clutter the view
+        if (coursePosts.length === 0 && !search) return null;
         const isOpen = openTracks.has(course.category);
         const catMeta = CATEGORY_META[course.category];
         const completedCount = coursePosts.filter((p) => p.is_completed).length;
