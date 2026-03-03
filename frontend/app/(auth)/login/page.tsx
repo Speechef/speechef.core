@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
@@ -89,11 +89,53 @@ function Chip({ chip }: { chip: typeof FEATURE_CHIPS[number] }) {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { login, loginWithGoogle } = useAuthStore();
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  // Load Google Identity Services and render the button
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const google = (window as any).google;
+      if (!google || !googleBtnRef.current) return;
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: { credential: string }) => {
+          setGoogleLoading(true);
+          setError('');
+          try {
+            await loginWithGoogle(response.credential);
+            router.replace('/dashboard');
+          } catch {
+            setError('Google sign-in failed. Please try again.');
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+      });
+      google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: googleBtnRef.current.offsetWidth || 360,
+        text: 'signin_with',
+        shape: 'pill',
+      });
+    };
+    document.head.appendChild(script);
+    return () => { document.head.removeChild(script); };
+  }, [loginWithGoogle, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -324,6 +366,27 @@ export default function LoginPage() {
               {loading ? 'Logging in…' : 'Log in'}
             </Button>
           </form>
+
+          {/* Divider */}
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <>
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400 font-medium">or</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Google Sign-In button rendered by GSI */}
+              <div
+                ref={googleBtnRef}
+                className="w-full flex justify-center"
+                style={{ minHeight: 44, opacity: googleLoading ? 0.6 : 1 }}
+              />
+              {googleLoading && (
+                <p className="text-center text-xs text-gray-400 mt-2">Signing in with Google…</p>
+              )}
+            </>
+          )}
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Don&apos;t have an account?{' '}

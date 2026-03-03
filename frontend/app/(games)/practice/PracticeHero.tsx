@@ -105,12 +105,12 @@ export default function PracticeHero({
             <div className="p-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-7 text-xs font-bold uppercase tracking-widest"
               style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
-              Practice Hub
+              The Kitchen
             </div>
 
             <h1 className="p-rise-2 font-black leading-[1.02] mb-4"
               style={{ fontSize: 'clamp(2.4rem,5vw,4.5rem)' }}>
-              <span style={{ color: '#fff' }}>Train Every Day.</span>
+              <span style={{ color: '#fff' }}>Mise en Place.</span>
               <br />
               <span style={{
                 backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
@@ -119,13 +119,13 @@ export default function PracticeHero({
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}>
-                Level Up Fast.
+                Cook Up Fluency.
               </span>
             </h1>
 
             <p className="p-rise-3 text-base font-medium mb-9 max-w-md"
               style={{ color: 'rgba(255,255,255,0.48)' }}>
-              Word games, AI roleplay, test prep &amp; smart tools — every skill, one place.
+              Kitchen drills, service sims, exam prep &amp; chef&apos;s tools — every skill, one kitchen.
             </p>
 
             <div className="p-rise-4 flex items-center gap-3 flex-wrap">
@@ -134,14 +134,14 @@ export default function PracticeHero({
                 className="p-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
                 style={{ background: BRAND.gradient, color: BRAND.primary }}
               >
-                Start Practicing ↓
+                Enter the Kitchen ↓
               </button>
               <Link
                 href="/practice/roleplay"
                 className="px-7 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-white/10"
                 style={{ borderColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.62)' }}
               >
-                AI Roleplay →
+                Service Sims →
               </Link>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function PracticeHero({
                   <div className="flex items-center gap-4 mb-5">
                     <div>
                       <p className="text-3xl font-black text-white leading-none">{totalGames}</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Games</p>
+                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Dishes</p>
                     </div>
                     <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
                     <div>
@@ -187,17 +187,17 @@ export default function PracticeHero({
                   <div className="flex items-center gap-4 mb-5">
                     <div>
                       <p className="text-3xl font-black text-white leading-none">6</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Word Games</p>
+                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Kitchen Drills</p>
                     </div>
                     <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
                     <div>
                       <p className="text-3xl font-black text-white leading-none">4</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Roleplay</p>
+                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Service Sims</p>
                     </div>
                     <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.12)' }} />
                     <div>
                       <p className="text-3xl font-black text-white leading-none">4</p>
-                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>AI Tools</p>
+                      <p className="text-[10px] font-semibold mt-1 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Chef&apos;s Tools</p>
                     </div>
                   </div>
                   <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>

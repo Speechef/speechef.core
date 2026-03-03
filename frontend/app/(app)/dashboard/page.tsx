@@ -184,23 +184,25 @@ function ActivityHeatmap({ sessions }: { sessions: { played_at: string }[] }) {
 
   return (
     <div>
-      <div className="flex gap-2">
+      <div className="flex gap-3 justify-between">
         {days.map((day, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center gap-1.5" title={`${day.fullLabel} — ${day.count === 0 ? 'No activity' : `${day.count} session${day.count !== 1 ? 's' : ''}`}`}>
+          <div key={i} className="flex flex-col items-center gap-1.5" title={`${day.fullLabel} — ${day.count === 0 ? 'No activity' : `${day.count} session${day.count !== 1 ? 's' : ''}`}`}>
             <span className="text-[10px] font-semibold" style={{ color: day.isToday ? '#141c52' : '#9ca3af' }}>
               {day.label}
             </span>
             <div
-              className="w-full rounded-lg transition-all"
+              className="rounded-full transition-all"
               style={{
-                height: 36,
+                width: 28,
+                height: 28,
                 backgroundColor: COLOR(day.count),
                 border: day.isToday ? '2px solid #141c52' : '2px solid transparent',
+                boxShadow: day.count > 0 ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
               }}
             />
-            {day.count > 0 && (
-              <span className="text-[10px] font-bold" style={{ color: '#92400e' }}>{day.count}</span>
-            )}
+            <span className="text-[10px] font-bold" style={{ color: day.count > 0 ? '#92400e' : 'transparent' }}>
+              {day.count > 0 ? day.count : '·'}
+            </span>
           </div>
         ))}
       </div>
@@ -781,17 +783,6 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Activity heatmap */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold" style={{ color: '#141c52' }}>Practice Activity</h2>
-                {currentStreak > 0 && (
-                  <span className="text-xs font-semibold text-gray-400">{currentStreak}-day streak 🔥</span>
-                )}
-              </div>
-              <ActivityHeatmap sessions={sessions} />
-            </div>
-
             {/* Weekly Goal + Score Trend */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <WeeklyGoals sessions={sessions} />
@@ -801,60 +792,211 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Quick Play + Level Up Faster */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h2 className="font-bold mb-3" style={{ color: '#141c52' }}>Quick Play</h2>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { href: '/practice/vocabulary-blitz',        label: 'Vocab Blitz',  emoji: '⚡' },
-                    { href: '/practice/sentence-builder',        label: 'Sentences',    emoji: '✍️' },
-                    { href: '/practice/pronunciation-challenge', label: 'Speak',        emoji: '🎙️' },
-                    { href: '/practice/roleplay',                label: 'Roleplay',     emoji: '🎭' },
-                    { href: '/practice/memory-match',            label: 'Memory',       emoji: '🃏' },
-                    { href: '/practice/guess-the-word',          label: 'Guess',        emoji: '🧠' },
-                  ].map(({ href, label, emoji }) => (
-                    <Link key={href} href={href}
-                      className="flex flex-col items-center gap-1 py-3 rounded-xl bg-gray-50 hover:bg-yellow-50 border border-transparent hover:border-yellow-200 transition-all text-center">
-                      <span className="text-xl">{emoji}</span>
-                      <span className="text-[11px] font-medium leading-tight" style={{ color: '#141c52' }}>{label}</span>
-                    </Link>
-                  ))}
+            {/* Test Prep — all tracks */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold" style={{ color: '#141c52' }}>Exam Prep</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">All available tracks</p>
                 </div>
-                <Link href="/practice/leaderboard"
-                  className="block text-center mt-3 text-xs font-semibold py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-                  🏆 Leaderboard
+                <Link href="/practice/test-prep" className="text-xs font-semibold hover:underline" style={{ color: '#141c52' }}>
+                  View all →
                 </Link>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h2 className="font-bold mb-3" style={{ color: '#141c52' }}>Level Up Faster</h2>
-                <div className="space-y-2">
-                  <Link href="/review"
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-opacity hover:opacity-90"
-                    style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)', color: 'white' }}>
-                    <span className="text-lg shrink-0">🎓</span>
-                    <div>
-                      <p className="font-bold text-sm">Expert Panel Review</p>
-                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Get scored by real coaches</p>
-                    </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {[
+                  { href: '/practice/test-prep/ielts-academic', emoji: '🇬🇧', label: 'IELTS Academic',    desc: 'Listening · Reading · Writing · Speaking', bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', badge: "Chef's Pick" },
+                  { href: '/practice/test-prep/toefl-ibt',      emoji: '🇺🇸', label: 'TOEFL iBT',         desc: 'Integrated speaking & academic writing',   bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4', badge: null },
+                  { href: '/practice/test-prep/pte-academic',   emoji: '🌏', label: 'PTE Academic',       desc: 'AI-scored speaking & writing tasks',        bg: '#dcfce7', text: '#166534', border: '#86efac', badge: null },
+                  { href: '/practice/test-prep/oet',            emoji: '🏥', label: 'OET',                desc: 'Medical English for healthcare pros',       bg: '#fef3c7', text: '#78350f', border: '#fcd34d', badge: null },
+                  { href: '/practice/test-prep/celpip',         emoji: '🍁', label: 'CELPIP',             desc: 'Canadian proficiency · Listening & Reading', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd', badge: null },
+                  { href: '/practice/vocab-list',               emoji: '📖', label: 'Vocab Tracker',      desc: '550+ academic words for IELTS & TOEFL',     bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', badge: null },
+                ].map(({ href, emoji, label, desc, bg, text, border, badge }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="relative flex flex-col gap-1.5 p-3.5 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-sm"
+                    style={{ background: bg, borderColor: border }}
+                  >
+                    {badge && (
+                      <span className="absolute top-2.5 right-2.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ background: '#141c52', color: '#FADB43' }}>
+                        {badge}
+                      </span>
+                    )}
+                    <span className="text-2xl leading-none">{emoji}</span>
+                    <p className="text-xs font-bold leading-tight pr-8" style={{ color: text }}>{label}</p>
+                    <p className="text-[10px] leading-tight" style={{ color: text, opacity: 0.65 }}>{desc}</p>
                   </Link>
-                  <Link href="/mentors"
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
-                    <span className="text-lg shrink-0">🧑‍🏫</span>
-                    <div>
-                      <p className="font-semibold text-sm" style={{ color: '#141c52' }}>Find a Mentor</p>
-                      <p className="text-xs text-gray-400">1-on-1 video coaching</p>
-                    </div>
-                  </Link>
-                  <Link href="/practice/test-prep"
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
-                    <span className="text-lg shrink-0">📝</span>
-                    <div>
-                      <p className="font-semibold text-sm" style={{ color: '#141c52' }}>Test Prep</p>
-                      <p className="text-xs text-gray-400">IELTS · TOEFL · PTE · OET</p>
-                    </div>
-                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Quick Play ── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold" style={{ color: '#141c52' }}>Quick Play</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Word games &amp; vocabulary drills</p>
                 </div>
+                <Link href="/practice" className="text-xs font-semibold hover:underline" style={{ color: '#141c52' }}>
+                  View all →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  { href: '/practice/vocabulary-blitz',        emoji: '⚡',  label: 'Vocab Blitz',        desc: '60-sec vocabulary sprint',           bg: '#fef9c3', text: '#92400e', border: '#fde68a', badge: 'Sizzling' },
+                  { href: '/practice/guess-the-word',          emoji: '🧠',  label: 'Guess the Word',     desc: 'Identify the mystery word meaning',  bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe', badge: null },
+                  { href: '/practice/memory-match',            emoji: '🃏',  label: 'Memory Match',       desc: 'Pair words with their meanings',     bg: '#d1fae5', text: '#065f46', border: '#a7f3d0', badge: null },
+                  { href: '/practice/word-scramble',           emoji: '🔤',  label: 'Word Scramble',      desc: 'Unscramble the secret ingredient',   bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe', badge: null },
+                  { href: '/practice/sentence-builder',        emoji: '✍️',  label: 'Sentence Builder',   desc: 'Use vocab words in sentences',       bg: '#fce7f3', text: '#9d174d', border: '#fbcfe8', badge: null },
+                  { href: '/practice/pronunciation-challenge', emoji: '🎙️',  label: 'Pronunciation',      desc: 'Speak and get real-time feedback',   bg: '#fee2e2', text: '#991b1b', border: '#fecaca', badge: 'Fresh' },
+                  { href: '/practice/daily-challenge',         emoji: '🔥',  label: 'Daily Challenge',    desc: "Today's featured word challenge",    bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', badge: 'Daily' },
+                  { href: '/practice/vocab-list',              emoji: '📖',  label: 'Vocab Tracker',      desc: '550+ academic words to master',      bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', badge: null },
+                ].map(({ href, emoji, label, desc, bg, text, border, badge }) => (
+                  <Link key={href} href={href}
+                    className="relative flex flex-col gap-1.5 p-3.5 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-sm"
+                    style={{ background: bg, borderColor: border }}>
+                    {badge && (
+                      <span className="absolute top-2.5 right-2.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ background: '#141c52', color: '#FADB43' }}>{badge}</span>
+                    )}
+                    <span className="text-2xl leading-none">{emoji}</span>
+                    <p className="text-xs font-bold leading-tight pr-8" style={{ color: text }}>{label}</p>
+                    <p className="text-[10px] leading-tight" style={{ color: text, opacity: 0.65 }}>{desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ── AI Roleplay ── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold" style={{ color: '#141c52' }}>AI Roleplay</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Conversational practice with AI coaches</p>
+                </div>
+                <Link href="/practice" className="text-xs font-semibold hover:underline" style={{ color: '#141c52' }}>
+                  View all →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {[
+                  { href: '/practice/roleplay/job_interview', emoji: '💼',  label: 'Job Interview',      desc: 'Nail tough interview questions',    bg: '#fef3c7', text: '#78350f', border: '#fde68a', badge: "Chef's Special" },
+                  { href: '/practice/roleplay/presentation',  emoji: '🎤',  label: 'Presentation Pitch', desc: 'Pitch to an AI audience',           bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe', badge: null },
+                  { href: '/practice/roleplay/debate',        emoji: '🗣️',  label: 'Debate',             desc: 'Argue against an AI debater',       bg: '#fee2e2', text: '#991b1b', border: '#fecaca', badge: null },
+                  { href: '/practice/roleplay/small_talk',    emoji: '💬',  label: 'Small Talk',         desc: 'Natural English social scenarios',  bg: '#d1fae5', text: '#065f46', border: '#a7f3d0', badge: null },
+                  { href: '/practice/interview',              emoji: '🎯',  label: 'Interview Sim',      desc: 'Text mock interview with scoring',  bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', badge: 'AI Sous Chef' },
+                ].map(({ href, emoji, label, desc, bg, text, border, badge }) => (
+                  <Link key={href} href={href}
+                    className="relative flex flex-col gap-1.5 p-3.5 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-sm"
+                    style={{ background: bg, borderColor: border }}>
+                    {badge && (
+                      <span className="absolute top-2.5 right-2.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ background: '#141c52', color: '#FADB43' }}>{badge}</span>
+                    )}
+                    <span className="text-2xl leading-none">{emoji}</span>
+                    <p className="text-xs font-bold leading-tight pr-8" style={{ color: text }}>{label}</p>
+                    <p className="text-[10px] leading-tight" style={{ color: text, opacity: 0.65 }}>{desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ── AI Tools ── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold" style={{ color: '#141c52' }}>AI Tools</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Powered by GPT-4o</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  { href: '/practice/writing-coach',   emoji: '✍️', label: 'Writing Coach',   desc: 'Grammar, vocabulary & structure feedback',  bg: '#fdf4ff', text: '#7c3aed', border: '#e9d5ff', badge: 'GPT-4o' },
+                  { href: '/practice/resume-analyzer', emoji: '📄', label: 'Resume Analyzer', desc: 'ATS score, phrases & keyword suggestions',  bg: '#f0fdf4', text: '#166534', border: '#bbf7d0', badge: 'GPT-4o' },
+                  { href: '/practice/interview',       emoji: '🎯', label: 'Interview Sim',   desc: 'Mock interviews with full scoring report',  bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', badge: 'Fresh' },
+                  { href: '/practice/vocab-list',      emoji: '🔖', label: 'Saved Words',     desc: 'Stock your personal vocabulary pantry',     bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', badge: null },
+                ].map(({ href, emoji, label, desc, bg, text, border, badge }) => (
+                  <Link key={href} href={href}
+                    className="relative flex flex-col gap-1.5 p-3.5 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-sm"
+                    style={{ background: bg, borderColor: border }}>
+                    {badge && (
+                      <span className="absolute top-2.5 right-2.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ background: '#141c52', color: '#FADB43' }}>{badge}</span>
+                    )}
+                    <span className="text-2xl leading-none">{emoji}</span>
+                    <p className="text-xs font-bold leading-tight pr-8" style={{ color: text }}>{label}</p>
+                    <p className="text-[10px] leading-tight" style={{ color: text, opacity: 0.65 }}>{desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Community & Mentors ── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold" style={{ color: '#141c52' }}>Community &amp; Mentors</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Connect, learn and grow together</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {[
+                  { href: '/community',     emoji: '💬',   label: 'Community',       desc: 'Discuss, share & ask questions',       bg: '#f0fdf4', text: '#166534', border: '#bbf7d0' },
+                  { href: '/mentors',       emoji: '🧑‍🏫', label: 'Find a Mentor',   desc: '1-on-1 live video coaching sessions',  bg: '#fff7ed', text: '#9a3412', border: '#fed7aa' },
+                  { href: '/mentors/apply', emoji: '🌟',   label: 'Become a Mentor', desc: 'Share your expertise with learners',    bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe' },
+                ].map(({ href, emoji, label, desc, bg, text, border }) => (
+                  <Link key={href} href={href}
+                    className="flex flex-col gap-1.5 p-3.5 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-sm"
+                    style={{ background: bg, borderColor: border }}>
+                    <span className="text-2xl leading-none">{emoji}</span>
+                    <p className="text-xs font-bold leading-tight" style={{ color: text }}>{label}</p>
+                    <p className="text-[10px] leading-tight" style={{ color: text, opacity: 0.65 }}>{desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Leaderboard ── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold" style={{ color: '#141c52' }}>Leaderboard</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Kitchen Brigade rankings</p>
+                </div>
+                <span className="text-2xl">🏆</span>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { rank: 1, label: 'Head Chef',      emoji: '👨‍🍳', desc: 'Top scorer', color: '#f59e0b' },
+                  { rank: 2, label: 'Sous Chef',       emoji: '🥈',   desc: '2nd place',  color: '#94a3b8' },
+                  { rank: 3, label: 'Chef de Partie',  emoji: '🥉',   desc: '3rd place',  color: '#b45309' },
+                ].map(({ rank, label, emoji, desc, color }) => (
+                  <div key={rank} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50">
+                    <span className="text-lg shrink-0">{emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold truncate" style={{ color: '#141c52' }}>{label}</p>
+                      <p className="text-[10px] text-gray-400">{desc}</p>
+                    </div>
+                    <span className="text-[11px] font-extrabold" style={{ color }}># {rank}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 space-y-2">
+                {totalGames > 0 && (
+                  <div className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: '#fef9c3' }}>
+                    <p className="text-xs font-semibold" style={{ color: '#92400e' }}>Your score</p>
+                    <p className="text-xs font-extrabold" style={{ color: '#78350f' }}>{totalScore.toLocaleString()} pts</p>
+                  </div>
+                )}
+                <Link
+                  href="/practice/leaderboard"
+                  className="block text-center py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition-all hover:scale-[1.02]"
+                  style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+                >
+                  See full brigade →
+                </Link>
               </div>
             </div>
 
@@ -872,24 +1014,24 @@ export default function DashboardPage() {
             {/* Daily Challenge — compact */}
             <Link
               href="/practice/daily-challenge"
-              className="block rounded-2xl overflow-hidden transition-all hover:scale-[1.01] hover:shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #0c1338 0%, #141c52 60%, #1a1060 100%)' }}
+              className="block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all hover:scale-[1.01] hover:shadow-md"
             >
+              <div className="h-[3px]" style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }} />
               <div className="p-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">🔥</span>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Daily Challenge</p>
-                      <p className="text-base font-extrabold text-white leading-tight">Today's challenge</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5 text-gray-400">Daily Challenge</p>
+                      <p className="text-base font-extrabold leading-tight" style={{ color: '#141c52' }}>Today's challenge</p>
                     </div>
                   </div>
                   {playedToday
                     ? <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0" style={{ background: '#dcfce7', color: '#166534' }}>Done ✓</span>
-                    : <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0" style={{ background: 'rgba(250,219,67,0.15)', color: '#FADB43', border: '1px solid rgba(250,219,67,0.25)' }}>New</span>
+                    : <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0" style={{ background: '#fef9c3', color: '#92400e', border: '1px solid #fde68a' }}>New</span>
                   }
                 </div>
-                <p className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <p className="text-xs leading-relaxed mb-4 text-gray-400">
                   {playedToday
                     ? "You've completed today's challenge!"
                     : streakAtRisk
@@ -903,8 +1045,18 @@ export default function DashboardPage() {
                   {playedToday ? 'View result →' : 'Start challenge →'}
                 </div>
               </div>
-              <div className="h-[2px]" style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)' }} />
             </Link>
+
+            {/* Streak — 7-day strip */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-bold" style={{ color: '#141c52' }}>Streak</h2>
+                {currentStreak > 0 && (
+                  <span className="text-xs font-semibold text-gray-400">{currentStreak}-day streak 🔥</span>
+                )}
+              </div>
+              <ActivityHeatmap sessions={sessions} />
+            </div>
 
             {/* Recent Activity with green +pts */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">

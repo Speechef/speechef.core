@@ -106,6 +106,14 @@ interface UserBadge {
   earned_at: string;
 }
 
+interface SavedWord {
+  id: number;
+  word: string;
+  definition: string;
+  note: string;
+  saved_at: string;
+}
+
 // ── Review constants ───────────────────────────────────────────────────────────
 
 const REVIEW_TYPE_LABELS: Record<string, string> = {
@@ -325,15 +333,27 @@ function ScoreTrend({ sessions }: { sessions: AnalysisSession[] }) {
 
 export default function ProfilePage() {
   const { data: user, isLoading: profileLoading, refetch } = useProfile();
-  const [tab, setTab] = useState<'overview' | 'progress'>('overview');
   const [form, setForm] = useState({ username: '', email: '' });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showLoginBanner, setShowLoginBanner] = useState(false);
 
   useEffect(() => {
     if (user) setForm({ username: user.username, email: user.email });
   }, [user]);
+
+  // Show login-streak bonus banner once per day
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const last = typeof window !== 'undefined' ? localStorage.getItem('speechef_login_bonus_date') : null;
+    if (last !== today) {
+      setShowLoginBanner(true);
+      localStorage.setItem('speechef_login_bonus_date', today);
+      const t = setTimeout(() => setShowLoginBanner(false), 5000);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   // ── All queries (shared across tabs) ──────────────────────────────────────
 
@@ -389,6 +409,11 @@ export default function ProfilePage() {
   const { data: userBadges = [], isLoading: loadingBadges } = useQuery<UserBadge[]>({
     queryKey: ['profile-badges'],
     queryFn: () => api.get('/auth/badges/').then((r) => r.data).catch(() => []),
+  });
+
+  const { data: savedWords = [], isLoading: loadingSavedWords } = useQuery<SavedWord[]>({
+    queryKey: ['profile-saved-words'],
+    queryFn: () => api.get('/practice/saved-words/').then((r) => r.data).catch(() => []),
   });
 
   // ── Submit handler ─────────────────────────────────────────────────────────
@@ -448,9 +473,10 @@ export default function ProfilePage() {
     if (ex) { ex.count += 1; ex.best = Math.max(ex.best, s.score); }
     else gameMap.set(s.game, { count: 1, best: s.score });
   }
-  const gameEntries  = [...gameMap.entries()].sort((a, b) => b[1].count - a[1].count);
-  const uniqueGames  = gameMap.size;
+  const gameEntries   = [...gameMap.entries()].sort((a, b) => b[1].count - a[1].count);
+  const uniqueGames   = gameMap.size;
   const bestGameScore = gameSessions.length > 0 ? Math.max(...gameSessions.map((s) => s.score)) : 0;
+  const totalGameScore = gameSessions.reduce((sum, s) => sum + s.score, 0);
 
   // Learn progress
   const totalLessons     = learnPosts.length;
@@ -507,102 +533,156 @@ export default function ProfilePage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen" style={{ background: '#f4f6fb' }}>
 
-        {/* ── Profile header ─── */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-extrabold text-white shrink-0"
-              style={{ background: 'linear-gradient(135deg,#141c52,#1e2d78)' }}
-            >
+      {/* ── Hero Banner ──────────────────────────────────────────────────────── */}
+      <div style={{ background: 'linear-gradient(135deg,#080d26 0%,#141c52 55%,#1a2460 100%)' }}>
+        <div className="max-w-5xl mx-auto px-6 py-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+
+            {/* Avatar */}
+            <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-extrabold shrink-0"
+              style={{ background: 'linear-gradient(135deg,#FADB43,#fe9940)', color: '#141c52' }}>
               {user?.username?.[0]?.toUpperCase() ?? '?'}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>
-                @{user?.username}
+
+            {/* Name + meta + stat chips */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-extrabold text-white leading-tight">
+                {user?.username}
               </h1>
-              {activeDaysCount != null && (
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Active for <span className="font-semibold text-gray-600">{activeDaysCount}</span> day{activeDaysCount !== 1 ? 's' : ''}
-                  {dateJoined ? ` · joined ${new Date(dateJoined).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` : ''}
-                </p>
+              <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                {user?.email}
+                {dateJoined ? ` · Joined ${new Date(dateJoined).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` : ''}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
+                  🎤 {allAnalysis.length} analyses
+                </span>
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
+                  🎮 {gameSessions.length} games
+                </span>
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
+                  🗣️ {roleplaySessions.length} roleplays
+                </span>
+                {totalGameScore > 0 && (
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                    style={{ background: 'rgba(250,219,67,0.18)', border: '1px solid rgba(250,219,67,0.3)', color: '#FADB43' }}>
+                    ⭐ {totalGameScore.toLocaleString()} pts
+                  </span>
+                )}
+                <span className="text-xs font-bold px-3 py-1.5 rounded-full"
+                  style={currentStreak > 0
+                    ? { background: 'rgba(251,146,60,0.28)', border: '1px solid rgba(251,146,60,0.5)', color: '#fb923c' }
+                    : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                  🔥 {currentStreak > 0 ? `${currentStreak}-day streak` : 'No streak yet'}
+                </span>
+              </div>
+            </div>
+
+            {/* Score ring + actions */}
+            <div className="flex flex-col items-center gap-2 shrink-0">
+              {latestScore != null
+                ? <ScoreRing score={latestScore} />
+                : (
+                  <div className="w-24 h-24 rounded-full border-4 flex items-center justify-center shrink-0"
+                    style={{ borderColor: 'rgba(255,255,255,0.15)' }}>
+                    <span className="text-white/30 text-3xl">?</span>
+                  </div>
+                )}
+              <span className="text-[10px] font-semibold uppercase tracking-widest"
+                style={{ color: 'rgba(255,255,255,0.4)' }}>Speechef Score</span>
+              {delta != null && delta !== 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: delta > 0 ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)', color: delta > 0 ? '#4ade80' : '#f87171' }}>
+                  {delta > 0 ? '▲' : '▼'} {Math.abs(delta)} pts
+                </span>
               )}
+              <div className="flex items-center gap-2 mt-1">
+                <Link href="/analyze"
+                  className="text-xs font-bold px-4 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+                  style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                  Analyze →
+                </Link>
+                {user?.username && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/u/${user.username}`);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors hover:bg-white/10"
+                    style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.6)' }}>
+                    {copied ? '✓ Copied' : '🔗 Share'}
+                  </button>
+                )}
+              </div>
             </div>
+
           </div>
-          {user?.username && (
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/u/${user.username}`);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              className="text-sm font-semibold px-4 py-1.5 rounded-full border-2 transition-colors hover:bg-gray-50"
-              style={{ borderColor: BRAND.primary, color: BRAND.primary }}
-            >
-              {copied ? '✓ Copied!' : '🔗 Share Profile'}
-            </button>
-          )}
         </div>
+      </div>
 
-        {/* ── Tabs ─── */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
-          {(['overview', 'progress'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="px-5 py-2 rounded-lg text-sm font-semibold transition-all capitalize"
-              style={
-                tab === t
-                  ? { backgroundColor: '#141c52', color: '#fff' }
-                  : { color: '#6b7280', backgroundColor: 'transparent' }
-              }
-            >
-              {t === 'overview' ? '👤 Overview' : '📊 Progress'}
-            </button>
-          ))}
-        </div>
-
-        {/* ════════════════════════════════════════════════════════════
-            OVERVIEW TAB
-        ════════════════════════════════════════════════════════════ */}
-        {tab === 'overview' && (
-          <div className="space-y-5">
-
-            {/* Stats strip */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'Analyses',        value: allAnalysis.length, emoji: '🎤' },
-                { label: 'Expert Reviews',  value: reviews.length,     emoji: '🎓' },
-                { label: 'Mentor Sessions', value: mentorSessions.length, emoji: '📅' },
-              ].map(({ label, value, emoji }) => (
-                <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-                  <p className="text-xl">{emoji}</p>
-                  <p className="text-2xl font-extrabold mt-1" style={{ color: BRAND.primary }}>{value}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-                </div>
-              ))}
+      {/* ── Login bonus banner ───────────────────────────────────────────────── */}
+      {showLoginBanner && (
+        <div className="max-w-5xl mx-auto px-4 pt-4">
+          <div
+            className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-sm"
+            style={{ background: 'linear-gradient(to right,#fff7ed,#fef3c7)', border: '1px solid #fde68a' }}
+          >
+            <span className="text-2xl animate-bounce">🔥</span>
+            <div className="flex-1">
+              <p className="text-sm font-extrabold" style={{ color: '#78350f' }}>
+                +1 Login streak!
+                {currentStreak > 0 && (
+                  <span className="ml-2 text-xs font-semibold" style={{ color: '#92400e' }}>
+                    You&apos;re on a {currentStreak}-day streak 🎉
+                  </span>
+                )}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: '#a16207' }}>
+                Every login counts — keep showing up daily.
+              </p>
             </div>
+            <button
+              onClick={() => setShowLoginBanner(false)}
+              className="text-xs font-bold px-3 py-1 rounded-full transition-colors hover:bg-amber-100"
+              style={{ color: '#92400e' }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
-            {/* Edit form */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="font-bold text-lg mb-4" style={{ color: BRAND.primary }}>Account Details</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="username">Username</Label>
+      {/* ── Body ─────────────────────────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+
+          {/* ── Left Sidebar ──────────────────────────────────────────────────── */}
+          <div className="w-full lg:w-72 shrink-0 space-y-5">
+
+            {/* Account */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h2 className="font-bold text-sm mb-4" style={{ color: BRAND.primary }}>Account</h2>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="username" className="text-xs">Username</Label>
                   <Input id="username" value={form.username}
                     onChange={(e) => setForm({ ...form, username: e.target.value })} required />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-xs">Email</Label>
                   <Input id="email" type="email" value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })} required />
                 </div>
                 {message && (
-                  <p className={`text-sm px-3 py-2 rounded-lg ${
-                    message.includes('Failed') ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50'
-                  }`}>{message}</p>
+                  <p className={`text-xs px-3 py-2 rounded-lg ${message.includes('Failed') ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50'}`}>
+                    {message}
+                  </p>
                 )}
                 <Button type="submit" disabled={saving}
                   className="w-full rounded-full font-medium text-[#141c52]"
@@ -612,10 +692,258 @@ export default function ProfilePage() {
               </form>
             </div>
 
+            {/* Skill Scores */}
+            {loadingAnalysis ? (
+              <div className="h-40 bg-white rounded-2xl border border-gray-100 animate-pulse" />
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base">📊</span>
+                  <p className="font-bold text-sm" style={{ color: BRAND.primary }}>Skill Scores</p>
+                  {doneSessions.length > 0 && (
+                    <span className="ml-auto text-xs text-gray-400">avg of {doneSessions.length}</span>
+                  )}
+                </div>
+                {doneSessions.length === 0 ? (
+                  <div className="flex flex-col items-center py-4 gap-2 text-center">
+                    <p className="text-2xl">🎙️</p>
+                    <p className="text-xs text-gray-400">Analyze a speech to unlock skill scores.</p>
+                    <Link href="/analyze" className="text-xs font-semibold underline" style={{ color: BRAND.primary }}>
+                      Get started →
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {([
+                      { label: 'Fluency',    score: avgFluency },
+                      { label: 'Vocabulary', score: avgVocab },
+                      { label: 'Overall',    score: avgOverall },
+                    ] as { label: string; score: number | null }[]).map(({ label, score }) => {
+                      if (score == null) return null;
+                      const sc = SCORE_COLOR(score);
+                      return (
+                        <div key={label}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-gray-500">{label}</span>
+                            <span className="text-xs font-extrabold px-2 py-0.5 rounded-full"
+                              style={{ color: sc.color, backgroundColor: sc.bg }}>{score}</span>
+                          </div>
+                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all"
+                              style={{ width: `${score}%`, backgroundColor: sc.color }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Focus Areas */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-base">🎯</span>
+                <p className="font-bold text-sm" style={{ color: BRAND.primary }}>Focus Areas</p>
+              </div>
+              {!latestResult?.improvement_priorities?.length ? (
+                <div className="flex flex-col items-center py-4 gap-2 text-center">
+                  <p className="text-xs text-gray-400">Complete a speech analysis to get recommendations.</p>
+                  <Link href="/analyze" className="text-xs font-semibold underline" style={{ color: BRAND.primary }}>
+                    Analyze →
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {latestResult.improvement_priorities.slice(0, 4).map((priority) => {
+                    const key = priority.toLowerCase();
+                    const match = Object.entries(PRIORITY_LINKS).find(([k]) => key.includes(k));
+                    const link = match ? match[1] : null;
+                    return (
+                      <div key={priority} className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{link?.emoji ?? '💡'}</span>
+                          <span className="text-xs font-medium capitalize" style={{ color: BRAND.primary }}>{priority}</span>
+                        </div>
+                        {link && (
+                          <Link href={link.href}
+                            className="text-xs font-bold px-2 py-0.5 rounded-full hover:opacity-80 transition-opacity"
+                            style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                            →
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Badges */}
+            {loadingBadges ? (
+              <div className="h-24 bg-white rounded-2xl border border-gray-100 animate-pulse" />
+            ) : userBadges.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center">
+                <p className="text-3xl mb-2">🏅</p>
+                <p className="text-xs text-gray-400">Keep practicing to earn badges.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base">🏆</span>
+                  <p className="font-bold text-sm" style={{ color: BRAND.primary }}>Badges</p>
+                  <span className="ml-auto text-xs text-gray-400">{userBadges.length} earned</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {userBadges.map((ub) => (
+                    <div key={ub.id} title={ub.badge.description}
+                      className="flex flex-col items-center gap-1 bg-gray-50 rounded-xl p-2.5 text-center hover:bg-gray-100 transition-colors">
+                      <span className="text-2xl">{ub.badge.emoji}</span>
+                      <p className="text-[10px] font-semibold leading-tight" style={{ color: BRAND.primary }}>
+                        {ub.badge.name}
+                      </p>
+                      <p className="text-[9px] text-gray-400">
+                        {new Date(ub.earned_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* ── Main Content ───────────────────────────────────────────────────── */}
+          <div className="flex-1 min-w-0 space-y-5">
+
+            {/* Streak stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+                <p className="text-xl mb-1">📅</p>
+                <p className="text-2xl font-extrabold" style={{ color: BRAND.primary }}>
+                  {activeDaysCount != null ? `${activeDaysCount}d` : '—'}
+                </p>
+                <p className="text-xs font-semibold text-gray-500 mt-0.5">Active For</p>
+                <p className="text-[10px] text-gray-400">since joining</p>
+              </div>
+
+              {/* Current streak — highlighted when active */}
+              <div
+                className="rounded-2xl shadow-sm p-4 text-center"
+                style={currentStreak > 0
+                  ? { background: 'linear-gradient(135deg,#fff7ed,#fef3c7)', border: '1px solid #fde68a' }
+                  : { background: '#fff', border: '1px solid #f3f4f6' }}
+              >
+                <p className="text-xl mb-1">🔥</p>
+                <p className="text-2xl font-extrabold" style={{ color: currentStreak > 0 ? '#c2410c' : BRAND.primary }}>
+                  {currentStreak > 0 ? `${currentStreak}d` : '—'}
+                </p>
+                <p className="text-xs font-semibold mt-0.5" style={{ color: currentStreak > 0 ? '#92400e' : '#6b7280' }}>
+                  Current Streak
+                </p>
+                <p className="text-[10px]" style={{ color: currentStreak > 0 ? '#a16207' : '#9ca3af' }}>
+                  {currentStreak > 0 ? 'login counts ✓' : 'start today'}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+                <p className="text-xl mb-1">⭐</p>
+                <p className="text-2xl font-extrabold" style={{ color: BRAND.primary }}>
+                  {longestStreak > 0 ? `${longestStreak}d` : '—'}
+                </p>
+                <p className="text-xs font-semibold text-gray-500 mt-0.5">Longest Streak</p>
+                <p className="text-[10px] text-gray-400">personal best</p>
+              </div>
+            </div>
+
+            {/* Activity graph */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-base">📆</span>
+                <p className="font-bold text-sm" style={{ color: BRAND.primary }}>Activity — Past Year</p>
+                <p className="ml-auto text-xs text-gray-400">games · analyses · roleplay</p>
+              </div>
+              <ContributionGraph activityDates={activityDates} />
+            </div>
+
+            {/* Score Trend */}
+            {loadingAnalysis ? (
+              <div className="h-36 bg-white rounded-2xl border border-gray-100 animate-pulse" />
+            ) : sparkScores.length < 2 ? (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📈</span>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>Score Trend</p>
+                    <p className="text-xs text-gray-400">Complete 2+ analyses to see your trend chart.</p>
+                  </div>
+                </div>
+                <Link href="/analyze" className="shrink-0 text-xs font-bold px-4 py-2 rounded-full hover:opacity-90"
+                  style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                  Analyze →
+                </Link>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📈</span>
+                    <p className="font-bold text-sm" style={{ color: BRAND.primary }}>Score Trend</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>Best: <span className="font-bold" style={{ color: BRAND.primary }}>{sparkBest}</span></span>
+                    <span>Avg: <span className="font-bold" style={{ color: BRAND.primary }}>{sparkAvg}</span></span>
+                    {delta != null && delta !== 0 && (
+                      <span className="font-bold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: delta > 0 ? '#dcfce7' : '#fee2e2', color: delta > 0 ? '#166534' : '#991b1b' }}>
+                        {delta > 0 ? '▲' : '▼'} {Math.abs(delta)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+                  <defs>
+                    <linearGradient id="profTrendGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%"   stopColor="#FADB43" />
+                      <stop offset="100%" stopColor="#fe9940" />
+                    </linearGradient>
+                  </defs>
+                  <polyline points={polyline} fill="none" stroke="url(#profTrendGrad)"
+                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  {sparkScores.map((sc, i) => (
+                    <circle key={i}
+                      cx={PAD + i * xStep}
+                      cy={PAD + (1 - (sc - minS) / sRange) * (H - PAD * 2)}
+                      r={i === sparkScores.length - 1 ? 4 : 2.5}
+                      fill={i === sparkScores.length - 1 ? '#fe9940' : 'white'}
+                      stroke="#fe9940" strokeWidth="2" />
+                  ))}
+                </svg>
+                <div className="flex justify-between text-[10px] text-gray-400 mt-1.5">
+                  <span>
+                    {sortedDone.length >= sparkScores.length
+                      ? new Date(sortedDone[sortedDone.length - sparkScores.length].created_at)
+                          .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      : ''}
+                  </span>
+                  <span>{sparkScores.length} sessions</span>
+                  <span>
+                    {sortedDone.length > 0
+                      ? new Date(sortedDone[sortedDone.length - 1].created_at)
+                          .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      : ''}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Score History */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Score History</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎤</span>
+                  <h2 className="font-bold text-sm" style={{ color: BRAND.primary }}>Score History</h2>
+                </div>
                 <Link href="/analyze" className="text-xs font-semibold text-indigo-600 hover:underline">
                   + New Analysis
                 </Link>
@@ -623,7 +951,7 @@ export default function ProfilePage() {
               {loadingAnalysis ? (
                 <div className="h-16 rounded-xl bg-gray-100 animate-pulse" />
               ) : analysisSessions.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-6 text-gray-400">
                   <p className="text-3xl mb-2">🎤</p>
                   <p className="text-sm">No analyses yet.</p>
                   <Link href="/analyze" className="inline-block mt-3 text-xs font-bold px-4 py-2 rounded-full"
@@ -632,450 +960,195 @@ export default function ProfilePage() {
                   </Link>
                 </div>
               ) : (
-                <>
-                  <div className="mb-5"><ScoreTrend sessions={analysisSessions} /></div>
-                  <div className="space-y-2">
-                    {analysisSessions.slice(0, 5).map((s) => (
-                      <Link key={s.id} href={`/analyze?session=${s.id}`}
-                        className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div>
-                          <p className="text-sm font-medium" style={{ color: BRAND.primary }}>Analysis #{s.id}</p>
-                          <p className="text-xs text-gray-400">
-                            {new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </p>
-                        </div>
-                        {s.result?.overall_score != null ? (
-                          <span className="text-lg font-extrabold" style={{ color: BRAND.primary }}>
-                            {s.result.overall_score}<span className="text-xs font-normal text-gray-400"> /100</span>
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-400 capitalize">{s.status}</span>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Expert Reviews */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Expert Reviews</h2>
-                <Link href="/review/my" className="text-xs font-semibold text-indigo-600 hover:underline">View all →</Link>
-              </div>
-              {reviews.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="text-3xl mb-2">🎓</p>
-                  <p className="text-sm">No reviews yet.</p>
-                  <Link href="/review" className="inline-block mt-3 text-xs font-bold px-4 py-2 rounded-full"
-                    style={{ background: BRAND.gradient, color: BRAND.primary }}>
-                    Submit for Expert Review →
-                  </Link>
-                </div>
-              ) : (
                 <div className="space-y-2">
-                  {reviews.slice(0, 3).map((r) => {
-                    const cfg = REVIEW_STATUS_COLORS[r.status];
-                    return (
-                      <Link key={r.id} href={`/review/${r.id}`}
-                        className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div>
-                          <p className="text-sm font-medium" style={{ color: BRAND.primary }}>
-                            {REVIEW_TYPE_LABELS[r.review_type] ?? r.review_type}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {new Date(r.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </p>
-                        </div>
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                          style={{ color: cfg?.color, backgroundColor: cfg?.bg }}>
-                          {r.status.replace('_', ' ')}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Mentor Sessions */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Mentor Sessions</h2>
-                <Link href="/mentors/sessions" className="text-xs font-semibold text-indigo-600 hover:underline">View all →</Link>
-              </div>
-              {mentorSessions.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="text-3xl mb-2">🧑‍🏫</p>
-                  <p className="text-sm">No mentor sessions yet.</p>
-                  <Link href="/mentors" className="inline-block mt-3 text-xs font-bold px-4 py-2 rounded-full"
-                    style={{ background: BRAND.gradient, color: BRAND.primary }}>
-                    Browse Mentors →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {mentorSessions.slice(0, 3).map((s) => (
-                    <div key={s.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50">
+                  {analysisSessions.slice(0, 5).map((s) => (
+                    <Link key={s.id} href={`/analyze?session=${s.id}`}
+                      className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
                       <div>
-                        <p className="text-sm font-medium" style={{ color: BRAND.primary }}>
-                          Session with {s.mentor.name}
-                        </p>
+                        <p className="text-sm font-medium" style={{ color: BRAND.primary }}>Analysis #{s.id}</p>
                         <p className="text-xs text-gray-400">
-                          {new Date(s.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          {' · '}{s.duration_minutes} min
+                          {new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
-                      <span className="text-xs text-gray-500 capitalize">{s.status.replace('_', ' ')}</span>
-                    </div>
+                      {s.result?.overall_score != null ? (
+                        <span className="text-lg font-extrabold" style={{ color: BRAND.primary }}>
+                          {s.result.overall_score}<span className="text-xs font-normal text-gray-400"> /100</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400 capitalize">{s.status}</span>
+                      )}
+                    </Link>
                   ))}
                 </div>
               )}
             </div>
 
-          </div>
-        )}
-
-        {/* ════════════════════════════════════════════════════════════
-            PROGRESS TAB
-        ════════════════════════════════════════════════════════════ */}
-        {tab === 'progress' && (
-          <div className="space-y-5">
-
-            {/* ── Hero stats band ── */}
-            <div className="rounded-2xl px-7 py-6 flex flex-col sm:flex-row items-center justify-between gap-5"
-              style={{ background: 'linear-gradient(to right,#141c52,#1e2d78)' }}>
-              <div className="flex items-center gap-5">
-                {latestScore != null ? <ScoreRing score={latestScore} /> : (
-                  <div className="w-24 h-24 rounded-full border-4 border-white/20 flex items-center justify-center shrink-0">
-                    <span className="text-white/40 text-3xl">?</span>
-                  </div>
-                )}
-                <div>
-                  {user?.username && (
-                    <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-1">
-                      @{user.username}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    {activeDaysCount != null && (
-                      <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/10 text-white">
-                        📅 Active {activeDaysCount}d
-                      </span>
-                    )}
-                    {currentStreak > 0 && (
-                      <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/10 text-white">
-                        🔥 {currentStreak} day streak
-                      </span>
-                    )}
-                    {longestStreak > 0 && (
-                      <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/10 text-white">
-                        ⭐ Best streak: {longestStreak}d
-                      </span>
-                    )}
-                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/10 text-white">
-                      🎮 {gameSessions.length} sessions
-                    </span>
-                  </div>
-                  {latestScore != null && delta != null && delta !== 0 && (
-                    <span className="inline-block mt-2 text-xs font-bold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: delta > 0 ? '#dcfce7' : '#fee2e2', color: delta > 0 ? '#166534' : '#991b1b' }}>
-                      {delta > 0 ? '▲' : '▼'} {Math.abs(delta)} pts from last analysis
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 shrink-0">
-                <Link href="/analyze"
-                  className="px-5 py-2.5 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
-                  style={{ background: BRAND.gradient, color: BRAND.primary }}>
-                  {latestScore == null ? 'Analyze a Speech →' : 'Analyze Again →'}
-                </Link>
-                {latestScore != null && (
-                  <Link href="/analyze/history"
-                    className="px-5 py-2.5 rounded-full font-bold text-sm border border-white/20 text-white hover:bg-white/10 transition-colors">
-                    View History →
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            {/* ── Streak stats row ── */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'Active For',      value: activeDaysCount != null ? `${activeDaysCount}d` : '—', emoji: '📅', sub: 'since joining' },
-                { label: 'Current Streak',  value: currentStreak > 0 ? `${currentStreak}d` : '—',          emoji: '🔥', sub: 'consecutive days' },
-                { label: 'Longest Streak',  value: longestStreak > 0 ? `${longestStreak}d` : '—',           emoji: '⭐', sub: 'personal best' },
-              ].map(({ label, value, emoji, sub }) => (
-                <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-                  <p className="text-xl mb-1">{emoji}</p>
-                  <p className="text-2xl font-extrabold" style={{ color: BRAND.primary }}>{value}</p>
-                  <p className="text-xs font-semibold text-gray-500 mt-0.5">{label}</p>
-                  <p className="text-[10px] text-gray-400">{sub}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* ── Contribution graph ── */}
+            {/* Practice Activity */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-4">
-                <span className="px-2 py-0.5 rounded-lg text-xs font-semibold" style={{ background: '#dcfce7', color: '#166534' }}>📆</span>
-                <p className="text-sm font-bold" style={{ color: BRAND.primary }}>Activity — Past Year</p>
-                <p className="ml-auto text-xs text-gray-400">games · analyses · roleplay</p>
+                <span className="text-base">🎮</span>
+                <h2 className="font-bold text-sm" style={{ color: BRAND.primary }}>Practice Activity</h2>
               </div>
-              <ContributionGraph activityDates={activityDates} />
-            </div>
-
-            {/* ── Score Trend + Skill Breakdown ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-              {/* Score Trend */}
-              {loadingAnalysis ? (
-                <div className="h-48 bg-white rounded-2xl border border-gray-100 animate-pulse" />
-              ) : sparkScores.length < 2 ? (
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col items-center justify-center text-center gap-3 min-h-[12rem]">
-                  <p className="text-3xl">📈</p>
-                  <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>Score Trend</p>
-                  <p className="text-xs text-gray-400">Complete 2+ analyses to see your trend chart.</p>
-                  <Link href="/analyze" className="text-xs font-semibold underline" style={{ color: BRAND.primary }}>
-                    Analyze a speech →
+              {loadingGames ? (
+                <div className="h-36 rounded-xl bg-gray-100 animate-pulse" />
+              ) : gameSessions.length === 0 ? (
+                <div className="flex flex-col items-center py-6 gap-2 text-center">
+                  <p className="text-3xl">🎮</p>
+                  <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>No games played yet</p>
+                  <p className="text-xs text-gray-400 mb-3">Play practice games to track your progress.</p>
+                  <Link href="/practice"
+                    className="inline-block px-5 py-2 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
+                    style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                    Go to Practice →
                   </Link>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-lg text-xs font-semibold" style={{ background: '#fef9c3', color: '#92400e' }}>📈</span>
-                      <p className="text-sm font-bold" style={{ color: BRAND.primary }}>Score Trend</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span>Best: <span className="font-bold" style={{ color: BRAND.primary }}>{sparkBest}</span></span>
-                      <span>Avg: <span className="font-bold" style={{ color: BRAND.primary }}>{sparkAvg}</span></span>
-                      {delta != null && delta !== 0 && (
-                        <span className="font-bold px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: delta > 0 ? '#dcfce7' : '#fee2e2', color: delta > 0 ? '#166534' : '#991b1b' }}>
-                          {delta > 0 ? '▲' : '▼'} {Math.abs(delta)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
-                    <defs>
-                      <linearGradient id="profTrendGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%"   stopColor="#FADB43" />
-                        <stop offset="100%" stopColor="#fe9940" />
-                      </linearGradient>
-                    </defs>
-                    <polyline points={polyline} fill="none" stroke="url(#profTrendGrad)"
-                      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                    {sparkScores.map((sc, i) => (
-                      <circle key={i}
-                        cx={PAD + i * xStep}
-                        cy={PAD + (1 - (sc - minS) / sRange) * (H - PAD * 2)}
-                        r={i === sparkScores.length - 1 ? 4 : 2.5}
-                        fill={i === sparkScores.length - 1 ? '#fe9940' : 'white'}
-                        stroke="#fe9940" strokeWidth="2" />
-                    ))}
-                  </svg>
-                  <div className="flex justify-between text-[10px] text-gray-400 mt-1.5">
-                    <span>
-                      {sortedDone.length >= sparkScores.length
-                        ? new Date(sortedDone[sortedDone.length - sparkScores.length].created_at)
-                            .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                        : ''}
+                <>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
+                      🎮 {gameSessions.length} session{gameSessions.length !== 1 ? 's' : ''}
                     </span>
-                    <span>{sparkScores.length} sessions</span>
-                    <span>
-                      {sortedDone.length > 0
-                        ? new Date(sortedDone[sortedDone.length - 1].created_at)
-                            .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                        : ''}
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
+                      🕹️ {uniqueGames} game{uniqueGames !== 1 ? 's' : ''}
+                    </span>
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
+                      ⭐ Best: {bestGameScore}
                     </span>
                   </div>
-                </div>
-              )}
-
-              {/* Skill Breakdown */}
-              {loadingAnalysis ? (
-                <div className="h-48 bg-white rounded-2xl border border-gray-100 animate-pulse" />
-              ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="px-2 py-0.5 rounded-lg text-xs font-semibold" style={{ background: '#dbeafe', color: '#1e40af' }}>📊</span>
-                    <p className="text-sm font-bold" style={{ color: BRAND.primary }}>Skill Scores</p>
-                    {doneSessions.length > 0 && (
-                      <span className="ml-auto text-xs text-gray-400">
-                        avg of {doneSessions.length} session{doneSessions.length !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-                  {doneSessions.length === 0 ? (
-                    <div className="flex flex-col items-center py-8 gap-2 text-center">
-                      <p className="text-3xl">🎙️</p>
-                      <p className="text-sm text-gray-400">Analyze a speech to unlock skill scores.</p>
-                      <Link href="/analyze" className="text-xs font-semibold underline" style={{ color: BRAND.primary }}>
-                        Get started →
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {([
-                        { label: 'Fluency',    score: avgFluency },
-                        { label: 'Vocabulary', score: avgVocab },
-                        { label: 'Overall',    score: avgOverall },
-                      ] as { label: string; score: number | null }[]).map(({ label, score }) => {
-                        if (score == null) return null;
-                        const sc = SCORE_COLOR(score);
-                        return (
-                          <div key={label}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-semibold text-gray-500">{label}</span>
-                              <span className="text-xs font-extrabold px-2 py-0.5 rounded-full"
-                                style={{ color: sc.color, backgroundColor: sc.bg }}>{score}</span>
+                  <div className="space-y-1">
+                    {gameEntries.map(([game, { count, best }]) => {
+                      const gc = GAME_COLORS[game] ?? { bg: '#f3f4f6', text: '#374151', emoji: '🎮', label: game };
+                      const pct = Math.round((count / gameSessions.length) * 100);
+                      return (
+                        <Link key={game} href={`/practice/history?game=${game}`}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: gc.text }} />
+                          <span className="text-base shrink-0">{gc.emoji}</span>
+                          <span className="text-sm font-semibold flex-1 min-w-0 truncate" style={{ color: BRAND.primary }}>{gc.label}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="hidden sm:block w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: gc.text }} />
                             </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full transition-all"
-                                style={{ width: `${score}%`, backgroundColor: sc.color }} />
-                            </div>
+                            <span className="text-xs text-gray-400">{count}</span>
+                            <span className="text-xs text-gray-300">·</span>
+                            <span className="text-xs font-bold" style={{ color: BRAND.primary }}>{best}</span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-100 text-right">
+                    <Link href="/practice/history" className="text-xs font-semibold hover:underline" style={{ color: BRAND.primary }}>
+                      View full history →
+                    </Link>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* ── Practice Activity ── */}
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#fef9c3', color: '#92400e' }}>🎮</span>
-                <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Practice Activity</h2>
-              </div>
-              {loadingGames ? (
-                <div className="h-36 bg-white rounded-2xl border border-gray-100 animate-pulse" />
-              ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  {gameSessions.length === 0 ? (
-                    <div className="flex flex-col items-center py-8 gap-2 text-center">
-                      <p className="text-3xl">🎮</p>
-                      <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>No games played yet</p>
-                      <p className="text-xs text-gray-400 mb-3">Play practice games to track your progress here.</p>
-                      <Link href="/practice"
-                        className="inline-block px-5 py-2 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
-                        style={{ background: BRAND.gradient, color: BRAND.primary }}>
-                        Go to Practice →
-                      </Link>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
-                          🎮 {gameSessions.length} session{gameSessions.length !== 1 ? 's' : ''}
-                        </span>
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
-                          🕹️ {uniqueGames} game{uniqueGames !== 1 ? 's' : ''}
-                        </span>
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
-                          ⭐ Best: {bestGameScore}
-                        </span>
-                      </div>
-                      <div className="space-y-1">
-                        {gameEntries.map(([game, { count, best }]) => {
-                          const gc = GAME_COLORS[game] ?? { bg: '#f3f4f6', text: '#374151', emoji: '🎮', label: game };
-                          const pct = Math.round((count / gameSessions.length) * 100);
-                          return (
-                            <Link key={game} href={`/practice/history?game=${game}`}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: gc.text }} />
-                              <span className="text-base shrink-0">{gc.emoji}</span>
-                              <span className="text-sm font-semibold flex-1 min-w-0 truncate" style={{ color: BRAND.primary }}>{gc.label}</span>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <div className="hidden sm:block w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: gc.text }} />
-                                </div>
-                                <span className="text-xs text-gray-400">{count}</span>
-                                <span className="text-xs text-gray-300">·</span>
-                                <span className="text-xs font-bold" style={{ color: BRAND.primary }}>{best}</span>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-gray-100 text-right">
-                        <Link href="/practice/history" className="text-xs font-semibold hover:underline" style={{ color: BRAND.primary }}>
-                          View full history →
-                        </Link>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </section>
+            {/* Expert Reviews + Mentor Sessions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-            {/* ── Focus Areas + Learning Progress ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-              {/* Focus Areas */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2 py-0.5 rounded-lg text-xs font-semibold" style={{ background: '#fce7f3', color: '#9d174d' }}>🎯</span>
-                  <p className="text-sm font-bold" style={{ color: BRAND.primary }}>Focus Areas</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🎓</span>
+                    <h2 className="font-bold text-sm" style={{ color: BRAND.primary }}>Expert Reviews</h2>
+                  </div>
+                  <Link href="/review/my" className="text-xs font-semibold text-indigo-600 hover:underline">View all →</Link>
                 </div>
-                {!latestResult || !latestResult.improvement_priorities?.length ? (
-                  <div className="flex flex-col items-center py-6 gap-2 text-center">
-                    <p className="text-3xl">🎯</p>
-                    <p className="text-xs text-gray-400">Complete a speech analysis to get personalized recommendations.</p>
-                    <Link href="/analyze" className="mt-1 text-xs font-semibold underline" style={{ color: BRAND.primary }}>
-                      Analyze a speech →
+                {reviews.length === 0 ? (
+                  <div className="text-center py-6 text-gray-400">
+                    <p className="text-2xl mb-2">🎓</p>
+                    <p className="text-xs">No reviews yet.</p>
+                    <Link href="/review" className="inline-block mt-3 text-xs font-bold px-4 py-2 rounded-full"
+                      style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                      Submit →
                     </Link>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {latestResult.improvement_priorities.slice(0, 4).map((priority) => {
-                      const key = priority.toLowerCase();
-                      const match = Object.entries(PRIORITY_LINKS).find(([k]) => key.includes(k));
-                      const link = match ? match[1] : null;
+                    {reviews.slice(0, 3).map((r) => {
+                      const cfg = REVIEW_STATUS_COLORS[r.status];
                       return (
-                        <div key={priority} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-50">
-                          <div className="flex items-center gap-2">
-                            <span>{link?.emoji ?? '💡'}</span>
-                            <span className="text-sm font-medium capitalize" style={{ color: BRAND.primary }}>{priority}</span>
+                        <Link key={r.id} href={`/review/${r.id}`}
+                          className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div>
+                            <p className="text-xs font-medium" style={{ color: BRAND.primary }}>
+                              {REVIEW_TYPE_LABELS[r.review_type] ?? r.review_type}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                              {new Date(r.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
                           </div>
-                          {link && (
-                            <Link href={link.href}
-                              className="text-xs font-bold px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity"
-                              style={{ background: BRAND.gradient, color: BRAND.primary }}>
-                              Practice →
-                            </Link>
-                          )}
-                        </div>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ color: cfg?.color, backgroundColor: cfg?.bg }}>
+                            {r.status.replace('_', ' ')}
+                          </span>
+                        </Link>
                       );
                     })}
                   </div>
                 )}
               </div>
 
-              {/* Learning Progress */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🧑‍🏫</span>
+                    <h2 className="font-bold text-sm" style={{ color: BRAND.primary }}>Mentor Sessions</h2>
+                  </div>
+                  <Link href="/mentors/sessions" className="text-xs font-semibold text-indigo-600 hover:underline">View all →</Link>
+                </div>
+                {mentorSessions.length === 0 ? (
+                  <div className="text-center py-6 text-gray-400">
+                    <p className="text-2xl mb-2">🧑‍🏫</p>
+                    <p className="text-xs">No mentor sessions yet.</p>
+                    <Link href="/mentors" className="inline-block mt-3 text-xs font-bold px-4 py-2 rounded-full"
+                      style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                      Browse →
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {mentorSessions.slice(0, 3).map((s) => (
+                      <div key={s.id} className="px-3 py-2.5 rounded-xl bg-gray-50">
+                        <p className="text-xs font-medium" style={{ color: BRAND.primary }}>
+                          Session with {s.mentor.name}
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                          {new Date(s.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {' · '}{s.duration_minutes} min · {s.status.replace('_', ' ')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Learning + Roleplay */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-8">
+
               {loadingLearn ? (
-                <div className="h-48 bg-white rounded-2xl border border-gray-100 animate-pulse" />
+                <div className="h-40 bg-white rounded-2xl border border-gray-100 animate-pulse" />
               ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-4">
-                    <span className="px-2 py-0.5 rounded-lg text-xs font-semibold" style={{ background: '#d1fae5', color: '#065f46' }}>📚</span>
-                    <p className="text-sm font-bold" style={{ color: BRAND.primary }}>Learning Progress</p>
+                    <span className="text-base">📚</span>
+                    <p className="font-bold text-sm" style={{ color: BRAND.primary }}>Learning Progress</p>
                   </div>
                   {totalLessons === 0 ? (
-                    <div className="flex flex-col items-center py-6 gap-2 text-center">
-                      <p className="text-3xl">📚</p>
+                    <div className="flex flex-col items-center py-4 gap-2 text-center">
+                      <p className="text-2xl">📚</p>
                       <p className="text-xs text-gray-400">No lessons available yet.</p>
                     </div>
                   ) : (
                     <>
                       <p className="text-3xl font-extrabold mb-1" style={{ color: BRAND.primary }}>
                         {completedLessons}
-                        <span className="text-sm font-normal text-gray-400"> / {totalLessons} lessons</span>
+                        <span className="text-sm font-normal text-gray-400"> / {totalLessons}</span>
                       </p>
                       <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
                         <div className="h-full rounded-full transition-all"
@@ -1091,35 +1164,27 @@ export default function ProfilePage() {
                   )}
                 </div>
               )}
-            </div>
 
-            {/* ── Roleplay Summary ── */}
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#ede9fe', color: '#6d28d9' }}>🗣️</span>
-                <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Roleplay</h2>
-              </div>
               {loadingRoleplay ? (
-                <div className="h-24 bg-white rounded-2xl border border-gray-100 animate-pulse" />
+                <div className="h-40 bg-white rounded-2xl border border-gray-100 animate-pulse" />
               ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-base">🗣️</span>
+                    <p className="font-bold text-sm" style={{ color: BRAND.primary }}>Roleplay</p>
+                  </div>
                   {roleplaySessions.length === 0 ? (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">🗣️</span>
-                        <div>
-                          <p className="font-semibold text-sm" style={{ color: BRAND.primary }}>No roleplay sessions yet</p>
-                          <p className="text-xs text-gray-400">Practice AI conversations to boost speaking skills.</p>
-                        </div>
-                      </div>
+                    <div className="flex flex-col items-center py-4 gap-2 text-center">
+                      <p className="text-2xl">🗣️</p>
+                      <p className="text-xs text-gray-400">No roleplay sessions yet.</p>
                       <Link href="/practice/roleplay"
-                        className="shrink-0 px-5 py-2 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
+                        className="text-xs font-bold px-4 py-2 rounded-full hover:opacity-90"
                         style={{ background: BRAND.gradient, color: BRAND.primary }}>
-                        Start a roleplay →
+                        Start →
                       </Link>
                     </div>
                   ) : (
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
                         🗣️ {roleplaySessions.length} session{roleplaySessions.length !== 1 ? 's' : ''}
                       </span>
@@ -1130,57 +1195,113 @@ export default function ProfilePage() {
                       )}
                       {bestMode && (
                         <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600">
-                          ⭐ Best mode: {bestMode}
+                          ⭐ {bestMode}
                         </span>
                       )}
                       <Link href="/practice/roleplay"
                         className="ml-auto text-xs font-semibold hover:underline"
                         style={{ color: BRAND.primary }}>
-                        Go to Roleplay →
+                        Go →
                       </Link>
                     </div>
                   )}
                 </div>
               )}
-            </section>
 
-            {/* ── Badges ── */}
-            <section className="pb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-2 py-0.5 rounded-lg text-sm" style={{ background: '#fef3c7', color: '#78350f' }}>🏆</span>
-                <h2 className="font-bold text-lg" style={{ color: BRAND.primary }}>Badges</h2>
-              </div>
-              {loadingBadges ? (
-                <div className="h-24 bg-white rounded-2xl border border-gray-100 animate-pulse" />
-              ) : userBadges.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-                  <p className="text-4xl mb-2">🏅</p>
-                  <p className="text-sm text-gray-400">Keep practicing to earn badges.</p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                    {userBadges.map((ub) => (
-                      <div key={ub.id} title={ub.badge.description}
-                        className="flex flex-col items-center gap-1 bg-gray-50 rounded-xl p-3 text-center hover:bg-gray-100 transition-colors">
-                        <span className="text-3xl">{ub.badge.emoji}</span>
-                        <p className="text-xs font-semibold leading-tight" style={{ color: BRAND.primary }}>
-                          {ub.badge.name}
-                        </p>
-                        <p className="text-[10px] text-gray-400">
-                          {new Date(ub.earned_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                        </p>
-                      </div>
-                    ))}
+            </div>
+
+            {/* My Vocabulary */}
+            {loadingSavedWords ? (
+              <div className="h-40 bg-white rounded-2xl border border-gray-100 animate-pulse" />
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 pb-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📖</span>
+                    <p className="font-bold text-sm" style={{ color: BRAND.primary }}>My Vocabulary</p>
                   </div>
+                  <Link href="/practice/saved-words" className="text-xs font-semibold text-indigo-600 hover:underline">
+                    View all →
+                  </Link>
                 </div>
-              )}
-            </section>
+
+                {/* Stat row */}
+                <div className="flex items-center gap-5 mb-5 flex-wrap">
+                  <div>
+                    <p className="text-3xl font-extrabold leading-none" style={{ color: BRAND.primary }}>
+                      {savedWords.length}
+                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-1">Words saved</p>
+                  </div>
+                  <div className="w-px h-10 bg-gray-100" />
+                  <div>
+                    <p className="text-3xl font-extrabold leading-none" style={{ color: BRAND.primary }}>
+                      {(gameMap.get('blitz')?.count ?? 0) + (gameMap.get('guess')?.count ?? 0) + (gameMap.get('memory')?.count ?? 0) + (gameMap.get('scramble')?.count ?? 0)}
+                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-1">Vocab drills played</p>
+                  </div>
+                  {savedWords.length > 0 && (
+                    <>
+                      <div className="w-px h-10 bg-gray-100" />
+                      <div>
+                        <p className="text-3xl font-extrabold leading-none" style={{ color: BRAND.primary }}>
+                          {savedWords.filter((w) => w.definition).length}
+                        </p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-1">With definitions</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {savedWords.length === 0 ? (
+                  <div className="flex flex-col items-center py-5 gap-2 text-center">
+                    <p className="text-2xl">📖</p>
+                    <p className="text-xs text-gray-400">No words saved yet — start building your vocabulary pantry.</p>
+                    <Link href="/learn"
+                      className="inline-block mt-2 text-xs font-bold px-4 py-2 rounded-full hover:opacity-90"
+                      style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                      Browse lessons →
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    {/* Recent words */}
+                    <div className="space-y-2 mb-4">
+                      {savedWords.slice(0, 5).map((w) => (
+                        <div key={w.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-gray-50">
+                          <span className="text-sm font-bold mt-0.5 shrink-0" style={{ color: BRAND.primary }}>{w.word}</span>
+                          {w.definition && (
+                            <p className="text-xs text-gray-500 leading-snug line-clamp-2 flex-1">{w.definition}</p>
+                          )}
+                          <span className="text-[10px] text-gray-400 shrink-0 mt-0.5">
+                            {new Date(w.saved_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA row */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <Link href="/practice/saved-words"
+                        className="text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
+                        style={{ background: BRAND.gradient, color: BRAND.primary }}>
+                        All {savedWords.length} words →
+                      </Link>
+                      <Link href="/practice/vocabulary-blitz"
+                        className="text-xs font-semibold px-4 py-2 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                        ⚡ Practice vocabulary
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
           </div>
-        )}
 
+        </div>
       </div>
+
     </div>
   );
 }

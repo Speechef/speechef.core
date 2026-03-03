@@ -202,7 +202,7 @@ export default function AIRoleplayHero({ modes }: Props) {
                   animationDelay: '0.05s',
                 }}
               >
-                🎭 AI Roleplay
+                👨‍🍳 Service Simulations
               </span>
 
               {/* Headline */}
@@ -214,18 +214,18 @@ export default function AIRoleplayHero({ modes }: Props) {
                   animationDelay: '0.12s',
                 }}
               >
-                Real Conversations,{' '}
+                Live the Scene,{' '}
                 <span style={{
                   background: GRADIENT,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                 }}>
-                  Real Progress
+                  Own the Kitchen
                 </span>
                 <br />
                 <span style={{ color: 'rgba(255,255,255,0.42)', fontSize: '0.62em', fontWeight: 700, letterSpacing: '0.01em' }}>
-                  Scored by AI, improved by you
+                  Plated by AI, perfected by you
                 </span>
               </h2>
 
@@ -237,7 +237,7 @@ export default function AIRoleplayHero({ modes }: Props) {
                   animationDelay: '0.19s',
                 }}
               >
-                {modes.length} immersive AI roleplay scenarios — job interviews, debates, pitches
+                {modes.length} immersive service simulations — job interviews, debates, pitches
                 and everyday conversations, all scored and reviewed in real time.
               </p>
             </div>
@@ -248,7 +248,7 @@ export default function AIRoleplayHero({ modes }: Props) {
               style={{ animation: 'rp-fade-up 0.55s ease both', animationDelay: '0.26s' }}
             >
               {[
-                { value: String(modes.length), label: 'Modes'   },
+                { value: String(modes.length), label: 'Scenes'  },
                 { value: 'AI',                 label: 'Coach'   },
                 { value: '📊',                 label: 'Scored'  },
               ].map((s, i, arr) => (
@@ -280,7 +280,7 @@ export default function AIRoleplayHero({ modes }: Props) {
                   boxShadow: '0 8px 28px rgba(250,219,67,0.28)',
                 }}
               >
-                All Modes
+                All Scenes
                 <span className="text-base">→</span>
               </Link>
               <p className="text-[11px] mt-4" style={{ color: 'rgba(255,255,255,0.22)' }}>

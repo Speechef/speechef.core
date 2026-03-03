@@ -193,7 +193,7 @@ export default function AIToolsHero({ tools }: Props) {
                   animationDelay: '0.05s',
                 }}
               >
-                🤖 AI Tools
+                🔪 Chef&apos;s Toolkit
               </span>
 
               {/* Headline */}
@@ -205,7 +205,7 @@ export default function AIToolsHero({ tools }: Props) {
                   animationDelay: '0.12s',
                 }}
               >
-                Boost Your English{' '}
+                Master Your Craft{' '}
                 <span style={{
                   background: GRADIENT,
                   WebkitBackgroundClip: 'text',
@@ -228,7 +228,7 @@ export default function AIToolsHero({ tools }: Props) {
                   animationDelay: '0.19s',
                 }}
               >
-                {tools.length} AI-powered tools for writing feedback, resume analysis,
+                {tools.length} AI-powered chef&apos;s tools for writing feedback, resume analysis,
                 mock interviews and vocabulary building — instant results, every time.
               </p>
             </div>

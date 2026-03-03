@@ -34,9 +34,6 @@ interface MentorDetail extends Mentor {
   is_following: boolean;
 }
 
-interface RecommendedMentor extends Mentor {
-  match_reason: string | null;
-}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -50,7 +47,6 @@ const QUOTES = [
   { text: 'One conversation with the right person can change the trajectory of your life.', author: 'Unknown' },
 ];
 
-// All variations of the hero section navy palette — no off-brand colors
 const CARD_ACCENTS = [
   { from: '#141c52', to: '#1e2d78', light: '#eef2ff', ink: '#3730a3' },
   { from: '#0f1640', to: '#141c52', light: '#dbeafe', ink: '#1e40af' },
@@ -243,11 +239,11 @@ function StatBox({
   return (
     <div
       className="stat-anim flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-xl"
-      style={{ background: 'rgba(255,255,255,0.07)', animationDelay: `${delay}s` }}
+      style={{ background: 'rgba(255,255,255,0.6)', animationDelay: `${delay}s` }}
     >
       <span className="text-base leading-none">{icon}</span>
-      <span className="text-sm font-extrabold text-white leading-tight">{value}</span>
-      <span className="text-[9px] uppercase tracking-wide leading-none" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</span>
+      <span className="text-sm font-extrabold leading-tight" style={{ color: '#141c52' }}>{value}</span>
+      <span className="text-[9px] uppercase tracking-wide leading-none" style={{ color: 'rgba(20,28,82,0.45)' }}>{label}</span>
     </div>
   );
 }
@@ -271,16 +267,16 @@ function MentorCard({
       }}
       onClick={() => onSelect(mentor.id)}
     >
-      {/* Dark gradient header */}
+      {/* Light pastel header */}
       <div
         className="relative px-6 pt-6 pb-14 overflow-hidden"
-        style={{ background: `linear-gradient(135deg,${accent.from} 0%,${accent.to} 100%)` }}
+        style={{ background: accent.light }}
       >
         {/* Decorative circles */}
         <div className="absolute -right-8 -top-8 w-36 h-36 rounded-full"
-          style={{ background: 'rgba(255,255,255,0.05)' }} />
+          style={{ background: accent.ink, opacity: 0.08 }} />
         <div className="absolute right-12 bottom-[-28px] w-20 h-20 rounded-full"
-          style={{ background: 'rgba(255,255,255,0.04)' }} />
+          style={{ background: accent.ink, opacity: 0.06 }} />
 
         {/* Top row: avatar + price tag */}
         <div className="relative flex items-start justify-between gap-3">
@@ -288,7 +284,7 @@ function MentorCard({
           <div className="relative">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-black text-white shadow-lg flex-shrink-0"
-              style={{ background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.2)' }}
+              style={{ background: 'linear-gradient(135deg,#141c52,#1e2d78)' }}
             >
               {mentor.name[0].toUpperCase()}
             </div>
@@ -299,16 +295,16 @@ function MentorCard({
           {/* Price tag */}
           <div
             className="flex flex-col items-end px-3.5 py-2 rounded-2xl"
-            style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'rgba(255,255,255,0.6)' }}
           >
-            <span className="text-2xl font-black text-white leading-none">${mentor.hourly_rate}</span>
-            <span className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>per hour</span>
+            <span className="text-2xl font-black leading-none" style={{ color: '#141c52' }}>${mentor.hourly_rate}</span>
+            <span className="text-[10px] font-medium" style={{ color: 'rgba(20,28,82,0.45)' }}>per hour</span>
           </div>
         </div>
 
         {/* Name + badge */}
         <div className="relative mt-4">
-          <h3 className="text-xl font-extrabold text-white leading-tight">{mentor.name}</h3>
+          <h3 className="text-xl font-extrabold leading-tight" style={{ color: '#141c52' }}>{mentor.name}</h3>
           {mentor.top_badge && (
             <span
               className="badge-pulse inline-flex items-center gap-1 mt-1.5 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full"
@@ -375,7 +371,7 @@ function MentorCard({
       {/* Hover glow */}
       <div
         className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"
-        style={{ boxShadow: `inset 0 0 0 2px ${accent.to}40` }}
+        style={{ boxShadow: `inset 0 0 0 2px ${accent.ink}30` }}
       />
     </article>
   );
@@ -675,62 +671,6 @@ function FiltersBar({
   );
 }
 
-// ─── Recommended strip ─────────────────────────────────────────────────────────
-
-function RecommendedStrip({ onSelect }: { onSelect: (id: number) => void }) {
-  const { data: recommended = [], isLoading } = useQuery<RecommendedMentor[]>({
-    queryKey: ['mentors-recommended'],
-    queryFn: () => api.get('/mentors/recommended/').then((r) => r.data),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  if (isLoading || recommended.length === 0) return null;
-
-  return (
-    <div className="mb-10">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-gray-400">Recommended for You</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43]" />
-      </div>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-        {recommended.map((m) => {
-          const accent = CARD_ACCENTS[m.id % CARD_ACCENTS.length];
-          return (
-            <div
-              key={m.id}
-              onClick={() => onSelect(m.id)}
-              className="group flex-shrink-0 w-64 rounded-2xl overflow-hidden cursor-pointer border-2 hover:shadow-lg transition-all hover:-translate-y-1"
-              style={{ borderColor: '#FADB43' }}
-            >
-              <div className="relative px-4 py-4" style={{ background: `linear-gradient(135deg,${accent.from},${accent.to})` }}>
-                <div className="absolute top-0 right-0 px-2.5 py-1 rounded-bl-xl text-[10px] font-extrabold"
-                  style={{ background: BRAND.gradient, color: BRAND.primary }}>✦ Pick</div>
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-lg flex-shrink-0"
-                    style={{ background: 'rgba(255,255,255,0.15)' }}>{m.name[0]}</div>
-                  <div>
-                    <p className="font-bold text-sm text-white">{m.name}</p>
-                    <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>${m.hourly_rate}/hr</p>
-                  </div>
-                </div>
-              </div>
-              <div className="px-4 py-3 bg-white">
-                {m.match_reason && <p className="text-xs font-semibold mb-2" style={{ color: accent.ink }}>✓ {m.match_reason}</p>}
-                <button
-                  className="w-full py-2 rounded-xl text-xs font-bold transition-opacity hover:opacity-90"
-                  style={{ background: BRAND.gradient, color: BRAND.primary }}
-                >
-                  View Profile →
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ─── Main content ──────────────────────────────────────────────────────────────
 
 function MentorsContent() {
@@ -819,10 +759,6 @@ function MentorsContent() {
             </Link>
           </div>
         </div>
-
-        {isLoggedIn && !specialty && !language && !search && (
-          <RecommendedStrip onSelect={setSelectedId} />
-        )}
 
         <FiltersBar
           specialty={specialty} language={language} sortBy={sortBy} search={search}

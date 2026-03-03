@@ -323,7 +323,7 @@ def vocab_list(request):
 
     exam_tag = request.query_params.get('exam_tag')
     if exam_tag:
-        qs = qs.filter(exam_tags__contains=exam_tag)
+        qs = qs.filter(exam_tags__contains=[exam_tag])
 
     # Build known map for authenticated users
     known_ids = set()
@@ -420,8 +420,8 @@ def vocab_stats(request):
 
     by_exam = {}
     for tag in sorted(all_tags):
-        tag_total = VocabWord.objects.filter(exam_tags__contains=tag).count()
-        tag_known = VocabWord.objects.filter(exam_tags__contains=tag, id__in=known_word_ids).count()
+        tag_total = VocabWord.objects.filter(exam_tags__contains=[tag]).count()
+        tag_known = VocabWord.objects.filter(exam_tags__contains=[tag], id__in=known_word_ids).count()
         by_exam[tag] = {'total': tag_total, 'known': tag_known}
 
     return Response({

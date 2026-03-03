@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -105,11 +106,54 @@ function getStrength(pw: string): { label: string; color: string; pct: number } 
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { loginWithGoogle } = useAuthStore();
   const [form, setForm] = useState({ username: '', email: '', password: '', password2: '' });
   const [errors, setErrors]   = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPw, setShowPw]   = useState(false);
   const [showPw2, setShowPw2] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  // Load Google Identity Services and render the button
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const google = (window as any).google;
+      if (!google || !googleBtnRef.current) return;
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: { credential: string }) => {
+          setGoogleLoading(true);
+          setErrors({});
+          try {
+            await loginWithGoogle(response.credential);
+            router.replace('/dashboard');
+          } catch {
+            setErrors({ non_field_errors: 'Google sign-up failed. Please try again.' });
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+      });
+      google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: googleBtnRef.current.offsetWidth || 360,
+        text: 'signup_with',
+        shape: 'pill',
+      });
+    };
+    document.head.appendChild(script);
+    return () => { document.head.removeChild(script); };
+  }, [loginWithGoogle, router]);
 
   const strength = getStrength(form.password);
 
@@ -355,6 +399,26 @@ export default function RegisterPage() {
               {loading ? 'Creating account…' : 'Create free account'}
             </Button>
           </form>
+
+          {/* Divider + Google */}
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <>
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400 font-medium">or</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              <div
+                ref={googleBtnRef}
+                className="w-full flex justify-center"
+                style={{ minHeight: 44, opacity: googleLoading ? 0.6 : 1 }}
+              />
+              {googleLoading && (
+                <p className="text-center text-xs text-gray-400 mt-2">Signing up with Google…</p>
+              )}
+            </>
+          )}
 
           <p className="text-center text-sm text-gray-500 mt-5">
             Already have an account?{' '}

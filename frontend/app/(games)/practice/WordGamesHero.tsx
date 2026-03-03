@@ -204,7 +204,7 @@ export default function WordGamesHero({ games }: Props) {
                   animationDelay: '0.05s',
                 }}
               >
-                🎮 Word Games
+                🍳 Kitchen Drills
               </span>
 
               {/* Headline */}
@@ -216,7 +216,7 @@ export default function WordGamesHero({ games }: Props) {
                   animationDelay: '0.12s',
                 }}
               >
-                Sharpen Your{' '}
+                Season Your{' '}
                 <span style={{
                   background: GRADIENT,
                   WebkitBackgroundClip: 'text',
@@ -227,7 +227,7 @@ export default function WordGamesHero({ games }: Props) {
                 </span>
                 <br />
                 <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.62em', fontWeight: 700, letterSpacing: '0.01em' }}>
-                  One Game at a Time
+                  One Drill at a Time
                 </span>
               </h2>
 
@@ -239,7 +239,7 @@ export default function WordGamesHero({ games }: Props) {
                   animationDelay: '0.19s',
                 }}
               >
-                {games.length} games designed to build recall, fluency and
+                {games.length} kitchen drills designed to build recall, fluency and
                 speed — keep your daily streak alive with bite-sized challenges.
               </p>
             </div>
@@ -250,7 +250,7 @@ export default function WordGamesHero({ games }: Props) {
               style={{ animation: 'wg-fade-up 0.55s ease both', animationDelay: '0.26s' }}
             >
               {[
-                { value: String(games.length), label: 'Games' },
+                { value: String(games.length), label: 'Drills' },
                 { value: 'Daily',              label: 'Challenge' },
                 { value: '🔥',                 label: 'Streak' },
               ].map((s, i, arr) => (
@@ -282,7 +282,7 @@ export default function WordGamesHero({ games }: Props) {
                   boxShadow: '0 8px 28px rgba(250,219,67,0.28)',
                 }}
               >
-                See All Games
+                See All Drills
                 <span className="text-base">→</span>
               </Link>
               <p

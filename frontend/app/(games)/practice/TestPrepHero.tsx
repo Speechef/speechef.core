@@ -193,7 +193,7 @@ export default function TestPrepHero({ exams }: Props) {
                   animationDelay: '0.05s',
                 }}
               >
-                📝 Test Prep
+                🎓 Chef&apos;s Exam Prep
               </span>
 
               {/* Headline */}
@@ -205,14 +205,14 @@ export default function TestPrepHero({ exams }: Props) {
                   animationDelay: '0.12s',
                 }}
               >
-                Ace Your{' '}
+                Earn Your{' '}
                 <span style={{
                   background: GRADIENT,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                 }}>
-                  Certification
+                  Chef&apos;s Stripes
                 </span>
                 <br />
                 <span style={{ color: 'rgba(255,255,255,0.42)', fontSize: '0.62em', fontWeight: 700, letterSpacing: '0.01em' }}>

@@ -43,3 +43,9 @@ export function getAccessToken(): string | undefined {
 export function isAuthenticated(): boolean {
   return !!getAccessToken();
 }
+
+export async function loginWithGoogle(credential: string): Promise<void> {
+  const { data } = await api.post('/auth/google/', { credential });
+  Cookies.set('access_token',  data.access,  { expires: ACCESS_EXPIRY_DAYS,  sameSite: 'strict' });
+  Cookies.set('refresh_token', data.refresh, { expires: REFRESH_EXPIRY_DAYS, sameSite: 'strict' });
+}

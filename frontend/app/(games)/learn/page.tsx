@@ -22,6 +22,7 @@ interface Post {
   categories: Category[];
   is_bookmarked: boolean;
   is_completed: boolean;
+  completion_rate?: number;
 }
 
 interface CourseInfo {
@@ -45,60 +46,25 @@ const CATEGORY_META: Record<string, { bg: string; text: string; border: string; 
   'Listening':        { bg: '#fce7f3', text: '#9d174d', border: '#fbcfe8', emoji: '🎧' },
   'Interview Skills': { bg: '#fef3c7', text: '#78350f', border: '#fde68a', emoji: '💼' },
   'Writing':          { bg: '#f0fdf4', text: '#166534', border: '#bbf7d0', emoji: '✍️' },
+  'Tests':            { bg: '#f5f3ff', text: '#5b21b6', border: '#ddd6fe', emoji: '📝' },
+  'PTE':              { bg: '#dcfce7', text: '#166534', border: '#86efac', emoji: '🌏' },
+  'PTE Academic':     { bg: '#dcfce7', text: '#166534', border: '#86efac', emoji: '🌏' },
 };
 
 // ─── Static course catalogue ─────────────────────────────────────────────────
 
 const COURSES: CourseInfo[] = [
-  {
-    id: 'grammar',
-    name: 'Grammar Fundamentals',
-    description: 'Articles, tenses, conditionals, passive voice — the backbone of English',
-    emoji: '✏️',
-    category: 'Grammar',
-    level: 'Foundation',
-    featured: true,
-  },
-  {
-    id: 'pronunciation',
-    name: 'Pronunciation Mastery',
-    description: 'Sound clear, natural and confident in every conversation',
-    emoji: '🗣️',
-    category: 'Pronunciation',
-    level: 'Intermediate',
-  },
-  {
-    id: 'fluency',
-    name: 'Fluency Builder',
-    description: 'Speak smoothly, drop filler words, command the pause',
-    emoji: '🌊',
-    category: 'Fluency',
-    level: 'Intermediate',
-  },
-  {
-    id: 'vocabulary',
-    name: 'Vocabulary Expansion',
-    description: 'Build a rich, precise word bank for any situation',
-    emoji: '📚',
-    category: 'Vocabulary',
-    level: 'All levels',
-  },
-  {
-    id: 'communication',
-    name: 'Communication Skills',
-    description: 'Listen actively and express ideas with impact',
-    emoji: '💬',
-    category: 'Communication',
-    level: 'Advanced',
-  },
-  {
-    id: 'writing',
-    name: 'Professional Writing',
-    description: 'Craft clear, compelling emails and documents',
-    emoji: '✍️',
-    category: 'Writing',
-    level: 'Intermediate',
-  },
+  { id: 'grammar',          name: 'Grammar Fundamentals',  description: 'The backbone of the kitchen — articles, tenses, conditionals and passive voice',            emoji: '✏️',  category: 'Grammar',          level: 'Foundation',   featured: true },
+  { id: 'pronunciation',    name: 'Pronunciation Mastery', description: 'Sound clear and natural — season every word with the right accent and rhythm',                 emoji: '🗣️', category: 'Pronunciation',    level: 'Intermediate' },
+  { id: 'fluency',          name: 'Fluency Builder',        description: 'Keep the service flowing — drop filler words and command the pause',                          emoji: '🌊', category: 'Fluency',          level: 'Intermediate' },
+  { id: 'vocabulary',       name: 'Vocabulary Expansion',   description: 'Stock your pantry with a rich, precise word bank for any situation',                          emoji: '📚', category: 'Vocabulary',       level: 'All levels'   },
+  { id: 'communication',    name: 'Communication Skills',   description: 'Plate your ideas with impact — listen actively and express with confidence',                  emoji: '💬', category: 'Communication',    level: 'Advanced'     },
+  { id: 'writing',          name: 'Professional Writing',   description: 'Craft clear, compelling written dishes — emails, reports and cover letters',                  emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
+  { id: 'listening',        name: 'Listening Skills',       description: 'Train your ear — comprehend accents, follow conversations and catch every word',              emoji: '🎧', category: 'Listening',        level: 'All levels'   },
+  { id: 'interview-skills', name: 'Interview Skills',       description: 'Ace the service — craft compelling answers and handle tough interview questions',             emoji: '💼', category: 'Interview Skills', level: 'Intermediate' },
+  { id: 'pte',              name: 'PTE Academic',           description: 'Computer-based PTE preparation with AI-scored speaking and writing practice',                 emoji: '🌏', category: 'PTE',              level: 'All levels'   },
+  { id: 'pte-academic',     name: 'PTE Academic',           description: 'Computer-based PTE preparation with AI-scored speaking and writing practice',                 emoji: '🌏', category: 'PTE Academic',     level: 'All levels'   },
+  { id: 'tests',            name: 'Tests & Exercises',       description: 'Put your skills to the test — practice exercises and self-assessment quizzes',                  emoji: '📝', category: 'Tests',            level: 'All levels'   },
 ];
 
 // ─── Chapter names ────────────────────────────────────────────────────────────
@@ -109,9 +75,12 @@ const CHAPTER_NAMES: Record<string, Record<number, string>> = {
   'Fluency':          { 1: 'Building Flow', 2: 'Mastering Pace' },
   'Vocabulary':       { 1: 'Core Vocabulary', 2: 'Advanced Usage' },
   'Communication':    { 1: 'Verbal Foundations', 2: 'Active Communication', 3: 'Non-Verbal Presence' },
-  'Listening':        { 1: 'Foundations' },
-  'Interview Skills': { 1: 'Interview Essentials' },
+  'Listening':        { 1: 'Foundations', 2: 'Advanced Listening' },
+  'Interview Skills': { 1: 'Interview Essentials', 2: 'Advanced Interviews' },
   'Writing':          { 1: 'Professional Writing' },
+  'Tests':            { 1: 'Practice Tests', 2: 'Advanced Tests' },
+  'PTE':              { 1: 'Speaking & Writing', 2: 'Reading & Listening' },
+  'PTE Academic':     { 1: 'Speaking & Writing', 2: 'Reading & Listening' },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -156,6 +125,30 @@ function useDebounce<T>(value: T, delay: number): T {
   return dv;
 }
 
+// ─── User difficulty ratings (localStorage) ──────────────────────────────────
+
+type UserRating = 'Easy' | 'Medium' | 'Hard';
+
+function useUserRatings() {
+  const [ratings, setRatings] = useState<Record<number, UserRating>>(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem('speechef_user_ratings') ?? '{}'); }
+    catch { return {}; }
+  });
+
+  const setRating = (postId: number, rating: UserRating | null) => {
+    setRatings((prev) => {
+      const next = { ...prev };
+      if (rating === null) delete next[postId];
+      else next[postId] = rating;
+      try { localStorage.setItem('speechef_user_ratings', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  return { ratings, setRating };
+}
+
 // ─── Main page ───────────────────────────────────────────────────────────────
 
 function LearnContent() {
@@ -164,6 +157,7 @@ function LearnContent() {
   const { isLoggedIn } = useAuthStore();
   const queryClient = useQueryClient();
   const articlesRef = useRef<HTMLDivElement>(null);
+  const { ratings, setRating } = useUserRatings();
 
   const activeCategory = searchParams.get('category') || null;
   const showBookmarks = searchParams.get('bookmarks') === '1';
@@ -177,7 +171,7 @@ function LearnContent() {
     if (bm) p.set('bookmarks', '1');
     if (sort && sort !== 'newest') p.set('sort', sort);
     if (q) p.set('search', q);
-    router.push(`/learn${p.size ? `?${p}` : ''}`);
+    router.push(`/learn${p.size ? `?${p}` : ''}`, { scroll: false });
   }
 
   // ─── Queries ───────────────────────────────────────────────────────────────
@@ -281,11 +275,11 @@ function LearnContent() {
             {/* Left: title + description */}
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-2xl">📚</span>
-                <h1 className="text-[1.75rem] font-bold text-[#141c52] tracking-tight">Learn</h1>
+                <span className="text-2xl">📖</span>
+                <h1 className="text-[1.75rem] font-bold text-[#141c52] tracking-tight">Recipe Book</h1>
               </div>
               <p className="text-[14px] text-gray-500 leading-relaxed max-w-md">
-                Structured courses and articles to sharpen your English — from grammar foundations to fluency.
+                Structured recipes to sharpen your English — taste grammar foundations, vocabulary and fluency, one dish at a time.
               </p>
             </div>
 
@@ -429,11 +423,6 @@ function LearnContent() {
           />
         )}
 
-        {/* ── FEATURED HERO (no filter active) ─────────────────────────────── */}
-        {featuredPost && !activeCourse && (
-          <FeaturedHero post={featuredPost} onBookmark={handleBookmark} />
-        )}
-
         {/* ── SORT ROW ──────────────────────────────────────────────────────── */}
         {!isLoading && posts.length > 0 && !activeCourse && (
           <div className="flex items-center justify-between mb-4">
@@ -510,9 +499,21 @@ function LearnContent() {
             search={search}
             onBookmark={handleBookmark}
             isLoggedIn={isLoggedIn}
+            ratings={ratings}
+            setRating={setRating}
+          />
+        ) : noFilter ? (
+          // ── ALL TAB: ordered tracks (Grammar first) ──────────────────────────
+          <OrderedTracksView
+            allPosts={allPosts}
+            search={search}
+            onBookmark={handleBookmark}
+            isLoggedIn={isLoggedIn}
+            ratings={ratings}
+            setRating={setRating}
           />
         ) : (
-          // ── STANDARD MODE: flat 2-col grid ──────────────────────────────────
+          // ── FILTERED GRID: flat 2-col grid ───────────────────────────────────
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
             {sortedPosts.map((post) => {
               const isNew =
@@ -520,7 +521,6 @@ function LearnContent() {
                 Date.now() - new Date(post.created_on).getTime() < 14 * 24 * 60 * 60 * 1000;
               const primaryCat = post.categories[0];
               const catMeta = primaryCat ? CATEGORY_META[primaryCat.name] : undefined;
-
               return (
                 <ArticleCard
                   key={post.id}
@@ -919,6 +919,156 @@ function ArticleCard({
   );
 }
 
+// ─── OrderedTracksView ────────────────────────────────────────────────────────
+
+function OrderedTracksView({
+  allPosts,
+  search,
+  onBookmark,
+  isLoggedIn,
+  ratings,
+  setRating,
+}: {
+  allPosts: Post[];
+  search: string;
+  onBookmark: (e: React.MouseEvent, id: number) => void;
+  isLoggedIn: boolean;
+  ratings: Record<number, UserRating>;
+  setRating: (id: number, r: UserRating | null) => void;
+}) {
+  const [openTracks, setOpenTracks] = useState<Set<string>>(() => new Set(['Grammar']));
+
+  const toggleTrack = (category: string) => {
+    setOpenTracks((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category); else next.add(category);
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-3 pb-12">
+      {COURSES.map((course) => {
+        const coursePosts = allPosts
+          .filter((p) => p.categories.some((c) => c.name === course.category))
+          .filter((p) => !search || p.title.toLowerCase().includes(search.toLowerCase()))
+          .sort((a, b) => new Date(a.created_on).getTime() - new Date(b.created_on).getTime());
+        const isOpen = openTracks.has(course.category);
+        const catMeta = CATEGORY_META[course.category];
+        const completedCount = coursePosts.filter((p) => p.is_completed).length;
+        const pct = coursePosts.length > 0 && isLoggedIn
+          ? Math.round((completedCount / coursePosts.length) * 100) : 0;
+
+        return (
+          <div key={course.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Track header */}
+            <button
+              onClick={() => toggleTrack(course.category)}
+              className="w-full flex items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-gray-50/60"
+            >
+              <span className="text-xl flex-shrink-0">{course.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-[#141c52] leading-none">{course.name}</p>
+                <p className="text-[11px] text-gray-400 mt-0.5 truncate">{course.description}</p>
+              </div>
+              {isLoggedIn && coursePosts.length > 0 && (
+                <div className="flex-shrink-0 flex items-center gap-2 mr-2">
+                  <span className="text-xs font-semibold" style={{ color: catMeta?.text ?? '#141c52' }}>
+                    {completedCount}/{coursePosts.length}
+                  </span>
+                  <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: catMeta?.border ? `${catMeta.border}55` : '#f3f4f6' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, background: `linear-gradient(to right,${catMeta?.text ?? '#141c52'},${catMeta?.border ?? '#e5e7eb'})` }}
+                    />
+                  </div>
+                </div>
+              )}
+              <span className="flex-shrink-0 text-gray-400 transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </button>
+
+            {/* Lesson rows */}
+            {isOpen && coursePosts.length > 0 && (
+              <div className="border-t border-gray-50">
+                {coursePosts.map((post, idx) => {
+                  const { difficulty } = parsePostMeta(post.body ?? '');
+                  const dm = difficulty ? DIFF_MAP[difficulty] : null;
+                  const isDone = post.is_completed;
+                  const isLast = idx === coursePosts.length - 1;
+                  const userRating = ratings[post.id];
+
+                  return (
+                    <div
+                      key={post.id}
+                      className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${!isLast ? 'border-b border-gray-50' : ''} ${isDone ? 'opacity-40' : 'hover:bg-gray-50/70'}`}
+                    >
+                      <span
+                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                        style={isDone ? { background: '#dcfce7', color: '#166534' } : { background: catMeta?.bg ?? '#f9fafb', color: catMeta?.text ?? '#141c52' }}
+                      >
+                        {isDone ? '✓' : idx + 1}
+                      </span>
+                      <button
+                        onClick={(e) => onBookmark(e, post.id)}
+                        className="flex-shrink-0 text-sm leading-none transition-transform hover:scale-125"
+                        title={post.is_bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                      >
+                        {post.is_bookmarked ? '⭐' : '☆'}
+                      </button>
+                      <Link href={`/learn/${post.id}`} className="flex-1 min-w-0 group">
+                        <p className={`text-sm font-semibold leading-snug group-hover:underline truncate ${isDone ? 'line-through text-gray-400' : 'text-[#141c52]'}`}>
+                          {search ? highlightMatch(post.title, search) : post.title}
+                        </p>
+                      </Link>
+                      {dm && (
+                        <span
+                          className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                          style={{ background: dm.bg, color: dm.text, border: `1px solid ${dm.border}` }}
+                        >
+                          {difficulty}
+                        </span>
+                      )}
+                      <div className="flex-shrink-0 flex items-center gap-0.5" title="Rate your difficulty">
+                        {(['Easy', 'Medium', 'Hard'] as const).map((lvl) => {
+                          const rdm = DIFF_MAP[lvl];
+                          const isActive = userRating === lvl;
+                          return (
+                            <button
+                              key={lvl}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRating(post.id, isActive ? null : lvl); }}
+                              className="w-5 h-5 rounded-full text-[9px] font-bold transition-all"
+                              style={isActive ? { background: rdm.bg, color: rdm.text, border: `1px solid ${rdm.border}` } : { background: '#f3f4f6', color: '#9ca3af', border: '1px solid #e5e7eb' }}
+                              title={`Rate as ${lvl}`}
+                            >
+                              {lvl[0]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <span className="flex-shrink-0 text-[10px] font-semibold text-gray-400 w-9 text-right">
+                        {post.completion_rate != null ? `${post.completion_rate}%` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {isOpen && coursePosts.length === 0 && (
+              <div className="border-t border-gray-50 py-8 text-center text-sm text-gray-400">
+                {search ? 'No matching recipes' : 'No recipes yet — coming soon'}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── CourseTrackPanel ─────────────────────────────────────────────────────────
 
 const DIFF_MAP = {
@@ -934,6 +1084,8 @@ function CourseTrackPanel({
   search,
   onBookmark,
   isLoggedIn,
+  ratings,
+  setRating,
 }: {
   posts: Post[];
   catMeta: { bg: string; text: string; border: string; emoji: string } | undefined;
@@ -941,6 +1093,8 @@ function CourseTrackPanel({
   search: string;
   onBookmark: (e: React.MouseEvent, id: number) => void;
   isLoggedIn: boolean;
+  ratings: Record<number, UserRating>;
+  setRating: (id: number, r: UserRating | null) => void;
 }) {
   const [hideCompleted, setHideCompleted] = useState(false);
   const [diffFilter, setDiffFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
@@ -1124,6 +1278,7 @@ function CourseTrackPanel({
               const chName = chapter ? (CHAPTER_NAMES[courseCategory]?.[chapter] ?? `Ch ${chapter}`) : null;
               const dm = difficulty ? DIFF_MAP[difficulty] : null;
               const isLast = idx === filtered.length - 1;
+              const userRating = ratings[post.id];
 
               return (
                 <div
@@ -1174,6 +1329,30 @@ function CourseTrackPanel({
                       {difficulty}
                     </span>
                   )}
+
+                  {/* User rating pills */}
+                  <div className="flex-shrink-0 flex items-center gap-0.5" title="Rate your difficulty">
+                    {(['Easy', 'Medium', 'Hard'] as const).map((lvl) => {
+                      const rdm = DIFF_MAP[lvl];
+                      const isActive = userRating === lvl;
+                      return (
+                        <button
+                          key={lvl}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRating(post.id, isActive ? null : lvl); }}
+                          className="w-5 h-5 rounded-full text-[9px] font-bold transition-all"
+                          style={isActive ? { background: rdm.bg, color: rdm.text, border: `1px solid ${rdm.border}` } : { background: '#f3f4f6', color: '#9ca3af', border: '1px solid #e5e7eb' }}
+                          title={`Rate as ${lvl}`}
+                        >
+                          {lvl[0]}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Success % */}
+                  <span className="flex-shrink-0 text-[10px] font-semibold text-gray-400 w-9 text-right">
+                    {post.completion_rate != null ? `${post.completion_rate}%` : '—'}
+                  </span>
 
                   {/* Status */}
                   <span
@@ -1276,11 +1455,6 @@ const LN_STYLES = `
   .ln-stat-3 { animation-delay:.89s; }
 `;
 
-const LN_STATS = [
-  { value: '8',   label: 'Courses' },
-  { value: '8',   label: 'Categories' },
-  { value: 'AI',  label: 'Powered' },
-];
 
 const BRAND_LN = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
 
@@ -1348,13 +1522,13 @@ function LearnHero({ onScrollDown }: { onScrollDown: () => void }) {
         <div className="ln-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-7 text-xs font-bold uppercase tracking-widest"
           style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
           <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
-          Learning Hub
+          Recipe Book
         </div>
 
         {/* Headline */}
         <h1 className="ln-rise-2 font-black leading-[1.02] mb-4"
           style={{ fontSize: 'clamp(2.8rem,8vw,5.5rem)' }}>
-          <span style={{ color: '#fff' }}>Read. Learn.</span>
+          <span style={{ color: '#fff' }}>Taste. Learn.</span>
           <br />
           <span style={{
             backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
@@ -1363,26 +1537,15 @@ function LearnHero({ onScrollDown }: { onScrollDown: () => void }) {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
-            Level Up.
+            Master the Menu.
           </span>
         </h1>
 
         {/* Sub */}
         <p className="ln-rise-3 text-base font-medium mb-9 max-w-md mx-auto"
           style={{ color: 'rgba(255,255,255,0.48)' }}>
-          Structured articles across grammar, vocabulary, pronunciation &amp; more — track your progress as you go.
+          Structured recipes across grammar, vocabulary, pronunciation &amp; more — taste every lesson and track your progress as you go.
         </p>
-
-        {/* Stat row */}
-        <div className="ln-rise-3 flex items-center justify-center gap-10 mb-10">
-          {LN_STATS.map((s, i) => (
-            <div key={s.label} className={`ln-stat ln-stat-${i + 1} text-center`}>
-              <p className="text-3xl font-black text-white leading-none">{s.value}</p>
-              <p className="text-xs font-semibold mt-1.5 uppercase tracking-wide"
-                style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
 
         {/* CTAs */}
         <div className="ln-rise-4 flex items-center justify-center gap-3 flex-wrap">
@@ -1391,7 +1554,7 @@ function LearnHero({ onScrollDown }: { onScrollDown: () => void }) {
             className="ln-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
             style={{ background: BRAND_LN.gradient, color: BRAND_LN.primary }}
           >
-            Browse Articles ↓
+            Browse Recipes ↓
           </button>
           <Link
             href="/learn?category=Grammar"
