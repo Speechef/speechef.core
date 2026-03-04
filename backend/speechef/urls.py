@@ -23,6 +23,7 @@ from users import views as user_views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
+    path('healthz', views.healthz, name='healthz'),
     path('admin/', admin.site.urls),
     path('', views.landing_page, name="landing_page"),
     path('register/', user_views.register, name='register'),
