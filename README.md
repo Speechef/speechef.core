@@ -310,10 +310,142 @@ npm run lint
 
 | Service | What runs there | Deploy trigger |
 |---|---|---|
-| **Railway** | Django · PostgreSQL · Redis · Celery | Push to `main` |
+| **Render** | Django (Docker) | Push to `main` |
+| **Render PostgreSQL** | Database | Managed |
+| **Upstash Redis** | Cache + Celery broker | Managed |
 | **Vercel** | Next.js frontend | Push to `main` |
 
-See `backend/railway.toml` for Railway config and `frontend/vercel.json` (if present) for Vercel overrides.
+---
+
+### Backend — Render Web Service
+
+#### Step 1 — Create a PostgreSQL database on Render
+1. Render dashboard → **New → PostgreSQL**
+2. Give it a name (e.g. `speechef-db`), choose region, create
+3. Copy the **Internal Connection String** — you'll need it as `DATABASE_URL`
+
+#### Step 2 — Create a Redis instance (Upstash)
+1. Go to [upstash.com](https://upstash.com) → create a free Redis database
+2. Copy the `REDIS_URL` (starts with `rediss://`)
+
+#### Step 3 — Create the Web Service
+1. Render dashboard → **New → Web Service** → connect `speechef.core` repo
+2. Fill in the form:
+
+| Field | Value |
+|---|---|
+| **Name** | `speechef-api` |
+| **Language** | Docker |
+| **Branch** | `main` |
+| **Root Directory** | `backend` |
+| **Docker Build Context** | `backend` |
+| **Dockerfile Path** | `backend/Dockerfile` |
+| **Docker Command** | *(leave blank)* |
+| **Pre-Deploy Command** | *(leave blank — `entrypoint.sh` runs migrations automatically)* |
+| **Health Check Path** | `/healthz` |
+| **Auto-Deploy** | On Commit |
+
+#### Step 4 — Set environment variables
+
+| Variable | Value |
+|---|---|
+| `DJANGO_SETTINGS_MODULE` | `speechef.settings.production` |
+| `SECRET_KEY` | `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
+| `DEBUG` | `False` |
+| `ALLOWED_HOSTS` | `speechef-api.onrender.com` *(your Render subdomain)* |
+| `DATABASE_URL` | *(Internal Connection String from Step 1)* |
+| `REDIS_URL` | *(from Step 2)* |
+| `CORS_ALLOWED_ORIGINS` | `https://your-app.vercel.app` |
+| `FRONTEND_URL` | `https://your-app.vercel.app` |
+| `OPENAI_API_KEY` | *(OpenAI key)* |
+| `EMAIL_HOST_USER` | *(Gmail address)* |
+| `EMAIL_HOST_PASSWORD` | *(Gmail App Password)* |
+| `DEFAULT_FROM_EMAIL` | `Speechef <noreply@speechef.com>` |
+| `R2_ACCESS_KEY_ID` | *(Cloudflare R2 key)* |
+| `R2_SECRET_ACCESS_KEY` | *(Cloudflare R2 secret)* |
+| `R2_BUCKET_NAME` | *(bucket name)* |
+| `R2_ENDPOINT_URL` | `https://<account_id>.r2.cloudflarestorage.com` |
+
+#### Step 5 — Deploy
+Click **Deploy web service**. On every deploy, `entrypoint.sh` automatically runs:
+1. `python manage.py migrate`
+2. Seed data load (skipped if already present)
+3. Gunicorn starts on port 8000
+
+---
+
+### Frontend — Vercel
+
+1. Import the `speechef.core` repo on [vercel.com](https://vercel.com)
+2. Set **Root Directory** to `frontend`
+3. Framework preset: **Next.js** (auto-detected)
+4. Add environment variable:
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://speechef-api.onrender.com/api/v1` |
+
+5. Deploy — Vercel auto-deploys on every push to `main`
+
+---
+
+### Custom Domain — Cloudflare DNS (speechef.com)
+
+#### Step 1 — Add DNS records in Cloudflare
+
+Go to **Cloudflare → speechef.com → DNS → Add record** and add all three:
+
+| Type | Name | Content | Proxy |
+|---|---|---|---|
+| `A` | `@` | `76.76.21.21` | DNS only (gray cloud) |
+| `CNAME` | `www` | `cname.vercel-dns.com` | DNS only (gray cloud) |
+| `CNAME` | `api` | `speechef-api.onrender.com` | DNS only (gray cloud) |
+
+> Keep all three as **DNS only**. Vercel and Render manage their own SSL/CDN — enabling Cloudflare proxy (orange cloud) breaks their certificate validation.
+
+#### Step 2 — Add domains in Vercel
+
+Vercel project → **Settings → Domains**, add:
+- `speechef.com`
+- `www.speechef.com`
+
+Vercel auto-issues SSL certificates for both.
+
+#### Step 3 — Add custom domain in Render
+
+Render → speechef-api service → **Settings → Custom Domains**, add:
+- `api.speechef.com`
+
+Render auto-issues the SSL certificate.
+
+#### Step 4 — Update environment variables
+
+On **Render**, update:
+
+| Variable | New Value |
+|---|---|
+| `ALLOWED_HOSTS` | `api.speechef.com` |
+| `CORS_ALLOWED_ORIGINS` | `https://speechef.com,https://www.speechef.com` |
+| `FRONTEND_URL` | `https://speechef.com` |
+
+On **Vercel**, update:
+
+| Variable | New Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://api.speechef.com/api/v1` |
+
+---
+
+### Build Filters (optional — reduce unnecessary deploys)
+
+On the Render Web Service → **Build Filters**:
+- **Included Paths**: `backend/**`
+
+On the Vercel project → **Git** settings → **Ignored Build Step**:
+```bash
+git diff HEAD^ HEAD --quiet -- frontend/
+```
+This ensures backend pushes don't retrigger a Vercel build and vice versa.
 
 ---
 
