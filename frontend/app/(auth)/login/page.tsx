@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,6 +89,8 @@ function Chip({ chip }: { chip: typeof FEATURE_CHIPS[number] }) {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justRegistered = searchParams.get('registered') === '1';
   const { login, loginWithGoogle } = useAuthStore();
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
@@ -286,6 +288,20 @@ export default function LoginPage() {
               Speechef
             </span>
           </div>
+
+          {/* Registration success banner */}
+          {justRegistered && (
+            <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-6"
+              style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)' }}>
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5l3 3 6-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-green-800">Account created! Please log in.</p>
+            </div>
+          )}
 
           {/* Heading */}
           <div className="mb-8">

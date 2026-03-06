@@ -110,6 +110,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ username: '', email: '', password: '', password2: '' });
   const [errors, setErrors]   = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPw, setShowPw]   = useState(false);
   const [showPw2, setShowPw2] = useState(false);
@@ -168,7 +169,8 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await api.post('/auth/register/', form);
-      router.replace('/login');
+      setSuccess(true);
+      setTimeout(() => router.replace('/login?registered=1'), 1800);
     } catch (err: unknown) {
       const data = (err as { response?: { data?: Record<string, string[]> } })?.response?.data;
       if (data) {
@@ -325,6 +327,28 @@ export default function RegisterPage() {
             </span>
           </div>
 
+          {/* Success state */}
+          {success ? (
+            <div className="flex flex-col items-center text-center gap-6 py-8">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+                style={{ background: BRAND.gradient }}>
+                <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
+                  <path d="M2 11l8 8L26 2" stroke="#141c52" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold" style={{ color: BRAND.primary }}>Account created!</h2>
+                <p className="text-gray-500 text-sm mt-2">Your account is ready. Redirecting you to log in…</p>
+              </div>
+              <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: '#f3f4f6' }}>
+                <div className="h-full rounded-full animate-[progress_1.8s_linear_forwards]"
+                  style={{ background: BRAND.gradient, width: '0%', animation: 'progress 1.8s linear forwards' }} />
+              </div>
+              <style dangerouslySetInnerHTML={{ __html: '@keyframes progress { from { width:0% } to { width:100% } }' }} />
+            </div>
+          ) : (
+          <>
+
           {/* Heading */}
           <div className="mb-7">
             <h2 className="text-2xl font-bold" style={{ color: BRAND.primary }}>Create your account</h2>
@@ -441,6 +465,9 @@ export default function RegisterPage() {
               </div>
             ))}
           </div>
+
+          </>
+          )}
         </div>
       </div>
     </div>
