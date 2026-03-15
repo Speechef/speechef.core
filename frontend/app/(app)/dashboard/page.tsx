@@ -805,7 +805,7 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {[
-                  { href: '/practice/test-prep/ielts-academic', emoji: '🇬🇧', label: 'IELTS Academic',    desc: 'Listening · Reading · Writing · Speaking', bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', badge: "Chef's Pick" },
+                  { href: '/practice/test-prep/ielts-academic', emoji: '🇬🇧', label: 'IELTS Academic',    desc: 'Listening · Reading · Writing · Speaking', bg: '#dbeafe', text: '#1e40af', border: '#93c5fd', badge: "Recommended" },
                   { href: '/practice/test-prep/toefl-ibt',      emoji: '🇺🇸', label: 'TOEFL iBT',         desc: 'Integrated speaking & academic writing',   bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4', badge: null },
                   { href: '/practice/test-prep/pte-academic',   emoji: '🌏', label: 'PTE Academic',       desc: 'AI-scored speaking & writing tasks',        bg: '#dcfce7', text: '#166534', border: '#86efac', badge: null },
                   { href: '/practice/test-prep/oet',            emoji: '🏥', label: 'OET',                desc: 'Medical English for healthcare pros',       bg: '#fef3c7', text: '#78350f', border: '#fcd34d', badge: null },
@@ -849,7 +849,7 @@ export default function DashboardPage() {
                   { href: '/practice/vocabulary-blitz',        emoji: '⚡',  label: 'Vocab Blitz',        desc: '60-sec vocabulary sprint',           bg: '#fef9c3', text: '#92400e', border: '#fde68a', badge: 'Sizzling' },
                   { href: '/practice/guess-the-word',          emoji: '🧠',  label: 'Guess the Word',     desc: 'Identify the mystery word meaning',  bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe', badge: null },
                   { href: '/practice/memory-match',            emoji: '🃏',  label: 'Memory Match',       desc: 'Pair words with their meanings',     bg: '#d1fae5', text: '#065f46', border: '#a7f3d0', badge: null },
-                  { href: '/practice/word-scramble',           emoji: '🔤',  label: 'Word Scramble',      desc: 'Unscramble the secret ingredient',   bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe', badge: null },
+                  { href: '/practice/word-scramble',           emoji: '🔤',  label: 'Word Scramble',      desc: 'Unscramble the hidden word',         bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe', badge: null },
                   { href: '/practice/sentence-builder',        emoji: '✍️',  label: 'Sentence Builder',   desc: 'Use vocab words in sentences',       bg: '#fce7f3', text: '#9d174d', border: '#fbcfe8', badge: null },
                   { href: '/practice/pronunciation-challenge', emoji: '🎙️',  label: 'Pronunciation',      desc: 'Speak and get real-time feedback',   bg: '#fee2e2', text: '#991b1b', border: '#fecaca', badge: 'Fresh' },
                   { href: '/practice/daily-challenge',         emoji: '🔥',  label: 'Daily Challenge',    desc: "Today's featured word challenge",    bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', badge: 'Daily' },
@@ -884,11 +884,11 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {[
-                  { href: '/practice/roleplay/job_interview', emoji: '💼',  label: 'Job Interview',      desc: 'Nail tough interview questions',    bg: '#fef3c7', text: '#78350f', border: '#fde68a', badge: "Chef's Special" },
+                  { href: '/practice/roleplay/job_interview', emoji: '💼',  label: 'Job Interview',      desc: 'Nail tough interview questions',    bg: '#fef3c7', text: '#78350f', border: '#fde68a', badge: "Popular" },
                   { href: '/practice/roleplay/presentation',  emoji: '🎤',  label: 'Presentation Pitch', desc: 'Pitch to an AI audience',           bg: '#ede9fe', text: '#6d28d9', border: '#ddd6fe', badge: null },
                   { href: '/practice/roleplay/debate',        emoji: '🗣️',  label: 'Debate',             desc: 'Argue against an AI debater',       bg: '#fee2e2', text: '#991b1b', border: '#fecaca', badge: null },
                   { href: '/practice/roleplay/small_talk',    emoji: '💬',  label: 'Small Talk',         desc: 'Natural English social scenarios',  bg: '#d1fae5', text: '#065f46', border: '#a7f3d0', badge: null },
-                  { href: '/practice/interview',              emoji: '🎯',  label: 'Interview Sim',      desc: 'Text mock interview with scoring',  bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', badge: 'AI Sous Chef' },
+                  { href: '/practice/interview',              emoji: '🎯',  label: 'Interview Sim',      desc: 'Text mock interview with scoring',  bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', badge: 'AI Scored' },
                 ].map(({ href, emoji, label, desc, bg, text, border, badge }) => (
                   <Link key={href} href={href}
                     className="relative flex flex-col gap-1.5 p-3.5 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-sm"
@@ -1111,7 +1111,7 @@ export default function DashboardPage() {
               <div className="px-5 py-4" style={{ background: 'linear-gradient(135deg,#0c1338 0%,#141c52 100%)' }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(250,219,67,0.55)' }}>Kitchen Rankings</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(250,219,67,0.55)' }}>Rankings</p>
                     <h2 className="font-bold text-white">Leaderboard</h2>
                   </div>
                   <span className="text-2xl">🏆</span>
@@ -1120,9 +1120,9 @@ export default function DashboardPage() {
               {/* Rank rows */}
               <div className="bg-white p-4 space-y-2">
                 {[
-                  { rank: 1, label: 'Head Chef',      emoji: '👨‍🍳', color: '#f59e0b', bg: 'linear-gradient(to right,#fef9c3,#fff7ed)', border: '#fde68a' },
-                  { rank: 2, label: 'Sous Chef',       emoji: '🥈',   color: '#94a3b8', bg: '#f9fafb',                                   border: 'transparent' },
-                  { rank: 3, label: 'Chef de Partie',  emoji: '🥉',   color: '#b45309', bg: '#f9fafb',                                   border: 'transparent' },
+                  { rank: 1, label: 'Top Player',    emoji: '🥇', color: '#f59e0b', bg: 'linear-gradient(to right,#fef9c3,#fff7ed)', border: '#fde68a' },
+                  { rank: 2, label: '2nd Place',      emoji: '🥈', color: '#94a3b8', bg: '#f9fafb',                                   border: 'transparent' },
+                  { rank: 3, label: '3rd Place',      emoji: '🥉', color: '#b45309', bg: '#f9fafb',                                   border: 'transparent' },
                 ].map(({ rank, label, emoji, color, bg, border }) => (
                   <div key={rank} className="flex items-center gap-3 px-3 py-2.5 rounded-xl border"
                     style={{ background: bg, borderColor: border }}>
@@ -1143,7 +1143,7 @@ export default function DashboardPage() {
                 <Link href="/practice/leaderboard"
                   className="block text-center py-2.5 rounded-xl text-xs font-extrabold tracking-wide transition-all hover:scale-[1.02] mt-1"
                   style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}>
-                  See full brigade →
+                  See full rankings →
                 </Link>
               </div>
             </div>

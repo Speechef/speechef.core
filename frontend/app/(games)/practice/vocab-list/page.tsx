@@ -514,7 +514,7 @@ function VocabHero({ stats, isLoggedIn }: { stats?: VocabStats; isLoggedIn: bool
           <div className="v-r1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 text-xs font-bold uppercase tracking-widest"
             style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
             <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#FADB43' }} />
-            The Word Kitchen
+            Vocabulary Tracker
           </div>
           <h1 className="v-r2 font-black leading-tight mb-3" style={{ fontSize: 'clamp(2rem,4.5vw,3.5rem)' }}>
             <span className="text-white">Stock Your</span><br />
@@ -522,7 +522,7 @@ function VocabHero({ stats, isLoggedIn }: { stats?: VocabStats; isLoggedIn: bool
               backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
               backgroundSize: '200%',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>Vocabulary Pantry.</span>
+            }}>Your Vocabulary.</span>
           </h1>
           <p className="v-r3 text-sm font-medium mb-6 max-w-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
             550+ academic words — IELTS, TOEFL, PTE &amp; more. Mark what you know, drill what you don&apos;t.

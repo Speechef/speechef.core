@@ -59,14 +59,14 @@ const CATEGORY_META: Record<string, { bg: string; text: string; border: string; 
 // ─── Static course catalogue ─────────────────────────────────────────────────
 
 const COURSES: CourseInfo[] = [
-  { id: 'grammar',          name: 'Grammar Fundamentals',  description: 'The backbone of the kitchen — articles, tenses, conditionals and passive voice',            emoji: '✏️',  category: 'Grammar',          level: 'Foundation',   featured: true },
-  { id: 'pronunciation',    name: 'Pronunciation Mastery', description: 'Sound clear and natural — season every word with the right accent and rhythm',                 emoji: '🗣️', category: 'Pronunciation',    level: 'Intermediate' },
-  { id: 'fluency',          name: 'Fluency Builder',        description: 'Keep the service flowing — drop filler words and command the pause',                          emoji: '🌊', category: 'Fluency',          level: 'Intermediate' },
-  { id: 'vocabulary',       name: 'Vocabulary Expansion',   description: 'Stock your pantry with a rich, precise word bank for any situation',                          emoji: '📚', category: 'Vocabulary',       level: 'All levels'   },
-  { id: 'communication',    name: 'Communication Skills',   description: 'Plate your ideas with impact — listen actively and express with confidence',                  emoji: '💬', category: 'Communication',    level: 'Advanced'     },
-  { id: 'writing',          name: 'Professional Writing',   description: 'Craft clear, compelling written dishes — emails, reports and cover letters',                  emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
+  { id: 'grammar',          name: 'Grammar Fundamentals',  description: 'The foundation of clear English — articles, tenses, conditionals and passive voice',          emoji: '✏️',  category: 'Grammar',          level: 'Foundation',   featured: true },
+  { id: 'pronunciation',    name: 'Pronunciation Mastery', description: 'Sound clear and natural — practice every word with the right accent and rhythm',               emoji: '🗣️', category: 'Pronunciation',    level: 'Intermediate' },
+  { id: 'fluency',          name: 'Fluency Builder',        description: 'Speak smoothly — drop filler words and command the pause',                                    emoji: '🌊', category: 'Fluency',          level: 'Intermediate' },
+  { id: 'vocabulary',       name: 'Vocabulary Expansion',   description: 'Build a rich, precise word bank for any situation',                                           emoji: '📚', category: 'Vocabulary',       level: 'All levels'   },
+  { id: 'communication',    name: 'Communication Skills',   description: 'Express your ideas with impact — listen actively and speak with confidence',                  emoji: '💬', category: 'Communication',    level: 'Advanced'     },
+  { id: 'writing',          name: 'Professional Writing',   description: 'Craft clear, compelling written pieces — emails, reports and cover letters',                  emoji: '✍️', category: 'Writing',          level: 'Intermediate' },
   { id: 'listening',        name: 'Listening Skills',       description: 'Train your ear — comprehend accents, follow conversations and catch every word',              emoji: '🎧', category: 'Listening',        level: 'All levels'   },
-  { id: 'interview-skills', name: 'Interview Skills',       description: 'Ace the service — craft compelling answers and handle tough interview questions',             emoji: '💼', category: 'Interview Skills', level: 'Intermediate' },
+  { id: 'interview-skills', name: 'Interview Skills',       description: 'Ace the interview — craft compelling answers and handle tough questions',                   emoji: '💼', category: 'Interview Skills', level: 'Intermediate' },
   { id: 'pte-academic',     name: 'PTE Academic',           description: 'Computer-based PTE preparation with AI-scored speaking and writing practice',                 emoji: '🌏', category: 'PTE Academic',     level: 'All levels'   },
   { id: 'ielts-academic',   name: 'IELTS Academic',         description: 'Earn your stripes — reading, writing, listening and speaking for IELTS mastery.',              emoji: '🇬🇧', category: 'IELTS Academic',  level: 'All levels'   },
   { id: 'ielts',            name: 'IELTS',                  description: 'English for international opportunities — practise all four IELTS skills.',                    emoji: '🇬🇧', category: 'IELTS',           level: 'All levels'   },
@@ -302,10 +302,10 @@ function LearnContent() {
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-2xl">📖</span>
-                <h1 className="text-[1.75rem] font-bold text-[#141c52] tracking-tight">Recipe Book</h1>
+                <h1 className="text-[1.75rem] font-bold text-[#141c52] tracking-tight">Learn</h1>
               </div>
               <p className="text-[14px] text-gray-500 leading-relaxed max-w-md">
-                Structured recipes to sharpen your English — taste grammar foundations, vocabulary and fluency, one dish at a time.
+                Structured lessons to sharpen your English — master grammar, vocabulary and fluency, one step at a time.
               </p>
             </div>
 
@@ -1557,7 +1557,7 @@ function LearnHero({ onScrollDown }: { onScrollDown: () => void }) {
         <div className="ln-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-7 text-xs font-bold uppercase tracking-widest"
           style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
           <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
-          Recipe Book
+          Learn
         </div>
 
         {/* Headline */}

@@ -9,12 +9,10 @@ import NotificationBell from './NotificationBell';
 import api from '@/lib/api';
 
 const NAV_LINKS = [
-  { href: '/dashboard',  label: 'Dashboard' },
-  { href: '/learn',      label: 'Learn' },
-  { href: '/practice',   label: 'Practice' },
-  { href: '/mentors',    label: 'Mentors' },
-  { href: '/jobs',       label: 'Jobs' },
-  { href: '/community',  label: 'Community' },
+  { href: '/dashboard', label: 'Home' },
+  { href: '/learn',     label: 'Learn' },
+  { href: '/practice',  label: 'Practice' },
+  { href: '/profile',   label: 'Me' },
 ];
 
 export default function Navbar() {
@@ -165,6 +163,29 @@ export default function Navbar() {
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <span>⚙️</span> Settings
+                    </Link>
+                    <div className="border-t border-gray-100 mt-1" />
+                    <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Explore</p>
+                    <Link
+                      href="/mentors"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <span>🎓</span> Mentors
+                    </Link>
+                    <Link
+                      href="/community"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <span>💬</span> Community
+                    </Link>
+                    <Link
+                      href="/jobs"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <span>💼</span> Jobs
                     </Link>
                     <div className="border-t border-gray-100 mt-1" />
                     <button

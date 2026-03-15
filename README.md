@@ -85,7 +85,7 @@ speechef.core/
 │   ├── stores/               # Zustand auth store
 │   └── public/               # manifest.json, sw.js, icons
 │
-├── docs/                     # Architecture, vision, tech stack, roadmap
+├── docs/                     # Architecture, vision, tech stack, roadmap, UX plan
 ├── openspec/changes/         # Feature proposal history
 ├── .github/workflows/        # CI: backend tests + frontend lint/build
 ├── docker-compose.yml        # Local dev: postgres + redis + django + frontend

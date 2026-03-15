@@ -13,7 +13,7 @@ const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 const GAME_FILTERS = [
-  { label: 'All Dishes',        value: '',             emoji: '🍽️' },
+  { label: 'All Games',          value: '',             emoji: '🏆' },
   { label: 'Guess the Word',    value: 'guess',        emoji: '🧠' },
   { label: 'Memory Match',      value: 'memory',       emoji: '🃏' },
   { label: 'Word Scramble',     value: 'scramble',     emoji: '🔤' },
@@ -308,9 +308,9 @@ function LeaderboardHero({
   const chevOpacity = Math.max(0, 1 - e * 3.5);
 
   const STATS = [
-    { value: hasData ? playerCount.toString()         : '—', label: 'Chefs' },
-    { value: hasData ? totalGames.toLocaleString()    : '—', label: 'Dishes Served' },
-    { value: hasData ? maxScore.toLocaleString()      : '—', label: 'Top Flavor' },
+    { value: hasData ? playerCount.toString()         : '—', label: 'Players' },
+    { value: hasData ? totalGames.toLocaleString()    : '—', label: 'Games Played' },
+    { value: hasData ? maxScore.toLocaleString()      : '—', label: 'Top Score' },
   ];
 
   return (
@@ -373,14 +373,14 @@ function LeaderboardHero({
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
-            Brigade.
+            Rankings.
           </span>
         </h1>
 
         {/* Subhead */}
         <p className="lb-rise-3 text-base font-medium mb-9 max-w-sm mx-auto"
           style={{ color: 'rgba(255,255,255,0.48)' }}>
-          Compete, cook, and claim your spot in the Kitchen Brigade.
+          Compete and claim your spot at the top.
         </p>
 
         {/* Live stat row */}
@@ -401,14 +401,14 @@ function LeaderboardHero({
             className="lb-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
             style={{ background: BRAND.gradient, color: BRAND.primary }}
           >
-            See the Brigade ↓
+            See the Rankings ↓
           </button>
           <Link
             href="/practice/word-games"
             className="px-7 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-white/10"
             style={{ borderColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.62)' }}
           >
-            🍳 Cook Now →
+            Play Now →
           </Link>
         </div>
       </div>
@@ -472,7 +472,7 @@ function LeaderboardContent() {
     : 0;
   const mostActive = [...entries].sort((a, b) => b.games_played - a.games_played)[0];
   const top3       = entries.slice(0, 3);
-  const gameLabel  = GAME_FILTERS.find((f) => f.value === game)?.label ?? 'All Dishes';
+  const gameLabel  = GAME_FILTERS.find((f) => f.value === game)?.label ?? 'All Games';
 
   const topPct = entries.length > 0 && myRank > 0
     ? Math.round((1 - (myRank - 1) / entries.length) * 100)
@@ -530,9 +530,9 @@ function LeaderboardContent() {
             <div className="flex items-center gap-5 flex-wrap">
               {[
                 { label: 'Your Rank',   value: `#${myRank}`,                        dot: true },
-                { label: 'Flavor',      value: myEntry.total_score.toLocaleString() },
-                { label: 'Dishes',      value: myEntry.games_played.toString() },
-                { label: 'Avg / Dish',  value: myAvg.toString() },
+                { label: 'Score',       value: myEntry.total_score.toLocaleString() },
+                { label: 'Games',       value: myEntry.games_played.toString() },
+                { label: 'Avg / Game',  value: myAvg.toString() },
                 { label: 'Top',         value: `${topPct}%` },
               ].map((s, i) => (
                 <div key={s.label} className="flex items-center gap-5">
@@ -572,14 +572,14 @@ function LeaderboardContent() {
         {!isLoading && entries.length === 0 && (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
             <p className="text-5xl mb-3">🏆</p>
-            <p className="font-bold text-lg mb-1" style={{ color: BRAND.primary }}>No dishes served yet</p>
-            <p className="text-gray-400 text-sm mb-5">Be the first to cook and claim the top spot!</p>
+            <p className="font-bold text-lg mb-1" style={{ color: BRAND.primary }}>No scores yet</p>
+            <p className="text-gray-400 text-sm mb-5">Be the first to play and claim the top spot!</p>
             <Link
               href="/practice"
               className="inline-block px-6 py-2.5 rounded-full text-sm font-bold"
               style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
-              Start Cooking →
+              Start Playing →
             </Link>
           </div>
         )}
@@ -593,7 +593,7 @@ function LeaderboardContent() {
               {/* Podium */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">
-                  👨‍🍳 Chef&apos;s Table Podium
+                  Top 3 Players
                 </p>
                 <Podium top3={top3} />
               </div>
@@ -601,7 +601,7 @@ function LeaderboardContent() {
               {/* Score bar chart */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
-                  📊 Flavor Rankings
+                  📊 Score Rankings
                 </p>
                 <p className="text-[10px] text-gray-400 mb-4">Top 10 total scores</p>
                 <ScoreBarChart entries={entries} maxScore={maxScore} currentUser={currentUsername} />
@@ -612,25 +612,25 @@ function LeaderboardContent() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 {
-                  icon: '📈', label: 'Avg Flavor',
+                  icon: '📈', label: 'Avg Score',
                   value: avgScore.toLocaleString(),
-                  sub: 'across all chefs',
+                  sub: 'across all players',
                   accent: false,
                 },
                 {
-                  icon: '🍳', label: 'Dishes Served',
+                  icon: '🎮', label: 'Games Played',
                   value: totalGames.toLocaleString(),
-                  sub: 'all-time dishes',
+                  sub: 'all-time games',
                   accent: false,
                 },
                 {
-                  icon: '🔥', label: 'Most Active Chef',
+                  icon: '🔥', label: 'Most Active',
                   value: mostActive?.user__username ?? '—',
-                  sub: `${mostActive?.games_played ?? 0} dishes`,
+                  sub: `${mostActive?.games_played ?? 0} games`,
                   accent: false,
                 },
                 {
-                  icon: '⭐', label: 'Top Flavor',
+                  icon: '⭐', label: 'Top Score',
                   value: maxScore.toLocaleString(),
                   sub: `by ${entries[0]?.user__username ?? '—'}`,
                   accent: true,
@@ -662,16 +662,16 @@ function LeaderboardContent() {
                 {/* Avg score per game */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">
-                    ⚡ Avg Flavor / Dish
+                    ⚡ Avg Score / Game
                   </p>
-                  <p className="text-[10px] text-gray-400 mb-4">Efficiency — who scores most per play</p>
+                  <p className="text-[10px] text-gray-400 mb-4">Efficiency — who scores most per game</p>
                   <AvgScoreChart entries={entries} currentUser={currentUsername} />
                 </div>
 
                 {/* Most games played */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">
-                    🍳 Most Dishes Served
+                    Most Games Played
                   </p>
                   <p className="text-[10px] text-gray-400 mb-4">Activity leaders</p>
                   <GamesPlayedChart entries={entries} currentUser={currentUsername} />
@@ -680,14 +680,14 @@ function LeaderboardContent() {
                 {/* Score distribution */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">
-                    🧑‍🍳 Kitchen Brigade
+                    Score Tiers
                   </p>
                   <div className="space-y-3">
                     {[
-                      { label: 'Head Chef   (>75%)',       color: '#FADB43', textColor: '#78350f', pctMin: 0.75, pctMax: 1 },
-                      { label: 'Sous Chef   (50–75%)',     color: '#6366f1', textColor: '#fff', pctMin: 0.5, pctMax: 0.75 },
-                      { label: 'Chef de Partie (25–50%)',  color: '#a5b4fc', textColor: '#fff', pctMin: 0.25, pctMax: 0.5 },
-                      { label: 'Commis Chef  (<25%)',      color: '#e5e7eb', textColor: '#6b7280', pctMin: 0, pctMax: 0.25 },
+                      { label: 'Elite        (>75%)',      color: '#FADB43', textColor: '#78350f', pctMin: 0.75, pctMax: 1 },
+                      { label: 'Advanced     (50–75%)',    color: '#6366f1', textColor: '#fff', pctMin: 0.5, pctMax: 0.75 },
+                      { label: 'Intermediate (25–50%)',    color: '#a5b4fc', textColor: '#fff', pctMin: 0.25, pctMax: 0.5 },
+                      { label: 'Beginner     (<25%)',      color: '#e5e7eb', textColor: '#6b7280', pctMin: 0, pctMax: 0.25 },
                     ].map((tier) => {
                       const count = entries.filter(
                         (e) => e.total_score > maxScore * tier.pctMin && e.total_score <= maxScore * tier.pctMax,
@@ -715,8 +715,8 @@ function LeaderboardContent() {
               {/* Right: Full rankings table */}
               <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                 <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between flex-shrink-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">🏅 Full Brigade</p>
-                  <span className="text-[10px] text-gray-400">{entries.length} chefs</span>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Full Rankings</p>
+                  <span className="text-[10px] text-gray-400">{entries.length} players</span>
                 </div>
 
                 <div className="overflow-auto flex-1" style={{ maxHeight: 560 }}>
@@ -727,7 +727,7 @@ function LeaderboardContent() {
                     >
                       <tr>
                         <th className="text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-gray-400 w-8">#</th>
-                        <th className="text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">Chef</th>
+                        <th className="text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">Player</th>
                         <th className="px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">Score</th>
                         <th className="text-right px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">Avg</th>
                         <th className="text-right px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">Dishes</th>
@@ -819,14 +819,14 @@ function LeaderboardContent() {
                   style={{ background: '#fafafa' }}
                 >
                   <span className="text-[10px] text-gray-400">
-                    Avg flavor across all chefs: <strong style={{ color: BRAND.primary }}>{avgScore.toLocaleString()}</strong>
+                    Avg score across all players: <strong style={{ color: BRAND.primary }}>{avgScore.toLocaleString()}</strong>
                   </span>
                   <Link
                     href="/practice"
                     className="text-[10px] font-bold hover:underline"
                     style={{ color: BRAND.primary }}
                   >
-                    Cook to climb →
+                    Play to climb →
                   </Link>
                 </div>
               </div>

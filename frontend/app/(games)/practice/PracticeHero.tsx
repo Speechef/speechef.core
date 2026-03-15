@@ -110,12 +110,12 @@ export default function PracticeHero({
             <div className="p-rise-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-7 text-xs font-bold uppercase tracking-widest"
               style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.11)' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-[#FADB43] inline-block" />
-              The Kitchen
+              Practice Hub
             </div>
 
             <h1 className="p-rise-2 font-black leading-[1.02] mb-4"
               style={{ fontSize: 'clamp(2.4rem,5vw,4.5rem)' }}>
-              <span style={{ color: '#fff' }}>Mise en Place.</span>
+              <span style={{ color: '#fff' }}>Get Ready.</span>
               <br />
               <span style={{
                 backgroundImage: 'linear-gradient(90deg,#FADB43,#fe9940,#FADB43)',
@@ -124,13 +124,13 @@ export default function PracticeHero({
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}>
-                Cook Up Fluency.
+                Build Fluency.
               </span>
             </h1>
 
             <p className="p-rise-3 text-base font-medium mb-9 max-w-md"
               style={{ color: 'rgba(255,255,255,0.48)' }}>
-              Kitchen drills, service sims, exam prep &amp; chef&apos;s tools — every skill, one kitchen.
+              Word games, AI practice, exam prep &amp; tools — every skill, one place.
             </p>
 
             <div className="p-rise-4 flex items-center gap-3 flex-wrap">
@@ -139,14 +139,14 @@ export default function PracticeHero({
                 className="p-cta px-8 py-3.5 rounded-full text-sm font-extrabold tracking-wide transition-transform hover:scale-105 active:scale-95"
                 style={{ background: BRAND.gradient, color: BRAND.primary }}
               >
-                Enter the Kitchen ↓
+                Start Practicing ↓
               </button>
               <Link
                 href="/practice/roleplay"
                 className="px-7 py-3.5 rounded-full text-sm font-semibold border transition-all hover:bg-white/10"
                 style={{ borderColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.62)' }}
               >
-                Service Sims →
+                AI Practice →
               </Link>
             </div>
           </div>
@@ -176,13 +176,13 @@ export default function PracticeHero({
                   style={{ transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }}
                 />
                 <text x={meterCx} y={meterCy - 8}  textAnchor="middle" fill="#fff"                   fontSize={22} fontWeight={900} fontFamily="inherit">{meterScore}</text>
-                <text x={meterCx} y={meterCy + 12} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize={10} fontWeight={600} fontFamily="inherit">KITCHEN SCORE</text>
+                <text x={meterCx} y={meterCy + 12} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize={10} fontWeight={600} fontFamily="inherit">YOUR SCORE</text>
               </svg>
 
               {/* Stat chips */}
               <div className="w-full grid grid-cols-3 gap-2">
                 {[
-                  { label: 'Dishes',     value: isLoggedIn ? totalGames : 6 },
+                  { label: 'Sessions',   value: isLoggedIn ? totalGames : 6 },
                   { label: 'Best',       value: isLoggedIn && totalGames > 0 ? bestScore : '—' },
                   { label: 'Streak',     value: isLoggedIn ? streak    : 0  },
                 ].map(({ label, value }) => (
