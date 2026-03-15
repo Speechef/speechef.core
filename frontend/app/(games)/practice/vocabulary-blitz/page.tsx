@@ -41,6 +41,7 @@ export default function VocabularyBlitzPage() {
   const [correctMeaning, setCorrectMeaning] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loadingRef = useRef(false);
+  const stageRef = useRef<Stage>('idle');
 
   const saveMutation = useMutation({
     mutationFn: (finalScore: number) =>
@@ -65,6 +66,7 @@ export default function VocabularyBlitzPage() {
   const endGame = useCallback((finalScore: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
     saveMutation.mutate(finalScore);
+    stageRef.current = 'finished';
     setStage('finished');
   }, [saveMutation]);
 
@@ -74,6 +76,7 @@ export default function VocabularyBlitzPage() {
     setStreak(0);
     setBestStreak(0);
     setTimeLeft(GAME_DURATION);
+    stageRef.current = 'playing';
     setStage('playing');
     await loadNextQuestion();
   }, [loadNextQuestion]);
@@ -83,10 +86,12 @@ export default function VocabularyBlitzPage() {
     timerRef.current = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
-          setScore((s) => {
-            endGame(s);
-            return s;
-          });
+          if (t === 1) {
+            setScore((s) => {
+              endGame(s);
+              return s;
+            });
+          }
           return 0;
         }
         return t - 1;
@@ -101,6 +106,7 @@ export default function VocabularyBlitzPage() {
     if (!question || answerState !== 'idle' || stage !== 'playing') return;
 
     const { correct, correct_meaning } = await checkAnswer(question.id, option);
+    if (stageRef.current !== 'playing') return;
     setCorrectMeaning(correct_meaning);
     setQuestionsAnswered((q) => q + 1);
 

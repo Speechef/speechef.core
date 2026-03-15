@@ -75,12 +75,21 @@ function ExamTimer({
   seconds: number; onExpire: () => void; compact?: boolean;
 }) {
   const [remaining, setRemaining] = useState(seconds);
+  const onExpireRef = useRef(onExpire);
+  const firedRef = useRef(false);
+  useEffect(() => { onExpireRef.current = onExpire; });
 
   useEffect(() => {
-    if (remaining <= 0) { onExpire(); return; }
+    if (remaining <= 0) {
+      if (!firedRef.current) {
+        firedRef.current = true;
+        onExpireRef.current();
+      }
+      return;
+    }
     const t = setInterval(() => setRemaining((r) => r - 1), 1000);
     return () => clearInterval(t);
-  }, [remaining, onExpire]);
+  }, [remaining]);
 
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;

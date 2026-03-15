@@ -115,7 +115,13 @@ export default function RolePlaySessionPage() {
       ]);
       setAiThinking(false);
     },
-    onError: () => setAiThinking(false),
+    onError: () => {
+      setAiThinking(false);
+      setTurns((prev) => [
+        ...prev,
+        { role: 'assistant', content: '(AI could not respond. Please try again.)', timestamp: new Date().toISOString() },
+      ]);
+    },
   });
 
   // Finish session
@@ -338,14 +344,19 @@ export default function RolePlaySessionPage() {
             {topic && <p className="text-xs text-gray-400">{topic}</p>}
           </div>
         </div>
-        <button
-          onClick={() => finishMutation.mutate()}
-          disabled={finishMutation.isPending || userTurnCount < 1}
-          className="text-xs font-bold px-4 py-2 rounded-full disabled:opacity-40 transition-opacity hover:opacity-90"
-          style={{ background: BRAND.primary, color: 'white' }}
-        >
-          {finishMutation.isPending ? 'Finishing…' : 'Finish & Score →'}
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={() => finishMutation.mutate()}
+            disabled={finishMutation.isPending || userTurnCount < 1}
+            className="text-xs font-bold px-4 py-2 rounded-full disabled:opacity-40 transition-opacity hover:opacity-90"
+            style={{ background: BRAND.primary, color: 'white' }}
+          >
+            {finishMutation.isPending ? 'Finishing…' : 'Finish & Score →'}
+          </button>
+          {finishMutation.isError && (
+            <p className="text-xs text-red-500">Failed to score. Please try again.</p>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
