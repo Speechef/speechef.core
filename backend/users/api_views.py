@@ -86,6 +86,30 @@ def user_settings(request):
     return Response({'ok': True})
 
 
+# ── Onboarding ────────────────────────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def complete_onboarding(request):
+    profile = request.user.profile
+    allowed_goals = {'speaking', 'writing', 'exam', 'interview'}
+    allowed_levels = {'beginner', 'intermediate', 'advanced'}
+    goal = request.data.get('goal', '')
+    level = request.data.get('level', '')
+    daily_minutes = request.data.get('daily_minutes', 15)
+    if goal in allowed_goals:
+        profile.goal = goal
+    if level in allowed_levels:
+        profile.level = level
+    try:
+        profile.daily_minutes = int(daily_minutes)
+    except (TypeError, ValueError):
+        pass
+    profile.onboarding_complete = True
+    profile.save(update_fields=['goal', 'level', 'daily_minutes', 'onboarding_complete'])
+    return Response({'ok': True})
+
+
 # ── Password reset ────────────────────────────────────────────────────────────
 
 @api_view(['POST'])

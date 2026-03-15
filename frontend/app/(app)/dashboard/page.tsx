@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import ScorecardWidget from '@/components/dashboard/ScorecardWidget';
@@ -10,6 +11,10 @@ interface Profile {
   image: string;
   current_streak: number;
   longest_streak: number;
+  goal: string;
+  level: string;
+  daily_minutes: number;
+  onboarding_complete: boolean;
 }
 
 interface UserProfile {
@@ -415,6 +420,123 @@ function WordOfDay() {
   );
 }
 
+// ── Daily plan card ───────────────────────────────────────────────────────────
+const GOAL_PLANS: Record<string, { emoji: string; label: string; href: string; gameKey?: string }[]> = {
+  speaking: [
+    { emoji: '💬', label: 'Quick vocab game', href: '/practice/guess-the-word', gameKey: 'guess' },
+    { emoji: '🎙️', label: 'Pronunciation challenge', href: '/practice/pronunciation-challenge', gameKey: 'pronunciation' },
+    { emoji: '🎭', label: 'AI Roleplay practice', href: '/practice/roleplay' },
+  ],
+  writing: [
+    { emoji: '✍️', label: 'Sentence Builder round', href: '/practice/sentence-builder', gameKey: 'sentence' },
+    { emoji: '📰', label: 'Read an article', href: '/learn' },
+    { emoji: '📝', label: 'AI Writing Coach', href: '/practice/writing-coach' },
+  ],
+  exam: [
+    { emoji: '⚡', label: 'Vocabulary Blitz', href: '/practice/vocabulary-blitz', gameKey: 'blitz' },
+    { emoji: '📚', label: 'Test Prep session', href: '/practice/test-prep' },
+    { emoji: '🔥', label: 'Daily Challenge', href: '/practice/daily-challenge', gameKey: 'daily' },
+  ],
+  interview: [
+    { emoji: '🧠', label: 'Guess the Word', href: '/practice/guess-the-word', gameKey: 'guess' },
+    { emoji: '💼', label: 'Job Interview Roleplay', href: '/practice/roleplay/job_interview' },
+    { emoji: '🎯', label: 'Interview Simulation', href: '/practice/interview' },
+  ],
+  default: [
+    { emoji: '🔥', label: 'Daily Challenge', href: '/practice/daily-challenge', gameKey: 'daily' },
+    { emoji: '🔤', label: 'Word Scramble', href: '/practice/word-scramble', gameKey: 'scramble' },
+    { emoji: '🧠', label: 'Guess the Word', href: '/practice/guess-the-word', gameKey: 'guess' },
+  ],
+};
+
+function DailyPlanCard({
+  goal,
+  sessions,
+  dailyMinutes,
+  username,
+}: {
+  goal: string;
+  sessions: GameSession[];
+  dailyMinutes: number;
+  username: string;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const plan = GOAL_PLANS[goal] ?? GOAL_PLANS.default;
+  const todayStr = new Date().toDateString();
+
+  const todayGameKeys = new Set(
+    sessions.filter((s) => new Date(s.played_at).toDateString() === todayStr).map((s) => s.game)
+  );
+
+  const items = plan.map((item) => ({
+    ...item,
+    done: item.gameKey ? todayGameKeys.has(item.gameKey as GameSession['game']) : false,
+  }));
+
+  const nextItem = items.find((i) => !i.done);
+  const allDone = items.every((i) => i.done);
+
+  if (!mounted) return null;
+
+  return (
+    <div className="rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(135deg,#0c1338 0%,#141c52 100%)', boxShadow: '0 4px 32px rgba(20,28,82,0.18)' }}>
+      <div className="px-6 pt-6 pb-5">
+        <div className="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              Today's plan {dailyMinutes > 0 ? `· ${dailyMinutes} min` : ''}
+            </p>
+            <h2 className="text-xl font-extrabold text-white leading-tight">
+              {allDone ? `All done, ${username}!` : `Your plan for today, ${username}`}
+            </h2>
+          </div>
+          {allDone && <span className="text-2xl flex-shrink-0">🏆</span>}
+        </div>
+
+        <div className="space-y-3 mb-5">
+          {items.map((item) => (
+            <div
+              key={item.href}
+              className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+              style={{ background: item.done ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.06)', border: `1px solid ${item.done ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.08)'}` }}
+            >
+              <span className="text-xl flex-shrink-0">{item.emoji}</span>
+              <span className="text-sm font-medium flex-1" style={{ color: item.done ? 'rgba(255,255,255,0.45)' : 'white', textDecoration: item.done ? 'line-through' : 'none' }}>
+                {item.label}
+              </span>
+              {item.done
+                ? <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.2)', color: '#4ade80' }}>Done</span>
+                : <span className="w-5 h-5 rounded-full border-2 flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+              }
+            </div>
+          ))}
+        </div>
+
+        {!allDone && nextItem && (
+          <Link
+            href={nextItem.href}
+            className="block w-full py-3 rounded-full text-sm font-bold text-center transition-all hover:scale-[1.02] active:scale-95"
+            style={{ background: 'linear-gradient(to right,#FADB43,#fe9940)', color: '#141c52' }}
+          >
+            Continue →
+          </Link>
+        )}
+        {allDone && (
+          <Link
+            href="/practice"
+            className="block w-full py-3 rounded-full text-sm font-bold text-center transition-all hover:scale-[1.02]"
+            style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)' }}
+          >
+            Explore more practice →
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Onboarding card ───────────────────────────────────────────────────────────
 const ONBOARDING_KEY = 'speechef_onboarding_dismissed';
 
@@ -481,6 +603,7 @@ function OnboardingCard({ hasGames, hasAnalysis, hasRoleplay }: {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -508,6 +631,13 @@ export default function DashboardPage() {
   const latestAnalysis = analysisSessions.find((s) => s.status === 'done');
   const analysisData   = latestAnalysis?.result;
   const profile        = user?.profile;
+
+  // Redirect new users to onboarding
+  useEffect(() => {
+    if (user && profile && profile.onboarding_complete === false) {
+      router.push('/onboarding');
+    }
+  }, [user, profile, router]);
   const currentStreak  = profile?.current_streak ?? 0;
   const longestStreak  = profile?.longest_streak ?? 0;
   const recentSessions = sessions.slice(0, 5);
@@ -614,6 +744,16 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-7">
+
+        {/* ── Daily plan (for users who completed onboarding) ─────────────── */}
+        {profile?.onboarding_complete && user && (
+          <DailyPlanCard
+            goal={profile.goal || 'default'}
+            sessions={sessions}
+            dailyMinutes={profile.daily_minutes ?? 15}
+            username={user.username}
+          />
+        )}
 
         {/* ── Onboarding (new users only) ─────────────────────────────────── */}
         <OnboardingCard

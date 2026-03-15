@@ -6,7 +6,7 @@ from .models import Profile, Notification, Badge, UserBadge
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['image', 'current_streak', 'longest_streak']
+        fields = ['image', 'current_streak', 'longest_streak', 'goal', 'level', 'daily_minutes', 'onboarding_complete']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -61,7 +61,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['username', 'email', 'image']
+        fields = ['username', 'email', 'image', 'goal', 'level', 'daily_minutes', 'onboarding_complete']
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', {})

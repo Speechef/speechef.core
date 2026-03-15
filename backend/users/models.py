@@ -3,6 +3,18 @@ from django.contrib.auth.models import User
 from PIL import Image
 
 class Profile(models.Model):
+    GOAL_CHOICES = [
+        ('speaking', 'Speaking in conversations'),
+        ('writing', 'Writing emails and documents'),
+        ('exam', 'Preparing for IELTS / TOEFL / PTE'),
+        ('interview', 'Job interviews in English'),
+    ]
+    LEVEL_CHOICES = [
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Intermediate'),
+        ('advanced', 'Advanced'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     image = models.ImageField(default='default.jpg', upload_to='profile_pics')
     current_streak = models.IntegerField(default=0)
@@ -10,6 +22,10 @@ class Profile(models.Model):
     last_played_date = models.DateField(null=True, blank=True)
     notification_prefs = models.JSONField(default=dict, blank=True)
     privacy_prefs = models.JSONField(default=dict, blank=True)
+    goal = models.CharField(max_length=20, choices=GOAL_CHOICES, blank=True, default='')
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, blank=True, default='')
+    daily_minutes = models.IntegerField(default=15)
+    onboarding_complete = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.user.username} Profile'

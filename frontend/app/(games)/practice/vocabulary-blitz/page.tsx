@@ -205,28 +205,28 @@ export default function VocabularyBlitzPage() {
                 </div>
               ))}
             </div>
-            <div className="flex gap-3">
+            <Link
+              href="/practice/sentence-builder"
+              className="block w-full py-3 rounded-full text-sm font-bold text-center transition-opacity hover:opacity-90"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
+            >
+              Practice in a sentence →
+            </Link>
+            <div className="flex items-center justify-center gap-4 mt-4">
               <button
                 onClick={startGame}
-                className="flex-1 py-3 rounded-full text-sm font-bold border-2 transition-colors hover:bg-gray-50"
-                style={{ borderColor: BRAND.primary, color: BRAND.primary }}
+                className="text-sm text-gray-400 hover:underline"
               >
                 Play Again
               </button>
+              <span className="text-gray-200">|</span>
               <Link
-                href="/practice"
-                className="flex-1 py-3 rounded-full text-sm font-bold text-center"
-                style={{ background: BRAND.gradient, color: BRAND.primary }}
+                href="/practice/history?game=blitz"
+                className="text-sm text-gray-400 hover:underline"
               >
-                More Games
+                View history
               </Link>
             </div>
-            <Link
-              href="/practice/history?game=blitz"
-              className="block text-center text-sm text-gray-400 hover:underline mt-4"
-            >
-              View session history →
-            </Link>
           </div>
         </div>
       </div>

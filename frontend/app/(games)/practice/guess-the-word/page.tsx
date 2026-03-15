@@ -150,25 +150,28 @@ export default function GuessTheWordPage() {
               <p className="text-green-600 text-sm font-medium mb-4 text-center">New personal best!</p>
             )}
 
-            <Button
-              onClick={handlePlayAgain}
-              className="w-full rounded-full font-medium text-[#141c52]"
-              style={{ backgroundColor: '#FADB43' }}
-            >
-              Play Again
-            </Button>
             <Link
-              href="/practice"
-              className="block text-sm text-gray-400 hover:underline mt-4 text-center"
+              href="/practice/memory-match"
+              className="block w-full py-3 rounded-full text-sm font-bold text-center transition-opacity hover:opacity-90"
+              style={{ background: BRAND.gradient, color: BRAND.primary }}
             >
-              ← Back to Games
+              Try Memory Match →
             </Link>
-            <Link
-              href="/practice/history?game=guess"
-              className="block text-sm text-gray-400 hover:underline mt-2 text-center"
-            >
-              View session history →
-            </Link>
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <button
+                onClick={handlePlayAgain}
+                className="text-sm text-gray-400 hover:underline"
+              >
+                Play Again
+              </button>
+              <span className="text-gray-200">|</span>
+              <Link
+                href="/practice/history?game=guess"
+                className="text-sm text-gray-400 hover:underline"
+              >
+                View history
+              </Link>
+            </div>
           </div>
         </div>
       </div>

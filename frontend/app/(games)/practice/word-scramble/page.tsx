@@ -116,12 +116,21 @@ export default function WordScramblePage() {
               >
                 Next Word →
               </Button>
-              <Link
-                href="/practice/history?game=scramble"
-                className="block text-center text-sm text-gray-400 hover:underline mt-3"
-              >
-                View session history →
-              </Link>
+              <div className="flex items-center justify-center gap-4 mt-3">
+                <Link
+                  href="/practice/saved-words"
+                  className="text-sm text-gray-400 hover:underline"
+                >
+                  Save new words →
+                </Link>
+                <span className="text-gray-200">|</span>
+                <Link
+                  href="/practice/history?game=scramble"
+                  className="text-sm text-gray-400 hover:underline"
+                >
+                  View history
+                </Link>
+              </div>
             </>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">

@@ -173,17 +173,26 @@ export default function MemoryMatchPage() {
             <div className="bg-white px-6 py-6 text-center">
               <Button
                 onClick={handlePlayAgain}
-                className="rounded-full font-medium text-[#141c52]"
+                className="w-full rounded-full font-medium text-[#141c52]"
                 style={{ backgroundColor: '#FADB43' }}
               >
                 Play Again
               </Button>
-              <Link
-                href="/practice/history?game=memory"
-                className="block text-sm text-gray-400 hover:underline mt-3"
-              >
-                View session history →
-              </Link>
+              <div className="flex items-center justify-center gap-4 mt-4">
+                <Link
+                  href="/practice"
+                  className="text-sm text-gray-400 hover:underline"
+                >
+                  ← Back to Games
+                </Link>
+                <span className="text-gray-200">|</span>
+                <Link
+                  href="/practice/history?game=memory"
+                  className="text-sm text-gray-400 hover:underline"
+                >
+                  View history
+                </Link>
+              </div>
             </div>
           </div>
         ) : (

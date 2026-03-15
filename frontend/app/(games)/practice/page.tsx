@@ -156,6 +156,8 @@ const TEST_PREP_EXAMS: ExamConfig[] = [
 interface GameSession { id: number; score: number; played_at: string; }
 
 const BRAND = { primary: '#141c52', gradient: 'linear-gradient(to right,#FADB43,#fe9940)' };
+const ROLEPLAY_UNLOCK_GAMES = 5;
+const TOOLS_UNLOCK_GAMES    = 3;
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function PracticePage() {
@@ -196,6 +198,24 @@ export default function PracticePage() {
 
           <ActiveSessionBanner />
 
+          {/* Progress path quick link */}
+          {isLoggedIn && (
+            <Link href="/practice/progress"
+              className="flex items-center justify-between px-4 py-3 rounded-2xl border transition-all hover:shadow-sm"
+              style={{ background: 'white', borderColor: '#e5e7eb' }}>
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🗺️</span>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: BRAND.primary }}>Your Progress Path</p>
+                  <p className="text-xs text-gray-400">{totalGames} game{totalGames !== 1 ? 's' : ''} played · See your journey</p>
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
+
           {/* Daily challenge */}
           <DailyStrip />
 
@@ -231,6 +251,16 @@ export default function PracticePage() {
               </button>
               {deepOpen && (
                 <div className="space-y-14">
+                  {/* Progressive disclosure — AI Roleplay unlock hint */}
+                  {totalGames < ROLEPLAY_UNLOCK_GAMES && (
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm"
+                      style={{ background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e' }}>
+                      <span className="text-lg flex-shrink-0">🔓</span>
+                      <span>
+                        Play <strong>{ROLEPLAY_UNLOCK_GAMES - totalGames} more game{ROLEPLAY_UNLOCK_GAMES - totalGames !== 1 ? 's' : ''}</strong> to fully unlock AI Roleplay features.
+                      </span>
+                    </div>
+                  )}
                   <AIRoleplayHero modes={ROLEPLAY_ITEMS} />
                   {/* Vocabulary Hub */}
                   <div className="rounded-3xl overflow-hidden border border-gray-100" style={{ background: 'white', boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
@@ -267,6 +297,16 @@ export default function PracticePage() {
                       </div>
                     </div>
                   </div>
+                  {/* Progressive disclosure — AI Tools unlock hint */}
+                  {totalGames < TOOLS_UNLOCK_GAMES && (
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm"
+                      style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534' }}>
+                      <span className="text-lg flex-shrink-0">🔓</span>
+                      <span>
+                        Play <strong>{TOOLS_UNLOCK_GAMES - totalGames} more game{TOOLS_UNLOCK_GAMES - totalGames !== 1 ? 's' : ''}</strong> to unlock the AI Tools.
+                      </span>
+                    </div>
+                  )}
                   <AIToolsHero tools={AI_TOOLS} />
                 </div>
               )}

@@ -5,7 +5,7 @@ from .api_views import (
     forgot_password, reset_password,
     google_auth,
     notification_list, notification_read, notification_read_all, notification_unread_count,
-    badge_list, public_profile,
+    badge_list, public_profile, complete_onboarding,
 )
 
 urlpatterns = [
@@ -26,4 +26,6 @@ urlpatterns = [
     path('badges/', badge_list, name='badge-list'),
     # Public profile
     path('users/<str:username>/', public_profile, name='public-profile'),
+    # Onboarding
+    path('onboarding/', complete_onboarding, name='onboarding'),
 ]
