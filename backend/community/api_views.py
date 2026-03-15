@@ -1,4 +1,4 @@
-from django.db.models import Count, Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef, F
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -34,18 +34,22 @@ def _thread_data(thread, user=None):
         is_voted_ann = getattr(thread, 'is_voted_ann', None)
         is_voted = is_voted_ann if is_voted_ann is not None else \
             ThreadVote.objects.filter(user=user, thread=thread).exists()
+    is_own_thread = False
+    if user and user.is_authenticated:
+        is_own_thread = thread.user == user
     return {
-        "id":          thread.id,
-        "title":       thread.title,
-        "body":        thread.body,
-        "category":    thread.category,
-        "is_pinned":   thread.is_pinned,
-        "view_count":  thread.view_count,
-        "vote_count":  vote_count,
-        "reply_count": reply_count,
-        "is_voted":    is_voted,
-        "author":      thread.user.username,
-        "created_at":  thread.created_at.isoformat(),
+        "id":            thread.id,
+        "title":         thread.title,
+        "body":          thread.body,
+        "category":      thread.category,
+        "is_pinned":     thread.is_pinned,
+        "view_count":    thread.view_count,
+        "vote_count":    vote_count,
+        "reply_count":   reply_count,
+        "is_voted":      is_voted,
+        "is_own_thread": is_own_thread,
+        "author":        thread.user.username,
+        "created_at":    thread.created_at.isoformat(),
     }
 
 
@@ -93,12 +97,25 @@ def thread_detail(request, pk):
         thread = _thread_qs(request.user).get(pk=pk)
     except Thread.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-    thread.view_count += 1
-    thread.save(update_fields=["view_count"])
+    Thread.objects.filter(pk=pk).update(view_count=F('view_count') + 1)
+    thread.refresh_from_db(fields=['view_count'])
     data = _thread_data(thread, request.user)
     # select_related('user') avoids 1 extra query per reply (N+1 fix)
     data["replies"] = [_reply_data(r, request.user) for r in thread.replies.select_related('user').all()]
     return Response(data)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_thread(request, pk):
+    try:
+        thread = Thread.objects.get(pk=pk)
+    except Thread.DoesNotExist:
+        return Response({"detail": "Thread not found."}, status=status.HTTP_404_NOT_FOUND)
+    if thread.user != request.user:
+        return Response({"detail": "Only the thread author can delete this thread."}, status=status.HTTP_403_FORBIDDEN)
+    thread.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(["POST"])
