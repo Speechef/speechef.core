@@ -36,6 +36,7 @@ interface ThreadDetail {
   reply_count: number;
   view_count: number;
   is_voted: boolean;
+  is_own_thread: boolean;
   author: string;
   created_at: string;
   replies: Reply[];
@@ -163,7 +164,7 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
                     <span>{new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                   </div>
                   {/* Accept button — only thread author sees this */}
-                  {isLoggedIn && !r.is_accepted && (
+                  {thread.is_own_thread && !r.is_accepted && (
                     <button
                       onClick={() => acceptReply(r.id)}
                       className="text-xs text-gray-400 hover:text-green-600 transition-colors"
