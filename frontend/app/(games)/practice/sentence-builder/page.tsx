@@ -332,6 +332,11 @@ export default function SentenceBuilderPage() {
             >
               {checkMutation.isPending ? 'Checking…' : 'Submit Sentence →'}
             </button>
+            {checkMutation.isError && (
+              <p className="text-xs text-red-500 text-center mt-2">
+                Could not evaluate your sentence. Please try again.
+              </p>
+            )}
           </>
         )}
 
