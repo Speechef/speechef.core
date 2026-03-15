@@ -75,12 +75,23 @@ function ExamTimer({
   seconds: number; onExpire: () => void; compact?: boolean;
 }) {
   const [remaining, setRemaining] = useState(seconds);
+  // Keep a ref to the latest onExpire so identity changes don't re-trigger the effect
+  const onExpireRef = useRef(onExpire);
+  useEffect(() => { onExpireRef.current = onExpire; });
+  // Guard against calling onExpire more than once (e.g. if remaining stays at 0)
+  const firedRef = useRef(false);
 
   useEffect(() => {
-    if (remaining <= 0) { onExpire(); return; }
+    if (remaining <= 0) {
+      if (!firedRef.current) {
+        firedRef.current = true;
+        onExpireRef.current();
+      }
+      return;
+    }
     const t = setInterval(() => setRemaining((r) => r - 1), 1000);
     return () => clearInterval(t);
-  }, [remaining, onExpire]);
+  }, [remaining]);
 
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;

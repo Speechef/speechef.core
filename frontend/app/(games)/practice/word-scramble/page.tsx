@@ -25,7 +25,7 @@ export default function WordScramblePage() {
   const [result, setResult] = useState<CheckResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { data: question, isLoading, refetch } = useQuery<ScrambleQuestion>({
+  const { data: question, isLoading, isFetching, refetch } = useQuery<ScrambleQuestion>({
     queryKey: ['scramble-question'],
     queryFn: () => api.get('/practice/word-scramble/').then((r) => r.data),
   });
@@ -111,10 +111,11 @@ export default function WordScramblePage() {
               </div>
               <Button
                 onClick={handleNext}
+                disabled={isFetching}
                 className="w-full rounded-full font-medium text-[#141c52]"
                 style={{ backgroundColor: '#FADB43' }}
               >
-                Next Word →
+                {isFetching ? 'Loading…' : 'Next Word →'}
               </Button>
               <Link
                 href="/practice/history?game=scramble"
@@ -131,11 +132,12 @@ export default function WordScramblePage() {
                 placeholder="Type your answer…"
                 autoComplete="off"
                 className="text-center text-lg"
+                disabled={isFetching}
                 required
               />
               <Button
                 type="submit"
-                disabled={!answer.trim() || submitting}
+                disabled={!answer.trim() || submitting || isFetching}
                 className="w-full rounded-full font-medium text-[#141c52]"
                 style={{ backgroundColor: '#FADB43' }}
               >

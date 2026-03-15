@@ -120,6 +120,15 @@ export default function MemoryMatchPage() {
   );
 
   function handlePlayAgain() {
+    // Reset all game state immediately. If the server returns the same pairs,
+    // the useEffect won't re-run (same reference), so we rebuild cards here too.
+    if (pairs && pairs.length > 0) setCards(buildCards(pairs));
+    setFlipped([]);
+    setLocked(false);
+    setAttempts(0);
+    setMatched(0);
+    setDone(false);
+    setScore(0);
     refetch();
   }
 

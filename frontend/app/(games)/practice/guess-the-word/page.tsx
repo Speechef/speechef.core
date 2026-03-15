@@ -45,7 +45,7 @@ export default function GuessTheWordPage() {
   const [wrongAttempts, setWrongAttempts] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
 
-  const { data: question, isLoading, refetch } = useQuery<Question>({
+  const { data: question, isLoading, isFetching, refetch } = useQuery<Question>({
     queryKey: ['guess-question'],
     queryFn: () => api.get('/practice/question/').then((r) => r.data),
   });
@@ -235,7 +235,7 @@ export default function GuessTheWordPage() {
                 <button
                   key={option}
                   onClick={() => !result && setSelected(option)}
-                  disabled={!!result}
+                  disabled={!!result || isFetching}
                   className="w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors"
                   style={style}
                 >
@@ -273,10 +273,11 @@ export default function GuessTheWordPage() {
           ) : (
             <Button
               onClick={handleNext}
+              disabled={isFetching}
               className="w-full rounded-full font-medium text-[#141c52]"
               style={{ backgroundColor: '#FADB43' }}
             >
-              Next Question →
+              {isFetching ? 'Loading…' : 'Next Question →'}
             </Button>
           )}
         </div>
